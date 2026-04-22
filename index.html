@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vaanya's Daily Star ⭐</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+:root{
+  --p:#8B5CF6;--pl:#F3EFFE;--pm:#C4B5FD;--pd:#6D28D9;
+  --t:#06B6D4;--tl:#ECFEFF;--tm:#67E8F9;--td:#0E7490;
+  --a:#F59E0B;--al:#FFFBEB;--am:#FCD34D;--ad:#B45309;
+  --pk:#EC4899;--pkl:#FDF2F8;--pkm:#F9A8D4;--pkd:#9D174D;
+  --g:#10B981;--gl:#ECFDF5;--gm:#6EE7B7;--gd:#047857;
+  --b:#3B82F6;--bl:#EFF6FF;--bm:#93C5FD;--bd:#1D4ED8;
+  --o:#F97316;--ol:#FFF7ED;--om:#FED7AA;--od:#C2410C;
+  --r:#EF4444;--rl:#FEF2F2;--rm:#FCA5A5;--rd:#B91C1C;
+  --gold:#F59E0B;--ink:#1E1B4B;--muted:#6B7280;--border:#E5E7EB;
+  --white:#FFFFFF;--bg:#F0F4FF;--rad:14px;--rads:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.5;min-height:100vh}
+.page{max-width:980px;margin:0 auto;padding:14px}
+
+/* TOP BAR */
+.topbar{background:linear-gradient(135deg,#4F46E5,#7C3AED,#DB2777);border-radius:var(--rad);
+  padding:14px 18px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.av{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);
+  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;flex-shrink:0}
+.tb-info{flex:1;min-width:140px}
+.tb-title{font-size:18px;font-weight:900}
+.tb-sub{font-size:11px;opacity:.85;margin-top:1px}
+.tb-pts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pts-chip{background:rgba(255,255,255,.2);border-radius:30px;padding:6px 14px;text-align:center;border:1px solid rgba(255,255,255,.3)}
+.pts-chip-num{font-size:20px;font-weight:900;line-height:1}
+.pts-chip-lbl{font-size:9px;opacity:.8;text-transform:uppercase;letter-spacing:.06em}
+.date-pill{background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.3)}
+.xp-wrap{background:rgba(255,255,255,.2);border-radius:10px;height:12px;overflow:hidden;margin-top:5px}
+.xp-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,#FCD34D,#F59E0B);transition:width .5s}
+.penalty-bar{background:#FEF2F2;border:2px solid #FCA5A5;border-radius:10px;padding:8px 14px;
+  margin-bottom:10px;font-size:12px;font-weight:700;color:#B91C1C;display:none;align-items:center;gap:8px}
+
+/* NAV TABS */
+.nav{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;padding:4px;
+  background:rgba(255,255,255,.7);border-radius:20px;border:1.5px solid var(--border)}
+.nb{padding:8px 14px;border-radius:16px;border:none;background:transparent;
+  font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;
+  transition:all .18s;color:var(--muted);display:flex;align-items:center;gap:5px}
+.nb:hover{background:var(--pl);color:var(--p)}
+.nb.active{color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.nb.t0.active{background:linear-gradient(135deg,#8B5CF6,#6D28D9)}
+.nb.t1.active{background:linear-gradient(135deg,#F59E0B,#D97706)}
+.nb.t2.active{background:linear-gradient(135deg,#10B981,#047857)}
+.nb.t3.active{background:linear-gradient(135deg,#06B6D4,#0E7490)}
+.nb.t4.active{background:linear-gradient(135deg,#EC4899,#9D174D)}
+.nb.t5.active{background:linear-gradient(135deg,#F97316,#C2410C)}
+.nb.t6.active{background:linear-gradient(135deg,#3B82F6,#1D4ED8)}
+.tab{display:none}.tab.active{display:block}
+
+/* SECTION */
+.sec{background:var(--white);border-radius:var(--rad);padding:15px 17px;margin-bottom:11px;
+  border:2px solid var(--border);transition:border-color .2s}
+.sec:hover{border-color:var(--pm)}
+.sh{font-size:14px;font-weight:900;display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.si{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ptag{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;background:var(--al);
+  color:var(--ad);border:1.5px solid var(--am);white-space:nowrap}
+.pts-earned-badge{font-size:11px;font-weight:900;padding:4px 10px;border-radius:20px;
+  background:var(--gl);color:var(--gd);border:1.5px solid var(--gm);margin-left:auto}
+.divlbl{font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+  margin:14px 0 7px;display:flex;align-items:center;gap:8px}
+.divlbl::after{content:'';flex:1;height:2px;background:linear-gradient(90deg,var(--border),transparent)}
+.must-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;
+  background:#FEF2F2;color:#B91C1C;border:1.5px solid #FCA5A5}
+
+/* FORMS */
+input[type=text],input[type=date],input[type=number],textarea,select{
+  font-family:'Nunito',sans-serif;font-size:12px;color:var(--ink);
+  border:2px solid var(--border);border-radius:var(--rads);padding:7px 10px;width:100%;
+  background:#FAFBFF;transition:all .15s;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--p);background:var(--white);box-shadow:0 0 0 3px var(--pl)}
+textarea{resize:vertical;min-height:52px;line-height:1.5}
+input[type=number]{-moz-appearance:textfield}
+.fl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+
+/* STARS */
+.stars{display:flex;gap:3px}
+.star{width:24px;height:24px;border-radius:6px;border:2px solid var(--border);background:#F9FAFB;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;
+  transition:all .1s}
+.star.on{background:var(--am);border-color:var(--a);transform:scale(1.1)}
+
+/* PILLS */
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+.pill{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:700;
+  border:2px solid var(--border);background:#F9FAFB;color:var(--muted);cursor:pointer;transition:all .15s}
+.pill:hover{transform:translateY(-1px)}
+.pp{background:var(--pl);border-color:var(--p);color:var(--pd)}
+.pt{background:var(--tl);border-color:var(--t);color:var(--td)}
+.pa{background:var(--al);border-color:var(--a);color:var(--ad)}
+.ppk{background:var(--pkl);border-color:var(--pk);color:var(--pkd)}
+.pg{background:var(--gl);border-color:var(--g);color:var(--gd)}
+.pr{background:var(--rl);border-color:var(--r);color:var(--rd)}
+.pb{background:var(--bl);border-color:var(--b);color:var(--bd)}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:8px 10px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;
+  text-align:left;border-bottom:2px solid var(--border);color:var(--muted)}
+td{padding:7px 10px;vertical-align:middle;border-bottom:1.5px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFBFF}
+
+/* REWARD CARDS */
+.rcard{border-radius:var(--rad);padding:14px;border:2.5px solid transparent;position:relative;
+  overflow:hidden;cursor:pointer;transition:all .2s;margin-bottom:10px}
+.rcard:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.rcard.unlocked{box-shadow:0 0 0 4px rgba(245,158,11,.35)}
+.rcard.locked{opacity:.75}
+.rc-icon{font-size:38px;margin-bottom:6px}
+.rc-pts{font-size:22px;font-weight:900;margin-bottom:3px}
+.rc-title{font-size:14px;font-weight:900;margin-bottom:5px}
+.rc-items{font-size:11px;line-height:1.7;opacity:.9}
+.rc-lock{position:absolute;top:10px;right:12px;font-size:22px}
+.rc-prog{height:8px;border-radius:4px;background:rgba(0,0,0,.12);margin-top:10px;overflow:hidden}
+.rc-fill{height:100%;border-radius:4px;transition:width .5s}
+
+/* SPEND */
+.scard{background:var(--white);border-radius:var(--rad);border:2px solid var(--border);
+  padding:14px;transition:all .2s}
+.scard:hover{transform:translateY(-2px);border-color:var(--a);box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.sc-icon{font-size:32px;margin-bottom:6px}
+.sc-cost{font-size:20px;font-weight:900;color:var(--a);margin-bottom:4px}
+.sc-title{font-size:13px;font-weight:800;margin-bottom:4px}
+.sc-desc{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.sc-btn{width:100%;padding:8px;border-radius:var(--rads);border:2px solid var(--a);
+  background:var(--al);color:var(--ad);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s}
+.sc-btn:hover{background:var(--a);color:#fff}
+.sc-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* PROGRESS */
+.prog{background:var(--border);border-radius:5px;height:10px;overflow:hidden;margin-top:6px}
+.prog-fill{height:100%;border-radius:5px;transition:width .4s}
+
+/* REFLECT */
+.rbox{border-radius:var(--rads);padding:10px 13px;margin-bottom:8px}
+.rlbl{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+
+/* SUMMARY GRID */
+.sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}
+.scard2{border-radius:var(--rads);padding:11px 8px;text-align:center;border:2px solid transparent}
+.snum{font-size:22px;font-weight:900}
+.slbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+
+/* PUZZLE / BRAIN */
+.puzzle-card{background:linear-gradient(135deg,#1E1B4B,#312E81);border-radius:var(--rad);
+  padding:18px;margin-bottom:12px;color:#fff}
+.puz-title{font-size:15px;font-weight:900;margin-bottom:4px}
+.puz-sub{font-size:12px;opacity:.75;margin-bottom:14px}
+.sudoku-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:1px;background:#4338CA;
+  border:3px solid #818CF8;border-radius:8px;overflow:hidden;max-width:340px;margin:0 auto 14px}
+.sc-cell{background:var(--white);display:flex;align-items:center;justify-content:center;
+  aspect-ratio:1;font-size:14px;font-weight:800;color:var(--ink);cursor:pointer;transition:background .1s;min-width:0}
+.sc-cell.given{background:#EEF2FF;color:#3730A3;cursor:default}
+.sc-cell.selected{background:#FEF9C3!important;color:#92400E}
+.sc-cell.correct{background:#ECFDF5;color:#065F46}
+.sc-cell.wrong{background:#FEF2F2;color:#B91C1C}
+.sc-cell.bb{border-right:2px solid #6366F1}
+.sc-cell.bt{border-bottom:2px solid #6366F1}
+.numpad{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.npbtn{width:38px;height:38px;border-radius:8px;background:#312E81;border:2px solid #818CF8;
+  color:#fff;font-size:15px;font-weight:800;cursor:pointer;transition:all .15s;font-family:'Nunito',sans-serif}
+.npbtn:hover{background:#4338CA;transform:scale(1.08)}
+.npbtn.erase{background:#7F1D1D;border-color:#FCA5A5}
+.logic-card{background:#fff;border-radius:var(--rads);border:2px solid var(--border);padding:14px;margin-bottom:10px}
+.logic-q{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:10px;line-height:1.6}
+.opt-btn{width:100%;padding:9px 14px;border-radius:var(--rads);border:2px solid var(--border);
+  background:#F9FAFB;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;text-align:left;margin-bottom:6px;transition:all .15s;color:var(--ink)}
+.opt-btn:hover{border-color:var(--pm);background:var(--pl)}
+.opt-btn.correct{background:var(--gl);border-color:var(--g);color:var(--gd)}
+.opt-btn.wrong{background:var(--rl);border-color:var(--r);color:var(--rd)}
+
+/* SHLOKA */
+.shloka-card{background:linear-gradient(135deg,#7C2D12,#9A3412);border-radius:var(--rad);
+  padding:16px 18px;color:#fff;margin-bottom:12px}
+.shloka-text{font-size:16px;font-weight:900;line-height:1.8;margin-bottom:8px;font-style:italic;text-shadow:0 1px 3px rgba(0,0,0,.3)}
+.shloka-meaning{font-size:12px;opacity:.9;line-height:1.7;margin-bottom:8px;background:rgba(255,255,255,.1);border-radius:8px;padding:10px 12px}
+.shloka-src{font-size:10px;opacity:.7;font-weight:700}
+
+/* CREATIVE */
+.creative-option{border:2.5px solid var(--border);border-radius:var(--rad);padding:14px;cursor:pointer;transition:all .2s}
+.creative-option:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.creative-option.chosen{border-color:var(--pk);background:var(--pkl)}
+.co-icon{font-size:30px;margin-bottom:6px}
+.co-title{font-size:13px;font-weight:900;margin-bottom:3px}
+.co-desc{font-size:11px;color:var(--muted);line-height:1.5}
+
+/* HISTORY */
+.day-item{background:var(--white);border-radius:var(--rads);border:2px solid var(--border);
+  padding:11px 14px;display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:8px;cursor:pointer;transition:all .15s;margin-bottom:7px}
+.day-item:hover{border-color:var(--p);background:var(--pl)}
+.di-pts{font-size:20px;font-weight:900;color:var(--a)}
+.hist-detail{background:var(--pl);border-radius:var(--rad);border:2px solid var(--pm);padding:15px;margin-bottom:12px}
+
+/* CHART */
+.chart-wrap{background:var(--white);border-radius:var(--rad);border:2px solid var(--border);padding:15px;margin-bottom:11px}
+.ct{font-size:13px;font-weight:800;margin-bottom:10px;color:var(--ink)}
+
+/* TOAST / POPUP */
+.toast{position:fixed;top:18px;right:18px;background:#1E1B4B;color:#fff;border-radius:var(--rads);
+  padding:12px 18px;font-size:13px;font-weight:700;z-index:9999;opacity:0;
+  transition:opacity .3s;pointer-events:none;max-width:290px;border:2px solid var(--pm)}
+.toast.show{opacity:1}
+.pop{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.65);z-index:9998;align-items:center;justify-content:center}
+.pop.show{display:flex}
+.pop-box{background:#fff;border-radius:20px;padding:28px 24px;text-align:center;max-width:380px;
+  width:92%;border:4px solid var(--gold);animation:popIn .3s ease}
+@keyframes popIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.pop-icon{font-size:56px;margin-bottom:10px}
+.pop-title{font-size:20px;font-weight:900;margin-bottom:6px;color:var(--ink)}
+.pop-msg{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px}
+.pop-close{padding:10px 28px;background:linear-gradient(135deg,var(--a),var(--o));color:#fff;
+  border:none;border-radius:30px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer}
+
+/* PIN MODAL */
+.pin-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.pin-overlay.show{display:flex}
+.pin-box{background:#fff;border-radius:24px;padding:32px 28px;max-width:340px;width:90%;
+  text-align:center;border:4px solid var(--gold);animation:popIn .3s ease}
+.pin-dots{display:flex;gap:12px;justify-content:center;margin:16px 0}
+.pin-dot{width:16px;height:16px;border-radius:50%;background:var(--border);transition:all .2s}
+.pin-dot.filled{background:var(--gold)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.pin-key{padding:16px;border-radius:12px;border:2px solid var(--border);background:#F9FAFB;
+  font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;cursor:pointer;transition:all .15s;color:var(--ink)}
+.pin-key:hover{background:var(--al);border-color:var(--a);transform:scale(1.05)}
+.pin-key:active{transform:scale(.93)}
+.pin-key.clr{background:var(--rl);border-color:var(--r);color:var(--rd)}
+.pin-key.ok{background:linear-gradient(135deg,var(--g),var(--gd));border:none;color:#fff}
+.pin-err{color:var(--r);font-size:12px;font-weight:800;min-height:18px;margin-bottom:8px}
+.approved-banner{background:linear-gradient(135deg,#047857,#10B981);color:#fff;border-radius:var(--rad);
+  padding:16px 20px;display:flex;align-items:center;gap:14px;margin-top:12px}
+
+/* PARENT APPROVAL BOX */
+.parent-approval-box{background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2.5px dashed var(--a);
+  border-radius:var(--rad);padding:20px;text-align:center;margin-top:12px}
+.approval-btn{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border:none;
+  border-radius:var(--rad);padding:14px 28px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;
+  cursor:pointer;width:100%;transition:all .2s;box-shadow:0 4px 14px rgba(245,158,11,.4)}
+.approval-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(245,158,11,.5)}
+
+/* BUTTONS */
+.btn{padding:10px 22px;border-radius:var(--rads);font-family:'Nunito',sans-serif;font-size:13px;
+  font-weight:800;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.btn-p{background:linear-gradient(135deg,var(--p),var(--pd));color:#fff}
+.btn-g{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff}
+.btn-a{background:linear-gradient(135deg,var(--a),var(--o));color:#fff}
+.btn-o{background:var(--white);color:var(--muted);border-color:var(--border)}
+.btn-o:hover{border-color:var(--p);color:var(--p)}
+.btn-row{display:flex;gap:9px;justify-content:center;margin-top:13px;flex-wrap:wrap}
+
+/* GRID HELPERS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mt6{margin-top:6px}.mt10{margin-top:10px}.mt14{margin-top:14px}
+
+/* HW ROW */
+.hw-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+.hw-label{font-size:12px;font-weight:800;padding:4px 10px;border-radius:8px;white-space:nowrap;flex-shrink:0}
+.pts-inline{font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;flex-shrink:0}
+
+/* SECTION POINTS DISPLAY */
+.sec-pts-row{display:flex;align-items:center;justify-content:space-between;
+  background:var(--gl);border-radius:var(--rads);padding:8px 14px;margin-top:10px}
+.sec-pts-label{font-size:11px;font-weight:800;color:var(--gd)}
+.sec-pts-val{font-size:20px;font-weight:900;color:var(--gd)}
+
+/* ODDA ASSIGNMENT */
+.odda-assign-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+@media(max-width:600px){
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .sum-grid{grid-template-columns:1fr 1fr}
+  .nav{gap:3px}.nb{padding:7px 10px;font-size:11px}
+}
+@media print{
+  .nav,.btn-row,.toast,.pop,.pin-overlay,.no-print{display:none!important}
+  body{background:#fff}
+  @page{margin:1.2cm}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- PIN MODAL -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-box">
+    <div style="font-size:48px;margin-bottom:6px">🔐</div>
+    <div style="font-size:20px;font-weight:900;color:var(--ink);margin-bottom:4px">Parent Approval</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Mamma or Papa — enter your 4-digit PIN to review Vaanya's report and award points!</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-err" id="pin-err"></div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key clr" onclick="pinClear()">⌫</button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <button class="pin-key ok" onclick="pinSubmit()">✓</button>
+    </div>
+    <button class="btn btn-o" style="width:100%" onclick="closePinModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- POPUP -->
+<div class="pop" id="pop">
+  <div class="pop-box">
+    <div class="pop-icon" id="pop-icon">⭐</div>
+    <div class="pop-title" id="pop-title">Amazing!</div>
+    <div class="pop-msg" id="pop-msg">You did something great!</div>
+    <button class="pop-close" onclick="closePop()">Awesome! ✨</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="av">V</div>
+  <div class="tb-info">
+    <div class="tb-title">Vaanya's Daily Star ⭐</div>
+    <div class="tb-sub">Class 6 · DPS Noida · CBSE 2026–27</div>
+    <div class="xp-wrap"><div class="xp-fill" id="xp-bar" style="width:0%"></div></div>
+    <div style="font-size:9px;opacity:.7;margin-top:2px" id="xp-lbl">0 / 300 pts</div>
+  </div>
+  <div class="tb-pts">
+    <div class="pts-chip"><div class="pts-chip-num" id="day-pts-live">0</div><div class="pts-chip-lbl">Today's pts</div></div>
+    <div class="pts-chip"><div class="pts-chip-num" id="total-pts-top">0</div><div class="pts-chip-lbl">Total bank</div></div>
+    <div class="pts-chip"><div class="pts-chip-num" id="streak-top">0🔥</div><div class="pts-chip-lbl">Streak</div></div>
+    <div class="date-pill" id="today-pill"></div>
+  </div>
+</div>
+
+<!-- PENALTY BAR -->
+<div class="penalty-bar" id="pen-bar">⚠️ <span id="pen-msg"></span></div>
+
+<!-- TABS -->
+<div class="nav">
+  <button class="nb t0 active" onclick="showTab('report',this)">📝 Daily Report</button>
+  <button class="nb t1" onclick="showTab('rewards',this)">🎁 Rewards</button>
+  <button class="nb t2" onclick="showTab('spend',this)">🛒 Spend</button>
+  <button class="nb t3" onclick="showTab('brain',this)">🧠 Brain Lab</button>
+  <button class="nb t4" onclick="showTab('soul',this)">🕉️ Geeta & Creative</button>
+  <button class="nb t5" onclick="showTab('history',this)">📅 History</button>
+  <button class="nb t6" onclick="showTab('graphs',this)">📈 Progress</button>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB: DAILY REPORT
+═══════════════════════════════════════ -->
+<div class="tab active" id="tab-report">
+
+<!-- DAY OVERVIEW — mood removed, kept date + timetable + school -->
+<div class="divlbl">Day overview</div>
+<div class="sec" style="border-color:var(--pm);background:linear-gradient(135deg,#FAFAFF,var(--pl))">
+  <div class="sh"><div class="si" style="background:var(--pl);color:var(--p)">📅</div>Today's overview</div>
+  <div class="g3">
+    <div>
+      <div class="fl">Date</div>
+      <input type="date" id="rpt-date" onchange="checkPenalty();calcDayPts()">
+    </div>
+    <div>
+      <div class="fl">Timetable followed? <span style="color:var(--a)">(up to +25 pts)</span></div>
+      <select id="rpt-tt" onchange="calcDayPts()">
+        <option value="0">Select...</option>
+        <option value="25">✅ Fully followed! (+25)</option>
+        <option value="15">🟡 Mostly (+15)</option>
+        <option value="5">🔶 A bit (+5)</option>
+        <option value="0">❌ Not followed (+0)</option>
+      </select>
+    </div>
+    <div>
+      <div class="fl">School attended? <span style="color:var(--a)">(+10 pts)</span></div>
+      <select id="rpt-school" onchange="calcDayPts()">
+        <option value="0">Select...</option>
+        <option value="10">Yes, full day (+10)</option>
+        <option value="5">Partial day (+5)</option>
+        <option value="0">Holiday / absent</option>
+      </select>
+    </div>
+  </div>
+  <!-- Live points from overview -->
+  <div class="sec-pts-row" id="overview-pts-row">
+    <span class="sec-pts-label">⭐ Day overview points earned</span>
+    <span class="sec-pts-val" id="overview-pts">0 pts</span>
+  </div>
+</div>
+
+<!-- TESTS & ASSESSMENTS -->
+<div id="monday-test-sec">
+  <div class="divlbl">Tests & assessments</div>
+  <div class="sec" style="border-color:var(--pkm)">
+    <div class="sh">
+      <div class="si" style="background:var(--pkl);color:var(--pk)">📝</div>
+      Test / Assessment
+      <span class="ptag">Up to 80 pts based on %</span>
+    </div>
+    <div class="g3">
+      <div>
+        <div class="fl">Subject tested today</div>
+        <input type="text" id="test-subj" placeholder="e.g. Maths, English...">
+        <div class="fl mt10">Marks got / Total marks</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <input type="number" id="test-got" min="0" max="200" placeholder="Got" oninput="calcScore()" style="text-align:center;font-size:16px;font-weight:900">
+          <span style="font-size:18px;font-weight:900;color:var(--muted)">/</span>
+          <input type="number" id="test-tot" min="1" max="200" placeholder="Total" oninput="calcScore()" style="text-align:center;font-size:16px;font-weight:900">
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+        <div style="font-size:42px;font-weight:900;color:var(--pk)" id="test-pct">–</div>
+        <div id="test-grade" style="text-align:center"></div>
+      </div>
+      <div>
+        <div style="background:var(--gl);border-radius:var(--rads);padding:12px;text-align:center;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:800;color:var(--gd);margin-bottom:4px">POINTS AWARDED</div>
+          <div style="font-size:28px;font-weight:900;color:var(--gd)" id="test-pts-display">0 pts</div>
+          <div style="font-size:10px;color:var(--gd);margin-top:3px">90%+=80 · 75%+=60 · 60%+=40 · else+20</div>
+        </div>
+        <div class="fl">Topics to revise</div>
+        <textarea id="test-revise" placeholder="e.g. LCM chapter..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOMEWORK & SUBJECTS STUDIED -->
+<div class="divlbl">Homework & subjects studied</div>
+<div class="sec" style="border-color:var(--gm)">
+  <div class="sh">
+    <div class="si" style="background:var(--gl);color:var(--g)">📚</div>
+    Homework & subjects studied today
+    <span class="ptag">15 pts per HW done ✓</span>
+  </div>
+  <!-- HW list built by JS — checkbox + subject name + pts + study notes box -->
+  <div id="hw-list"></div>
+  <div style="margin-top:8px">
+    <div class="prog"><div class="prog-fill" id="hw-prog" style="width:0%;background:linear-gradient(90deg,var(--g),var(--t))"></div></div>
+    <div style="font-size:11px;color:var(--muted);text-align:right;margin-top:4px" id="hw-pct">0% (0/7)</div>
+  </div>
+  <div class="sec-pts-row" id="hw-pts-row">
+    <span class="sec-pts-label">📚 HW points earned today</span>
+    <span class="sec-pts-val" id="hw-pts-display">0 pts</span>
+  </div>
+</div>
+
+<!-- ODDA ONLINE CLASS -->
+<div class="divlbl">Odda online class · 7–8 pm</div>
+<div class="sec" style="border-color:var(--pm)">
+  <div class="sh">
+    <div class="si" style="background:var(--pl);color:var(--p)">💻</div>
+    Odda class today
+    <span class="must-badge">Mandatory — −15 pts if missed!</span>
+    <span class="ptag">15 pts attended</span>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="fl">Did I attend today?</div>
+      <div class="pills" id="odda-att">
+        <div class="pill" onclick="toggleEx(this,'odda-att','pg');calcDayPts()">✅ Yes! (+15)</div>
+        <div class="pill" onclick="toggleEx(this,'odda-att','pr');calcDayPts()">❌ Missed (−15)</div>
+      </div>
+      <div class="fl mt10">Subject covered</div>
+      <input type="text" id="odda-subj" placeholder="e.g. Maths — fractions, decimals">
+      <!-- Assignment instead of question -->
+      <div class="fl mt10">Odda assignment completed?</div>
+      <div class="pills" id="odda-assign">
+        <div class="pill" onclick="toggleEx(this,'odda-assign','pg');showOddaAssign(true);calcDayPts()">✅ Yes, completed!</div>
+        <div class="pill" onclick="toggleEx(this,'odda-assign','pa');showOddaAssign(false);calcDayPts()">🟡 Partially</div>
+        <div class="pill" onclick="toggleEx(this,'odda-assign','pr');showOddaAssign(false);calcDayPts()">❌ Not done</div>
+      </div>
+      <div id="odda-assign-detail" style="display:none;margin-top:8px">
+        <div class="fl">Correct answers / Total questions</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <input type="number" id="odda-correct" min="0" max="100" placeholder="Correct" oninput="calcOddaAssign()" style="text-align:center;font-size:15px;font-weight:800">
+          <span style="font-size:16px;font-weight:900;color:var(--muted)">/</span>
+          <input type="number" id="odda-total-q" min="1" max="100" placeholder="Total" oninput="calcOddaAssign()" style="text-align:center;font-size:15px;font-weight:800">
+        </div>
+        <div id="odda-assign-result" style="margin-top:6px;font-size:13px;font-weight:800"></div>
+      </div>
+    </div>
+    <div>
+      <div class="fl">How well did I understand?</div>
+      <div class="stars mt6" id="odda-stars"></div>
+      <div class="fl mt10">What I learnt</div>
+      <textarea id="odda-notes" placeholder="Key concepts from today's Odda class..."></textarea>
+      <div class="fl mt10">Topic to revise</div>
+      <input type="text" id="odda-rev" placeholder="e.g. HCF problems, algebra basics">
+    </div>
+  </div>
+  <div class="sec-pts-row" id="odda-pts-row">
+    <span class="sec-pts-label">💻 Odda points earned today</span>
+    <span class="sec-pts-val" id="odda-pts-display">0 pts</span>
+  </div>
+</div>
+
+<!-- PHYSICAL ACTIVITY -->
+<div class="divlbl">Physical activity</div>
+<div class="sec" style="border-color:var(--am)">
+  <div class="sh">
+    <div class="si" style="background:var(--al);color:var(--a)">🤸</div>
+    Gymnastics & exercise
+    <span class="ptag">20 pts gym · 10 pts exercise</span>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="fl">Activity today?</div>
+      <div class="pills" id="gym-today">
+        <div class="pill" onclick="toggleEx(this,'gym-today','pa');calcDayPts()">🤸 Gym class! (+20)</div>
+        <div class="pill" onclick="toggleEx(this,'gym-today','pb');calcDayPts()">🏃 Exercise (+10)</div>
+        <div class="pill" onclick="toggleEx(this,'gym-today','pt');calcDayPts()">🚴 Outdoor play (+10)</div>
+        <div class="pill" onclick="toggleEx(this,'gym-today','pr');calcDayPts()">💤 Rest day</div>
+      </div>
+      <div class="fl mt10">Duration</div>
+      <input type="text" id="gym-dur" placeholder="e.g. 1.5 hrs, 45 mins">
+    </div>
+    <div>
+      <div class="fl">What I practised today</div>
+      <textarea id="gym-notes" placeholder="Skills, drills, what coach said..."></textarea>
+      <div class="fl mt10">Energy level ⭐</div>
+      <div class="stars mt6" id="gym-stars"></div>
+    </div>
+  </div>
+  <div class="sec-pts-row" id="gym-pts-row">
+    <span class="sec-pts-label">🤸 Activity points earned today</span>
+    <span class="sec-pts-val" id="gym-pts-display">0 pts</span>
+  </div>
+</div>
+
+<!-- SCREEN TIME -->
+<div class="divlbl">Screen time & free time</div>
+<div class="sec" style="border-color:var(--pkm)">
+  <div class="sh">
+    <div class="si" style="background:var(--pkl);color:var(--pk)">📺</div>
+    Screen & free time balance
+    <span class="ptag">20 pts within limits</span>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="fl">Screen within allowed window?</div>
+      <div class="pills" id="screen-check">
+        <div class="pill" onclick="toggleEx(this,'screen-check','pg');calcDayPts()">✅ Within limits! (+20)</div>
+        <div class="pill" onclick="toggleEx(this,'screen-check','pa');calcDayPts()">🟡 A little over (+10)</div>
+        <div class="pill" onclick="toggleEx(this,'screen-check','pr');calcDayPts()">❌ Went over (+0)</div>
+      </div>
+      <div class="fl mt10">What I watched / played</div>
+      <input type="text" id="screen-what" placeholder="Show/YouTube/game name">
+      <div class="fl mt10">Total screen time today</div>
+      <input type="text" id="screen-time" placeholder="e.g. 1 hr 30 mins">
+    </div>
+    <div>
+      <div class="fl">Skill builder activity today</div>
+      <input type="text" id="skill-act" placeholder="e.g. Drawing, origami, puzzle, Rubik's cube">
+      <div class="fl mt10">Reading today</div>
+      <input type="text" id="book-read" placeholder="Book + pages e.g. Wimpy Kid p.40–55">
+      <div class="fl mt10">Free time activity</div>
+      <input type="text" id="free-act" placeholder="e.g. Played with friends, cycling...">
+    </div>
+  </div>
+  <div class="sec-pts-row" id="screen-pts-row">
+    <span class="sec-pts-label">📺 Screen time points earned</span>
+    <span class="sec-pts-val" id="screen-pts-display">0 pts</span>
+  </div>
+</div>
+
+<!-- REFLECTION -->
+<div class="divlbl">My reflection for today</div>
+<div class="sec">
+  <div class="sh">
+    <div class="si" style="background:var(--pl);color:var(--p)">💭</div>
+    Vaanya's daily reflection
+    <span class="must-badge">Mandatory — −10 pts if all 3 empty!</span>
+    <span class="ptag">20 pts for all 3 filled</span>
+  </div>
+  <div class="rbox" style="background:var(--pl);border-left:4px solid var(--p)">
+    <div class="rlbl" style="color:var(--pd)">⭐ Best thing I did today...</div>
+    <textarea id="r1" placeholder="One win — big or small!" style="background:transparent;border:none;padding:0" oninput="calcDayPts()"></textarea>
+  </div>
+  <div class="rbox" style="background:var(--al);border-left:4px solid var(--a)">
+    <div class="rlbl" style="color:var(--ad)">🔧 One thing I want to improve...</div>
+    <textarea id="r2" placeholder="Honest self-reflection." style="background:transparent;border:none;padding:0" oninput="calcDayPts()"></textarea>
+  </div>
+  <div class="rbox" style="background:var(--gl);border-left:4px solid var(--g)">
+    <div class="rlbl" style="color:var(--gd)">🎯 Tomorrow I will...</div>
+    <textarea id="r3" placeholder="One clear plan for tomorrow." style="background:transparent;border:none;padding:0" oninput="calcDayPts()"></textarea>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="sec">
+  <div style="font-size:14px;font-weight:900;margin-bottom:12px">📊 Today's Summary</div>
+  <!-- Points breakdown by category -->
+  <div id="pts-breakdown" style="margin-bottom:14px"></div>
+  <div class="sum-grid">
+    <div class="scard2" style="background:var(--pl);border-color:var(--pm)">
+      <div class="snum" style="color:var(--p)" id="sc-hw">–</div>
+      <div class="slbl" style="color:var(--pd)">HW done</div>
+    </div>
+    <div class="scard2" style="background:var(--al);border-color:var(--am)">
+      <div class="snum" style="color:var(--a)" id="sc-phys">–</div>
+      <div class="slbl" style="color:var(--ad)">Activity</div>
+    </div>
+    <div class="scard2" style="background:var(--gl);border-color:var(--gm)">
+      <div class="snum" style="color:var(--g)" id="sc-odda">–</div>
+      <div class="slbl" style="color:var(--gd)">Odda</div>
+    </div>
+    <div class="scard2" style="background:var(--al);border-color:var(--am)">
+      <div class="snum" style="color:var(--gold)" id="sc-pts">0</div>
+      <div class="slbl" style="color:var(--ad)">⭐ Points today</div>
+    </div>
+  </div>
+
+  <!-- PARENT APPROVAL SECTION -->
+  <div id="approval-section">
+    <div class="parent-approval-box">
+      <div style="font-size:36px;margin-bottom:8px">👩‍👧</div>
+      <div style="font-size:16px;font-weight:900;color:var(--ad);margin-bottom:6px">Submit to Parent for Approval</div>
+      <div style="font-size:12px;color:var(--ad);margin-bottom:14px;line-height:1.6">
+        Vaanya, show this to Mamma or Papa!<br>They will review and award your points 🌟
+      </div>
+      <div class="fl" style="text-align:left;margin-bottom:4px">Mamma / Papa comments <span style="color:var(--a)">(+25 pts)</span></div>
+      <textarea id="parent-comment" placeholder="Proud of you for... / Tomorrow focus on... / Great job with..." oninput="calcDayPts()" style="margin-bottom:14px"></textarea>
+      <button class="approval-btn" onclick="openPinModal()">
+        🔐 Parent Approval — Enter PIN to Award Points
+      </button>
+      <div style="font-size:10px;color:var(--ad);margin-top:8px;opacity:.7">PIN is set by parents in the Admin Portal</div>
+    </div>
+  </div>
+
+  <div id="approved-section" style="display:none">
+    <div class="approved-banner">
+      <div style="font-size:44px">✅</div>
+      <div>
+        <div style="font-size:16px;font-weight:900">Approved by Parent!</div>
+        <div style="font-size:13px;opacity:.9" id="approved-msg">Points awarded!</div>
+        <div style="font-size:11px;opacity:.7;margin-top:3px" id="approved-time"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="btn btn-o" onclick="clearDay()">🗑️ Clear today</button>
+  <button class="btn btn-g" onclick="saveDay()">💾 Save report</button>
+  <button class="btn btn-p" onclick="window.print()">🖨️ Print</button>
+</div>
+</div><!-- end tab-report -->
+
+<!-- ═══════════════════════════════════════
+     TAB: REWARDS
+═══════════════════════════════════════ -->
+<div class="tab" id="tab-rewards">
+<div class="topbar" style="margin-bottom:12px">
+  <div style="font-size:28px">🏆</div>
+  <div class="tb-info">
+    <div class="tb-title" id="rwd-total-pts">0 points in bank</div>
+    <div class="tb-sub">Earn more every day · Spend wisely · Save for big prizes!</div>
+  </div>
+  <div class="tb-pts">
+    <div class="pts-chip"><div class="pts-chip-num" id="rwd-avail">0</div><div class="pts-chip-lbl">Available</div></div>
+    <div class="pts-chip"><div class="pts-chip-num" id="rwd-days">0</div><div class="pts-chip-lbl">Days saved</div></div>
+    <div class="pts-chip"><div class="pts-chip-num" id="rwd-streak">0🔥</div><div class="pts-chip-lbl">Streak</div></div>
+  </div>
+</div>
+<div id="reward-grid" class="g3"></div>
+<div class="sec mt14">
+  <div class="sh"><div class="si" style="background:var(--al);color:var(--a)">📋</div>Points earning guide — every day</div>
+  <table><thead><tr><th>Activity</th><th>Points</th><th>Note</th></tr></thead>
+  <tbody id="earn-guide"></tbody></table>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB: SPEND
+═══════════════════════════════════════ -->
+<div class="tab" id="tab-spend">
+<div class="topbar" style="margin-bottom:12px">
+  <div style="font-size:28px">🛒</div>
+  <div class="tb-info"><div class="tb-title">Spend your points!</div>
+    <div class="tb-sub">Use points for daily treats — save up for big rewards!</div></div>
+  <div class="pts-chip"><div class="pts-chip-num" id="spend-avail">0</div><div class="pts-chip-lbl">Available pts</div></div>
+</div>
+<div id="spend-grid" class="g2" style="margin-bottom:12px"></div>
+<div class="sec">
+  <div class="sh"><div class="si" style="background:var(--al);color:var(--a)">📜</div>Spending history</div>
+  <div id="spend-hist-list"></div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB: BRAIN LAB
+═══════════════════════════════════════ -->
+<div class="tab" id="tab-brain">
+<div class="puzzle-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+    <div>
+      <div class="puz-title">🧠 Brain Lab — Daily Puzzles</div>
+      <div class="puz-sub">Solve puzzles to earn bonus points!
+        <span class="must-badge" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.3)">Mandatory — −15 pts if skipped!</span>
+      </div>
+    </div>
+    <div class="pts-chip" style="background:rgba(255,255,255,.15)">
+      <div class="pts-chip-num" id="brain-pts-disp">0</div><div class="pts-chip-lbl">Brain pts today</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap" id="puzzle-tabs">
+    <button class="btn btn-p" style="font-size:12px;padding:7px 14px" onclick="showPuzzle('sudoku',this)">🔢 Sudoku</button>
+    <button class="btn btn-o" style="font-size:12px;padding:7px 14px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff" onclick="showPuzzle('logic',this)">🧩 Logic</button>
+    <button class="btn btn-o" style="font-size:12px;padding:7px 14px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff" onclick="showPuzzle('riddle',this)">🎭 Riddles</button>
+  </div>
+</div>
+
+<div id="puzzle-sudoku">
+  <div class="sec">
+    <div class="sh"><div class="si" style="background:var(--bl);color:var(--b)">🔢</div>Daily Sudoku <span class="ptag">30 pts for completing!</span></div>
+    <div style="text-align:center;margin-bottom:10px">
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-p" style="font-size:12px;padding:6px 14px" onclick="genSudoku('easy')">Easy</button>
+        <button class="btn btn-a" style="font-size:12px;padding:6px 14px" onclick="genSudoku('medium')">Medium (+5 bonus)</button>
+        <button class="btn" style="font-size:12px;padding:6px 14px;background:linear-gradient(135deg,#DC2626,#9B1C1C);color:#fff;border:none" onclick="genSudoku('hard')">Hard (+10 bonus)</button>
+        <button class="btn btn-o" style="font-size:12px;padding:6px 14px" onclick="checkSudoku()">✅ Check</button>
+        <button class="btn btn-o" style="font-size:12px;padding:6px 14px" onclick="revealSudokuHint()">💡 Hint (−5)</button>
+      </div>
+      <div id="sudoku-grid" class="sudoku-grid"></div>
+      <div class="numpad" id="numpad"></div>
+      <div style="margin-top:10px;font-size:13px;font-weight:700" id="sudoku-msg"></div>
+    </div>
+  </div>
+</div>
+
+<div id="puzzle-logic" style="display:none">
+  <div class="sec">
+    <div class="sh"><div class="si" style="background:var(--tl);color:var(--t)">🧩</div>Logic Puzzles <span class="ptag">15 pts per correct answer</span></div>
+    <div id="logic-puzzles"></div>
+    <div class="btn-row"><button class="btn btn-p" onclick="genLogicPuzzles()">🔄 New Puzzles</button></div>
+  </div>
+</div>
+
+<div id="puzzle-riddle" style="display:none">
+  <div class="sec">
+    <div class="sh"><div class="si" style="background:var(--pkl);color:var(--pk)">🎭</div>Riddles <span class="ptag">10 pts per correct answer</span></div>
+    <div id="riddle-section"></div>
+    <div class="btn-row"><button class="btn" style="background:linear-gradient(135deg,var(--pk),var(--pkd));color:#fff;border:none;padding:10px 22px;border-radius:var(--rads);font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer" onclick="genRiddles()">🔄 New Riddles</button></div>
+  </div>
+</div>
+
+<div class="sec mt10">
+  <div class="sh"><div class="si" style="background:var(--gl);color:var(--g)">✅</div>Brain Lab completed today?</div>
+  <div class="pills" id="brain-done">
+    <div class="pill" onclick="toggleEx(this,'brain-done','pg');calcDayPts()">✅ Yes, all done! (+brain pts)</div>
+    <div class="pill" onclick="toggleEx(this,'brain-done','pa');calcDayPts()">🟡 Partially done</div>
+    <div class="pill" onclick="toggleEx(this,'brain-done','pr');calcDayPts()">❌ Skipped (−15 pts tomorrow!)</div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB: GEETA & CREATIVE
+═══════════════════════════════════════ -->
+<div class="tab" id="tab-soul">
+<div style="background:linear-gradient(135deg,#7C2D12,#9A3412,#C2410C);border-radius:var(--rad);padding:16px 18px;color:#fff;margin-bottom:12px">
+  <div style="font-size:18px;font-weight:900;margin-bottom:3px">🕉️ Geeta Shloka & Creative Corner</div>
+  <div style="font-size:12px;opacity:.8">Nourish your mind and soul every day ·
+    <span style="background:rgba(255,255,255,.2);padding:2px 8px;border-radius:10px;font-weight:700">Mandatory — −20 pts if skipped!</span>
+  </div>
+</div>
+
+<div class="sec" style="border-color:#FED7AA">
+  <div class="sh">
+    <div class="si" style="background:var(--ol);color:var(--o)">📖</div>
+    Today's Geeta Shloka
+    <span class="must-badge">Must do daily!</span>
+    <span class="ptag">25 pts for completing</span>
+  </div>
+  <div id="shloka-display"></div>
+  <div class="g3 mt10">
+    <div>
+      <div class="fl">Did I write this shloka today?</div>
+      <div class="pills" id="shloka-done">
+        <div class="pill" onclick="toggleEx(this,'shloka-done','pg');calcDayPts()">✅ Yes! Written (+25)</div>
+        <div class="pill" onclick="toggleEx(this,'shloka-done','pr');calcDayPts()">❌ Not done</div>
+      </div>
+    </div>
+    <div>
+      <div class="fl">Do I understand the meaning?</div>
+      <div class="pills" id="shloka-understood">
+        <div class="pill" onclick="toggleEx(this,'shloka-understood','pg')">Yes, fully!</div>
+        <div class="pill" onclick="toggleEx(this,'shloka-understood','pa')">Somewhat</div>
+        <div class="pill" onclick="toggleEx(this,'shloka-understood','pr')">Need help</div>
+      </div>
+    </div>
+    <div>
+      <div class="fl">What this shloka means to me</div>
+      <textarea id="shloka-reflect" placeholder="Write in your own words..."></textarea>
+    </div>
+  </div>
+  <div style="margin-top:10px">
+    <div class="fl">Write the shloka here (practice)</div>
+    <textarea id="shloka-write" placeholder="Type it out here as practice, then write it in your notebook..."></textarea>
+  </div>
+  <div style="text-align:center;margin-top:8px">
+    <button class="btn btn-a" onclick="nextShloka()" style="font-size:12px;padding:8px 16px">🔄 Next Shloka</button>
+  </div>
+</div>
+
+<div class="sec" style="border-color:var(--pkm)">
+  <div class="sh">
+    <div class="si" style="background:var(--pkl);color:var(--pk)">🎨</div>
+    Creative Activity Corner
+    <span class="must-badge">Must do daily!</span>
+    <span class="ptag">20 pts for completing</span>
+  </div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Choose ONE creative activity for today. Do it on paper, then record it here.</div>
+  <div class="g3" id="creative-options"></div>
+  <div class="mt10" id="creative-detail" style="display:none">
+    <div class="fl">Tell me about what I created / wrote today</div>
+    <textarea id="creative-desc" placeholder="Describe your drawing / poem / creative work..."></textarea>
+    <div class="fl mt10">How happy am I with today's creative work?</div>
+    <div class="stars mt6" id="creative-stars"></div>
+    <div class="fl mt10">Completed today?</div>
+    <div class="pills" id="creative-done">
+      <div class="pill" onclick="toggleEx(this,'creative-done','pg');calcDayPts()">✅ Yes! (+20)</div>
+      <div class="pill" onclick="toggleEx(this,'creative-done','pa');calcDayPts()">🟡 Half done (+10)</div>
+      <div class="pill" onclick="toggleEx(this,'creative-done','pr');calcDayPts()">❌ Not done</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB: HISTORY
+═══════════════════════════════════════ -->
+<div class="tab" id="tab-history">
+<div style="font-size:20px;font-weight:900;margin-bottom:5px">📅 My Daily History</div>
+<div style="font-size:12px;color:var(--muted);margin-bottom:12px">Every saved day is stored here. Tap a day to see full details!</div>
+<div id="hist-detail-box"></div>
+<div id="day-list"></div>
+<div id="no-hist" style="text-align:center;padding:40px;color:var(--muted);font-size:14px">No days saved yet — fill your first report and hit Save!</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB: PROGRESS / GRAPHS
+═══════════════════════════════════════ -->
+<div class="tab" id="tab-graphs">
+<div style="font-size:20px;font-weight:900;margin-bottom:5px">📈 My Progress</div>
+<div style="font-size:12px;color:var(--muted);margin-bottom:12px">Save at least 3 days to see your charts grow!</div>
+<div id="perf-card" class="sec" style="margin-bottom:12px"></div>
+<div class="chart-wrap"><div class="ct">⭐ Daily points earned</div><canvas id="ch-pts" height="85"></canvas></div>
+<div class="chart-wrap"><div class="ct">📚 Homework completion %</div><canvas id="ch-hw" height="85"></canvas></div>
+<div class="chart-wrap"><div class="ct">💻 Odda class attendance</div><canvas id="ch-odda" height="85"></canvas></div>
+<div class="chart-wrap"><div class="ct">🧠 Brain Lab + 🎨 Creative + 🕉️ Shloka done?</div><canvas id="ch-mandatory" height="85"></canvas></div>
+</div>
+
+</div><!-- .page -->
+
+<script>
+'use strict';
+// ════════════════════════════════════════════
+// DATA CONSTANTS
+// ════════════════════════════════════════════
+const SUBJECTS=['Maths','English','Hindi','Science','Social Science','Sanskrit','Computer Sc.'];
+const SCOL=['#8B5CF6','#3B82F6','#EC4899','#10B981','#F97316','#D97706','#06B6D4'];
+
+const REWARDS=[
+  {pts:200,icon:'🎬',title:'1 extra movie at home',col:'#3B82F6',light:'#EFF6FF',items:['Family movie of your choice','Popcorn & snacks!','Any day, any time!']},
+  {pts:400,icon:'🍕',title:'Pick family dinner',col:'#F97316',light:'#FFF7ED',items:["You choose tonight's menu","Mamma/Papa cooks your favourite!",'Full veto power!']},
+  {pts:600,icon:'📚',title:'New comic book',col:'#10B981',light:'#ECFDF5',items:['Any comic or storybook','From your favourite series!','Visit bookstore together!']},
+  {pts:900,icon:'🎮',title:'New board game / toy',col:'#8B5CF6',light:'#F3EFFE',items:['Any game up to ₹500','Shop together with Mamma','Your pick!']},
+  {pts:1200,icon:'🎬',title:'Cinema outing!',col:'#D97706',light:'#FFFBEB',items:['Movie at the theatre!','Popcorn + cold drink','You pick the film!','Dinner after!']},
+  {pts:1600,icon:'🎁',title:'Mystery surprise gift!',col:'#EC4899',light:'#FDF2F8',items:['A wrapped mystery gift!','Mamma & Papa choose!','Could be anything amazing!']},
+  {pts:2200,icon:'🎡',title:'Theme park day!',col:'#6D28D9',light:'#EDE9FE',items:['Full day at a theme park!','All rides!','Family trip!']},
+  {pts:3000,icon:'✈️',title:'Weekend trip!',col:'#DC2626',light:'#FEF2F2',items:['Family weekend getaway!','Hotel stay!','You pick destination!']},
+];
+
+const SPEND_ITEMS=[
+  {id:'tv30',icon:'📺',title:'Extra 30 min TV/YouTube',cost:40,desc:'Watch 30 extra minutes beyond your daily window today.',col:'#3B82F6'},
+  {id:'tv60',icon:'📺✨',title:'Extra 1 hour screen time',cost:75,desc:'A full extra hour of screen time today.',col:'#8B5CF6'},
+  {id:'play45',icon:'🏃',title:'Extra 45 min outdoor play',cost:35,desc:'Extra playtime at the park, cycling or with friends.',col:'#10B981'},
+  {id:'sleep30',icon:'🌙',title:'Sleep 30 min later',cost:50,desc:'Stay up 30 extra minutes tonight. Weekends only!',col:'#EC4899'},
+  {id:'dinner',icon:'🍽️',title:"Pick tonight's dinner",cost:60,desc:'You choose what the family eats for dinner tonight!',col:'#F97316'},
+  {id:'skip-reading',icon:'📖',title:'Skip bedtime reading',cost:55,desc:'No reading tonight. Use wisely — books make you smarter!',col:'#D97706'},
+  {id:'snack',icon:'🍦',title:'Special snack of choice',cost:30,desc:'Any snack you want from the kitchen today!',col:'#06B6D4'},
+  {id:'movie',icon:'🎬',title:'Movie at home — right now!',cost:120,desc:'Watch a full movie anytime today with family permission.',col:'#4338CA'},
+];
+
+const EARN_GUIDE=[
+  ['Timetable followed fully','25 pts','Select "Fully followed"'],
+  ['Timetable followed mostly','15 pts','Select "Mostly"'],
+  ['School attended','10 pts','Full day attendance'],
+  ['Test — 90%+','80 pts','Enter test marks'],
+  ['Test — 75–89%','60 pts','Enter test marks'],
+  ['Test — 60–74%','40 pts','Enter test marks'],
+  ['Test — attempted','20 pts','Enter any score'],
+  ['Each homework done','15 pts','7 subjects × 15 = 105 max'],
+  ['Odda class attended','15 pts','Daily mandatory'],
+  ['Odda assignment done','up to 20 pts','Based on accuracy %'],
+  ['Gymnastics session','20 pts','Per gym class'],
+  ['Exercise / Outdoor','10 pts','Per activity day'],
+  ['Screen time within limits','20 pts','Daily reward'],
+  ['Daily reflection (all 3)','20 pts','Mandatory'],
+  ['Parent comment filled','25 pts','After PIN approval'],
+  ['Geeta Shloka — written','25 pts','MANDATORY −20 if skipped'],
+  ['Creative activity done','20 pts','MANDATORY −20 if skipped'],
+  ['Brain Lab completed','30 pts','MANDATORY −15 if skipped'],
+  ['Sudoku correct','30 pts','+ difficulty bonus'],
+  ['Logic puzzle correct','15 pts','Per puzzle'],
+  ['Riddle correct','10 pts','Per riddle'],
+  ['5-day streak bonus','50 pts','Consecutive days saved!'],
+  ['10-day streak bonus','120 pts','Keep the streak alive!'],
+];
+
+const SHLOKAS=[
+  {text:'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन ।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि ॥',
+   meaning:'You have the right to perform your duties, but not to the fruits of your actions. Do every action fully — let go of worrying about the result.',
+   chapter:'Chapter 2, Verse 47',transliteration:'Karmanyeva adhikaras te, ma phaleshu kadachan...'},
+  {text:'योगः कर्मसु कौशलम् ।',
+   meaning:'Yoga (excellence) is skill in performing actions. Do every task with your full skill and attention — that is yoga in daily life.',
+   chapter:'Chapter 2, Verse 50',transliteration:'Yogah karmasu kaushalam'},
+  {text:'श्रद्धावान् लभते ज्ञानम् ।',
+   meaning:'One who has faith and devotion gains knowledge. Believe in yourself and your efforts — knowledge comes to those who trust the process.',
+   chapter:'Chapter 4, Verse 39',transliteration:'Shraddhaavan labhate jnaanam'},
+  {text:'उद्धरेदात्मनाऽऽत्मानं नात्मानमवसादयेत् ।',
+   meaning:'Lift yourself up by your own efforts — do not let yourself fall. You are your own best friend — believe in yourself!',
+   chapter:'Chapter 6, Verse 5',transliteration:'Uddhareda atmana atmanam...'},
+  {text:'युक्ताहारविहारस्य युक्तचेष्टस्य कर्मसु ।\nयुक्तस्वप्नावबोधस्य योगो भवति दुःखहा ॥',
+   meaning:'For one who eats, plays, works and sleeps in balance — yoga (inner peace) destroys all sorrow. Balance in everything is the key to a happy life.',
+   chapter:'Chapter 6, Verse 17',transliteration:'Yukta ahara viharasya...'},
+  {text:'नैनं छिन्दन्ति शस्त्राणि नैनं दहति पावकः ।',
+   meaning:'The soul cannot be cut by weapons, nor burned by fire. Your true self — your inner strength — can never be destroyed. Be fearless!',
+   chapter:'Chapter 2, Verse 23',transliteration:'Nainam chindanti shastrani...'},
+  {text:'सर्वधर्मान्परित्यज्य मामेकं शरणं व्रज ।',
+   meaning:'Leave all other worries aside and focus on Me alone. Give your full heart to your most important duties — studies, health, family.',
+   chapter:'Chapter 18, Verse 66',transliteration:'Sarva dharman parityajya, mam ekam sharanam vraja'},
+];
+
+const CREATIVE_OPTIONS=[
+  {id:'draw',icon:'🎨',title:'Drawing / Painting',desc:'Draw anything you imagine — nature, a story scene, your favourite character.',pts:20},
+  {id:'poem',icon:'✍️',title:'Write a Poem',desc:'Write a short poem in Hindi or English about anything you love.',pts:20},
+  {id:'story',icon:'📖',title:'Mini Story',desc:'Write a short story (5–10 sentences) — make up characters and an adventure!',pts:20},
+  {id:'craft',icon:'✂️',title:'Paper Craft / Origami',desc:'Make something with paper — origami, a card, a collage.',pts:20},
+  {id:'rangoli',icon:'🌸',title:'Rangoli / Mandala',desc:'Create a beautiful rangoli or mandala pattern on paper using colours.',pts:20},
+  {id:'journal',icon:'📔',title:'Diary / Gratitude Journal',desc:'Write 3 things you are grateful for today and one happy memory from this week.',pts:20},
+];
+
+const LOGIC_PUZZLES=[
+  {q:'A train leaves Delhi at 6 AM going 60 km/h. Another leaves Agra (200 km away) at 7 AM going 40 km/h towards Delhi. When do they meet?',
+   opts:['8:00 AM','8:30 AM','9:00 AM','9:30 AM'],ans:1,exp:'After 7 AM, closing speed = 100 km/h. Distance left = 140 km. 140/100 = 1.4 hrs → 8:24 AM ≈ 8:30 AM'},
+  {q:'Vaanya has some toffees. She gives half to Riya, then half of what remains to Priya. She has 6 left. How many did she start with?',
+   opts:['18','20','24','30'],ans:2,exp:'After Priya: 6. Before Priya: 12. Before Riya: 24.'},
+  {q:'Fill the series: 2, 6, 12, 20, 30, ?',
+   opts:['38','40','42','44'],ans:2,exp:'Differences are 4,6,8,10,12… Next = 30+12 = 42.'},
+  {q:'A clock shows 3:15. What is the angle between the minute and hour hands?',
+   opts:['0°','7.5°','15°','22.5°'],ans:1,exp:'Minute hand at 90°. Hour hand: 3×30 + 15×0.5 = 97.5°. Difference = 7.5°'},
+  {q:'What comes next: Monday, Wednesday, Friday, ?, Tuesday',
+   opts:['Saturday','Sunday','Thursday','Monday'],ans:1,exp:'Skipping every other day: Mon, Wed, Fri, Sun, Tue'},
+  {q:'If you have a 3-litre and 5-litre jug, how do you get exactly 4 litres?',
+   opts:['Fill 5L, pour into 3L → 2L left. Empty 3L, pour 2L in. Fill 5L, pour 1L → 4L left!','Fill 3L twice and add','Impossible','Fill 5L twice'],ans:0,exp:'Fill 5L. Pour into 3L → 2L in 5L. Empty 3L. Move 2L into 3L. Fill 5L. Pour 1L into 3L → 4L in 5L!'},
+  {q:'Rearrange: TIONEDUCA',
+   opts:['EDUCATION','EDUCTION','CURATION','AUDITION'],ans:0,exp:'TIONEDUCA → EDUCATION'},
+  {q:'What has cities but no houses, mountains but no trees, water but no fish?',
+   opts:['A dream','A map','A book','A painting'],ans:1,exp:'A map has all these features without real ones!'},
+];
+
+const RIDDLES=[
+  {q:'I have cities but no houses, mountains but no trees, water but no fish. What am I?',a:'A map',hint:'You use me to find your way.'},
+  {q:'The more you take, the more you leave behind. What am I?',a:'Footsteps',hint:'Think about walking.'},
+  {q:'I speak without a mouth and hear without ears. What am I?',a:'An echo',hint:'Say something in a mountain valley.'},
+  {q:'What has to be broken before you can use it?',a:'An egg',hint:'Breakfast clue!'},
+  {q:'I have hands but cannot clap. What am I?',a:'A clock',hint:'You check me many times a day.'},
+  {q:'What begins with T, ends with T and has T in it?',a:'A teapot',hint:'Tea time!'},
+  {q:'The more you have of it, the less you see. What is it?',a:'Darkness',hint:'Turn off the lights.'},
+  {q:'I run but never walk, have a mouth but never talk. What am I?',a:'A river',hint:'Ganga, Yamuna...'},
+  {q:'What can travel around the world while staying in a corner?',a:'A stamp',hint:'Letters need me.'},
+  {q:'I have one eye but cannot see. What am I?',a:'A needle',hint:'Mamma uses it for stitching.'},
+];
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let savedDays     = JSON.parse(localStorage.getItem('vaanya_days')||'[]');
+let spendHist     = JSON.parse(localStorage.getItem('vaanya_spend_hist')||'[]');
+let totalSpent    = parseInt(localStorage.getItem('vaanya_spent_total')||'0');
+let brainPtsToday = 0;
+let sudokuGrid    = null, sudokuSolution = null, selectedCell = null, sudokuDifficulty = 'easy';
+let currentShloka = 0;
+let creativeChosen = null;
+let logicAnswered = [], riddleAnswered = [];
+let logicPts = 0, riddlePts = 0;
+let todayApproved = false;
+let pinBuf = '';
+let charts = {};
+
+// ════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════
+function totalEarned(){ return savedDays.reduce((a,d)=>a+(d.pts||0),0); }
+function availablePts(){ return Math.max(0,totalEarned()-totalSpent); }
+function getStreak(){
+  if(!savedDays.length)return 0;
+  const sorted=[...savedDays].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  let streak=0,prev=null;
+  for(const d of sorted){
+    const cur=new Date(d.date+'T12:00:00');
+    if(!prev){streak=1;prev=cur;continue;}
+    const diff=Math.round((prev-cur)/(86400000));
+    if(diff===1){streak++;prev=cur;}else break;
+  }
+  return streak;
+}
+function fmtDate(d){
+  if(!d)return'–';
+  return new Date(d+'T12:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+const PCLS=['pp','pt','pa','ppk','pg','pr','pb'];
+function toggleP(el,cls){el.classList.toggle(cls);}
+function toggleEx(el,gid,cls){
+  const g=document.getElementById(gid);
+  if(g)g.querySelectorAll('.pill').forEach(p=>PCLS.forEach(c=>p.classList.remove(c)));
+  el.classList.add(cls);
+}
+
+// ════════════════════════════════════════════
+// TABS — fixed: uses id suffix mapping
+// ════════════════════════════════════════════
+function showTab(id,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(id==='rewards')renderRewards();
+  if(id==='spend')renderSpend();
+  if(id==='history')renderHistory();
+  if(id==='graphs')renderGraphs();
+}
+
+function showPuzzle(type,btn){
+  ['sudoku','logic','riddle'].forEach(t=>{
+    const el=document.getElementById('puzzle-'+t);
+    if(el)el.style.display=t===type?'block':'none';
+  });
+  document.querySelectorAll('#puzzle-tabs button').forEach(b=>{
+    b.className='btn btn-o';
+    b.style.cssText='font-size:12px;padding:7px 14px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff';
+  });
+  if(btn){btn.className='btn btn-p';btn.style.cssText='font-size:12px;padding:7px 14px';}
+}
+
+// ════════════════════════════════════════════
+// BUILD UI
+// ════════════════════════════════════════════
+function buildAll(){
+  buildHW();
+  buildStars('odda-stars',5);buildStars('gym-stars',5);buildStars('creative-stars',5);
+  buildCreativeOptions();buildShlokaDisplay();
+  genSudoku('easy');genLogicPuzzles();genRiddles();
+  buildEarnGuide();
+  setTodayDate();checkPenalty();
+}
+
+function setTodayDate(){
+  const t=new Date();
+  const el=document.getElementById('rpt-date');
+  if(!el.value)el.value=t.toISOString().split('T')[0];
+  document.getElementById('today-pill').textContent=t.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+}
+
+// ── Homework list — fix #5: subject + checkbox + pts badge + study notes textbox
+function buildHW(){
+  const c=document.getElementById('hw-list');c.innerHTML='';
+  SUBJECTS.forEach((s,i)=>{
+    const row=document.createElement('div');row.className='hw-row';
+    row.innerHTML=`
+      <input type="checkbox" id="hw-${i}" onchange="updateHW()" style="width:18px;height:18px;accent-color:${SCOL[i]};cursor:pointer;flex-shrink:0">
+      <label for="hw-${i}" class="hw-label" style="color:${SCOL[i]};background:${SCOL[i]}18;border:1.5px solid ${SCOL[i]}40">${s}</label>
+      <span class="pts-inline" style="background:${SCOL[i]}18;color:${SCOL[i]};border:1.5px solid ${SCOL[i]}40">+15 pts</span>
+      <input type="text" id="hwdet-${i}" placeholder="What I studied / what was assigned..." style="flex:1;min-width:140px;font-size:12px;border-color:${SCOL[i]}60">`;
+    c.appendChild(row);
+  });
+}
+
+function buildStars(id,n){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML='';
+  for(let i=1;i<=n;i++){
+    const s=document.createElement('div');s.className='star';s.dataset.v=i;s.textContent='★';
+    s.onclick=()=>{setStar(id,i);calcDayPts();};
+    el.appendChild(s);
+  }
+}
+function setStar(id,v){
+  const el=document.getElementById(id);if(!el)return;
+  el.querySelectorAll('.star').forEach(s=>s.classList.toggle('on',parseInt(s.dataset.v)<=v));
+}
+function getStarVal(id){
+  const el=document.getElementById(id);if(!el)return 0;
+  let m=0;el.querySelectorAll('.star.on').forEach(s=>m=Math.max(m,parseInt(s.dataset.v)));return m;
+}
+
+function buildCreativeOptions(){
+  const c=document.getElementById('creative-options');if(!c)return;
+  c.innerHTML='';
+  CREATIVE_OPTIONS.forEach(opt=>{
+    const div=document.createElement('div');div.className='creative-option';
+    div.innerHTML=`<div class="co-icon">${opt.icon}</div>
+      <div class="co-title">${opt.title}</div>
+      <div class="co-desc">${opt.desc}</div>
+      <div style="margin-top:6px;font-size:10px;font-weight:800;color:var(--pk)">+${opt.pts} pts</div>`;
+    div.onclick=()=>{
+      document.querySelectorAll('.creative-option').forEach(o=>o.classList.remove('chosen'));
+      div.classList.add('chosen');creativeChosen=opt.id;
+      document.getElementById('creative-detail').style.display='block';
+      toast('Great choice! Complete your '+opt.title+' and tick it done!');
+    };
+    c.appendChild(div);
+  });
+}
+
+function buildShlokaDisplay(){
+  const s=SHLOKAS[currentShloka];
+  document.getElementById('shloka-display').innerHTML=`
+    <div class="shloka-card">
+      <div class="shloka-text">${s.text.replace(/\n/g,'<br>')}</div>
+      <div style="font-size:11px;opacity:.8;margin-bottom:8px;font-style:italic">${s.transliteration}</div>
+      <div class="shloka-meaning"><b>Meaning:</b> ${s.meaning}</div>
+      <div class="shloka-src">${s.chapter}</div>
+    </div>`;
+}
+
+function nextShloka(){
+  currentShloka=(currentShloka+1)%SHLOKAS.length;
+  buildShlokaDisplay();
+  document.getElementById('shloka-write').value='';
+  document.getElementById('shloka-reflect').value='';
+  PCLS.forEach(c=>{
+    document.getElementById('shloka-done')?.querySelectorAll('.pill').forEach(p=>p.classList.remove(c));
+    document.getElementById('shloka-understood')?.querySelectorAll('.pill').forEach(p=>p.classList.remove(c));
+  });
+}
+
+function buildEarnGuide(){
+  const tb=document.getElementById('earn-guide');if(!tb)return;
+  tb.innerHTML=EARN_GUIDE.map(([act,pts,note])=>`
+    <tr>
+      <td style="font-weight:700${act.includes('MANDATORY')?';color:var(--rd)':''}">${act}</td>
+      <td style="font-weight:900;color:var(--g)">${pts}</td>
+      <td style="color:var(--muted)">${note}</td>
+    </tr>`).join('');
+}
+
+// ════════════════════════════════════════════
+// SCORE CALC — fix #4: show % + points in section
+// ════════════════════════════════════════════
+function calcScore(){
+  const got=parseFloat(document.getElementById('test-got')?.value);
+  const tot=parseFloat(document.getElementById('test-tot')?.value)||0;
+  const pEl=document.getElementById('test-pct');
+  const gEl=document.getElementById('test-grade');
+  const ptEl=document.getElementById('test-pts-display');
+  if(!isNaN(got)&&tot>0){
+    const pct=Math.round(got/tot*100);
+    pEl.textContent=pct+'%';
+    let gr,gc,earnedPts;
+    if(pct>=90){gr='🌟 Excellent!';gc='#10B981';earnedPts=80;}
+    else if(pct>=75){gr='⭐ Very Good!';gc='#06B6D4';earnedPts=60;}
+    else if(pct>=60){gr='👍 Good!';gc='#3B82F6';earnedPts=40;}
+    else{gr='💪 Keep trying!';gc='#F97316';earnedPts=20;}
+    gEl.innerHTML=`<span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:${gc}18;color:${gc};border:1.5px solid ${gc}40">${gr}</span>`;
+    if(ptEl)ptEl.textContent=earnedPts+' pts';
+  }else{
+    pEl.textContent='–';gEl.innerHTML='';
+    if(ptEl)ptEl.textContent='0 pts';
+  }
+  calcDayPts();
+}
+
+// ════════════════════════════════════════════
+// HW UPDATE — fix #5
+// ════════════════════════════════════════════
+function updateHW(){
+  let done=0;
+  SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)done++;});
+  const pct=Math.round(done/SUBJECTS.length*100);
+  const prog=document.getElementById('hw-prog');
+  if(prog)prog.style.width=pct+'%';
+  const hwpct=document.getElementById('hw-pct');
+  if(hwpct)hwpct.textContent=pct+'% ('+done+'/'+SUBJECTS.length+' subjects)';
+  const schw=document.getElementById('sc-hw');
+  if(schw)schw.textContent=done+'/'+SUBJECTS.length;
+  const hwPtsEl=document.getElementById('hw-pts-display');
+  if(hwPtsEl)hwPtsEl.textContent=(done*15)+' pts';
+  calcDayPts();
+}
+
+// ════════════════════════════════════════════
+// ODDA ASSIGNMENT — fix #6
+// ════════════════════════════════════════════
+function showOddaAssign(show){
+  const el=document.getElementById('odda-assign-detail');
+  if(el)el.style.display=show?'block':'none';
+}
+function calcOddaAssign(){
+  const corr=parseFloat(document.getElementById('odda-correct')?.value)||0;
+  const tot=parseFloat(document.getElementById('odda-total-q')?.value)||0;
+  const el=document.getElementById('odda-assign-result');
+  if(!el)return;
+  if(tot>0){
+    const pct=Math.round(corr/tot*100);
+    let gc,gr,bonus;
+    if(pct>=90){gc='#10B981';gr='🌟 Excellent!';bonus=20;}
+    else if(pct>=75){gc='#06B6D4';gr='⭐ Very Good!';bonus=15;}
+    else if(pct>=60){gc='#F59E0B';gr='👍 Good!';bonus=10;}
+    else{gc='#F97316';gr='💪 Keep trying!';bonus=5;}
+    el.innerHTML=`<span style="color:${gc};font-weight:800">${pct}% — ${gr} (+${bonus} bonus pts)</span>`;
+  }else{el.innerHTML='';}
+  calcDayPts();
+}
+
+// ════════════════════════════════════════════
+// POINTS CALC — fixes #7,#8,#9 (gym/screen/summary working)
+// ════════════════════════════════════════════
+function calcDayPts(){
+  let pts=0;
+  let breakdown={};
+
+  // Timetable + school
+  const ttVal=parseInt(document.getElementById('rpt-tt')?.value||0);
+  const schVal=parseInt(document.getElementById('rpt-school')?.value||0);
+  pts+=ttVal+schVal;
+  breakdown.overview=ttVal+schVal;
+  const ovEl=document.getElementById('overview-pts');
+  if(ovEl)ovEl.textContent=(ttVal+schVal)+' pts';
+
+  // Test
+  let testPts=0;
+  const got=parseFloat(document.getElementById('test-got')?.value);
+  const tot=parseFloat(document.getElementById('test-tot')?.value)||0;
+  if(!isNaN(got)&&tot>0){
+    const pct=got/tot*100;
+    if(pct>=90)testPts=80;else if(pct>=75)testPts=60;else if(pct>=60)testPts=40;else testPts=20;
+  }
+  pts+=testPts;breakdown.test=testPts;
+
+  // HW
+  let hwPts=0;
+  SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwPts+=15;});
+  pts+=hwPts;breakdown.hw=hwPts;
+
+  // Odda — fix #7: attendance check working
+  let oddaPts=0;
+  const oAtt=document.getElementById('odda-att');
+  if(oAtt?.querySelector('.pg'))oddaPts+=15;
+  else if(oAtt?.querySelector('.pr'))oddaPts-=15; // missed penalty
+  // Odda assignment bonus
+  const oAssign=document.getElementById('odda-assign');
+  if(oAssign?.querySelector('.pg')){
+    // assignment completed — calc bonus
+    const corr=parseFloat(document.getElementById('odda-correct')?.value)||0;
+    const totQ=parseFloat(document.getElementById('odda-total-q')?.value)||0;
+    if(totQ>0){
+      const pct2=corr/totQ*100;
+      if(pct2>=90)oddaPts+=20;else if(pct2>=75)oddaPts+=15;else if(pct2>=60)oddaPts+=10;else oddaPts+=5;
+    }
+  }
+  pts+=oddaPts;breakdown.odda=Math.max(0,oddaPts);
+  const oddaPtEl=document.getElementById('odda-pts-display');
+  if(oddaPtEl)oddaPtEl.textContent=oddaPts+' pts';
+
+  // Gym — fix #7: pills pa/pb/pt all detected
+  let gymPts=0;
+  const gym=document.getElementById('gym-today');
+  if(gym?.querySelector('.pa'))gymPts=20;
+  else if(gym?.querySelector('.pb')||gym?.querySelector('.pt'))gymPts=10;
+  pts+=gymPts;breakdown.gym=gymPts;
+  const gymPtEl=document.getElementById('gym-pts-display');
+  if(gymPtEl)gymPtEl.textContent=gymPts+' pts';
+
+  // Screen — fix #8: pills working
+  let screenPts=0;
+  const sc=document.getElementById('screen-check');
+  if(sc?.querySelector('.pg'))screenPts=20;
+  else if(sc?.querySelector('.pa'))screenPts=10;
+  pts+=screenPts;breakdown.screen=screenPts;
+  const scPtEl=document.getElementById('screen-pts-display');
+  if(scPtEl)scPtEl.textContent=screenPts+' pts';
+
+  // Reflection
+  const r1=(document.getElementById('r1')?.value||'').trim();
+  const r2=(document.getElementById('r2')?.value||'').trim();
+  const r3=(document.getElementById('r3')?.value||'').trim();
+  let reflPts=0;
+  if(r1&&r2&&r3)reflPts=20;
+  pts+=reflPts;breakdown.refl=reflPts;
+
+  // Parent comment
+  const pc=(document.getElementById('parent-comment')?.value||'').trim();
+  let parentPts=0;
+  if(pc.length>5)parentPts=25;
+  pts+=parentPts;breakdown.parent=parentPts;
+
+  // Shloka
+  const sh=document.getElementById('shloka-done');
+  let shlokaPts=0;
+  if(sh?.querySelector('.pg'))shlokaPts=25;
+  pts+=shlokaPts;breakdown.shloka=shlokaPts;
+
+  // Creative
+  const cr=document.getElementById('creative-done');
+  let crPts=0;
+  if(cr?.querySelector('.pg'))crPts=20;
+  else if(cr?.querySelector('.pa'))crPts=10;
+  pts+=crPts;breakdown.creative=crPts;
+
+  // Brain lab
+  const br=document.getElementById('brain-done');
+  let brPts=0;
+  if(br?.querySelector('.pg'))brPts=brainPtsToday;
+  pts+=brPts;breakdown.brain=brPts;
+
+  // Penalty
+  const penEl=document.getElementById('pen-bar');
+  if(penEl&&penEl.style.display==='flex')pts=Math.max(0,pts-20);
+
+  // Update all displays — fix #9
+  const livePts=document.getElementById('day-pts-live');
+  if(livePts)livePts.textContent=pts;
+  const scPts=document.getElementById('sc-pts');
+  if(scPts)scPts.textContent=pts;
+  updateXP(pts);
+
+  // Summary indicators
+  const oAttQ=document.getElementById('odda-att');
+  const scOdda=document.getElementById('sc-odda');
+  if(scOdda)scOdda.textContent=oAttQ?.querySelector('.pg')?'Yes ✅':'No';
+
+  const gymEl=document.getElementById('gym-today');
+  const scPhys=document.getElementById('sc-phys');
+  if(scPhys)scPhys.textContent=gymEl?.querySelector('.pa')?'Gym! 🤸':gymEl?.querySelector('.pb')||gymEl?.querySelector('.pt')?'Active 🏃':'Rest 💤';
+
+  // Points breakdown display — fix #9
+  renderBreakdown(breakdown,pts);
+
+  return pts;
+}
+
+function renderBreakdown(bd,total){
+  const el=document.getElementById('pts-breakdown');if(!el)return;
+  const rows=[
+    {label:'📅 Timetable + School',pts:bd.overview||0,col:'var(--p)'},
+    {label:'📝 Test / Assessment',pts:bd.test||0,col:'var(--pk)'},
+    {label:'📚 Homework',pts:bd.hw||0,col:'var(--g)'},
+    {label:'💻 Odda class',pts:bd.odda||0,col:'var(--p)'},
+    {label:'🤸 Physical activity',pts:bd.gym||0,col:'var(--a)'},
+    {label:'📺 Screen time',pts:bd.screen||0,col:'var(--pk)'},
+    {label:'💭 Reflection',pts:bd.refl||0,col:'var(--t)'},
+    {label:'✍️ Parent comment',pts:bd.parent||0,col:'var(--b)'},
+    {label:'🕉️ Shloka',pts:bd.shloka||0,col:'var(--o)'},
+    {label:'🎨 Creative',pts:bd.creative||0,col:'var(--pk)'},
+    {label:'🧠 Brain Lab',pts:bd.brain||0,col:'var(--b)'},
+  ].filter(r=>r.pts>0);
+
+  if(!rows.length){el.innerHTML='';return;}
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+    ${rows.map(r=>`<span style="font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;background:${r.col}15;color:${r.col};border:1.5px solid ${r.col}40">${r.label}: +${r.pts}</span>`).join('')}
+  </div>
+  <div style="background:linear-gradient(135deg,var(--pl),var(--al));border-radius:var(--rads);padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:13px;font-weight:800;color:var(--pd)">⭐ Total points today</span>
+    <span style="font-size:28px;font-weight:900;color:var(--gold)">${total} pts</span>
+  </div>`;
+}
+
+function updateXP(pts){
+  const max=300;
+  const pct=Math.min(100,Math.round(pts/max*100));
+  const el=document.getElementById('xp-bar');if(el)el.style.width=pct+'%';
+  const lbl=document.getElementById('xp-lbl');if(lbl)lbl.textContent=pts+' / '+max+' pts';
+}
+
+// ════════════════════════════════════════════
+// PENALTY CHECK
+// ════════════════════════════════════════════
+function checkPenalty(){
+  if(!savedDays.length)return;
+  const today=document.getElementById('rpt-date').value;if(!today)return;
+  const yesterday=new Date(today+'T12:00:00');yesterday.setDate(yesterday.getDate()-1);
+  const yStr=yesterday.toISOString().split('T')[0];
+  const yd=savedDays.find(d=>d.date===yStr);
+  const pen=document.getElementById('pen-bar');
+  if(yd){
+    const penalties=[];
+    if(!yd.shlokaD)penalties.push('Geeta Shloka (−20 pts)');
+    if(!yd.creativeD)penalties.push('Creative Activity (−20 pts)');
+    if(!yd.brainD)penalties.push('Brain Lab (−15 pts)');
+    if(penalties.length){
+      pen.style.display='flex';
+      document.getElementById('pen-msg').textContent="⚠️ Yesterday's mandatory tasks missed: "+penalties.join(', ')+'. Penalty today!';
+    }else pen.style.display='none';
+  }else pen.style.display='none';
+}
+
+// ════════════════════════════════════════════
+// SAVE DAY
+// ════════════════════════════════════════════
+function saveDay(){
+  const date=document.getElementById('rpt-date').value;
+  if(!date){toast('Please set today\'s date first!');return;}
+  const pts=calcDayPts();
+
+  const shD=!!document.getElementById('shloka-done')?.querySelector('.pg');
+  const crD=!!(document.getElementById('creative-done')?.querySelector('.pg')||document.getElementById('creative-done')?.querySelector('.pa'));
+  const brD=!!(document.getElementById('brain-done')?.querySelector('.pg')||document.getElementById('brain-done')?.querySelector('.pa'));
+  const odD=!!document.getElementById('odda-att')?.querySelector('.pg');
+  let hwDone=0;
+  SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwDone++;});
+  let avgConf=0;
+  {let tot=0,cnt=0;SUBJECTS.forEach((_,i)=>{const v=getStarVal('sconf-'+i);if(v>0){tot+=v;cnt++;}});avgConf=cnt>0?parseFloat((tot/cnt).toFixed(1)):0;}
+
+  const data={date,pts,hwDone,avgConf,shlokaD:shD,creativeD:crD,brainD:brD,odda:odD,
+    tt:document.getElementById('rpt-tt')?.value||'',
+    gymType:document.getElementById('gym-today')?.querySelector('.pa')?'gym':document.getElementById('gym-today')?.querySelector('.pb')||document.getElementById('gym-today')?.querySelector('.pt')?'exercise':'rest',
+    r1:document.getElementById('r1')?.value||'',
+    r2:document.getElementById('r2')?.value||'',
+    r3:document.getElementById('r3')?.value||'',
+    parentComment:document.getElementById('parent-comment')?.value||'',
+    approved:todayApproved,
+    savedAt:new Date().toISOString()};
+
+  const idx=savedDays.findIndex(d=>d.date===date);
+  if(idx>=0)savedDays[idx]=data;else savedDays.unshift(data);
+  savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  localStorage.setItem('vaanya_days',JSON.stringify(savedDays));
+
+  const streak=getStreak();
+  if([5,10,15,20,30].includes(streak)){
+    const bonus=streak>=20?150:streak>=10?120:50;
+    showPop('🔥',streak+'-Day Streak!','Amazing consistency Vaanya! +'+bonus+' bonus points! Keep going!');
+  }
+  updateTopBar();
+  toast('Day saved! ⭐ '+pts+' pts recorded!');
+  if(pts>=250)showPop('🌟','Superstar day!','You earned '+pts+' points today! Incredible, Vaanya!');
+  else if(pts>=180)showPop('⭐','Brilliant day!',pts+' points! You are doing amazingly well!');
+  else{
+    const thresholds=[200,400,600,900,1200,1600,2200,3000];
+    const earned=totalEarned();
+    const justHit=thresholds.find(t=>earned>=t&&(earned-pts)<t);
+    if(justHit){const r=REWARDS.find(rw=>rw.pts===justHit);if(r)showPop(r.icon,'You unlocked: '+r.title,'🎉 Show Mamma and Papa! '+r.items.join(' · '));}
+  }
+}
+
+function updateTopBar(){
+  const avail=availablePts();
+  const el=document.getElementById('total-pts-top');if(el)el.textContent=avail;
+  const st=document.getElementById('streak-top');if(st)st.textContent=getStreak()+'🔥';
+}
+
+// ════════════════════════════════════════════
+// PIN MODAL — fix #10: parent approval working
+// ════════════════════════════════════════════
+function getPin(){return localStorage.getItem('vaanya_admin_pin')||'1234';}
+
+function openPinModal(){
+  pinBuf='';updatePinDots();
+  document.getElementById('pin-err').textContent='';
+  document.getElementById('pin-overlay').classList.add('show');
+}
+function closePinModal(){
+  pinBuf='';updatePinDots();
+  document.getElementById('pin-overlay').classList.remove('show');
+}
+function pinPress(d){
+  if(pinBuf.length>=4)return;
+  pinBuf+=d;updatePinDots();
+  if(pinBuf.length===4)setTimeout(pinSubmit,200);
+}
+function pinClear(){
+  pinBuf=pinBuf.slice(0,-1);updatePinDots();
+  document.getElementById('pin-err').textContent='';
+}
+function updatePinDots(){
+  for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.toggle('filled',i<pinBuf.length);
+}
+function pinSubmit(){
+  if(pinBuf===getPin()){
+    closePinModal();
+    approveReport();
+  }else{
+    document.getElementById('pin-err').textContent='❌ Wrong PIN — try again!';
+    pinBuf='';updatePinDots();
+  }
+}
+function approveReport(){
+  todayApproved=true;
+  const pts=calcDayPts();
+  document.getElementById('approval-section').style.display='none';
+  document.getElementById('approved-section').style.display='block';
+  document.getElementById('approved-msg').textContent='✅ +'+pts+' points approved! Keep shining, Vaanya! 🌟';
+  document.getElementById('approved-time').textContent='Approved: '+new Date().toLocaleString('en-IN');
+  showPop('✅','Parent Approved! 🎉','Your report has been approved, Vaanya! You earned '+pts+' points today! ⭐');
+  toast('Parent approved! +'+pts+' points awarded!');
+}
+
+// ════════════════════════════════════════════
+// REWARDS TAB
+// ════════════════════════════════════════════
+function renderRewards(){
+  const avail=availablePts();const earned=totalEarned();
+  const el=document.getElementById('rwd-total-pts');if(el)el.textContent=earned+' total points earned';
+  const ea=document.getElementById('rwd-avail');if(ea)ea.textContent=avail;
+  const ed=document.getElementById('rwd-days');if(ed)ed.textContent=savedDays.length;
+  const es=document.getElementById('rwd-streak');if(es)es.textContent=getStreak()+'🔥';
+
+  // Use admin-configured rewards if available
+  const rewardsData=(()=>{try{return JSON.parse(localStorage.getItem('vaanya_admin_rewards')||'null')||REWARDS;}catch(e){return REWARDS;}})();
+  const g=document.getElementById('reward-grid');if(!g)return;g.innerHTML='';
+  rewardsData.filter(r=>r.active!==false).forEach(r=>{
+    const unlocked=earned>=r.pts;
+    const prog=Math.min(100,Math.round(earned/r.pts*100));
+    const div=document.createElement('div');div.className='rcard '+(unlocked?'unlocked':'locked');
+    div.style.cssText=`background:${r.light||'#F9FAFB'};border-color:${r.col}`;
+    div.innerHTML=`<div class="rc-icon">${r.icon}</div>
+      <div class="rc-pts" style="color:${r.col}">${r.pts.toLocaleString()} pts</div>
+      <div class="rc-title" style="color:${r.col}">${r.title}</div>
+      <div class="rc-items" style="color:${r.col}">${(r.items||[]).map(i=>'• '+i).join('<br>')}</div>
+      <div class="rc-lock">${unlocked?'✅':'🔒'}</div>
+      <div class="rc-prog"><div class="rc-fill" style="width:${prog}%;background:${r.col}"></div></div>
+      <div style="font-size:10px;color:${r.col};margin-top:4px;font-weight:800">${prog}% · ${Math.min(earned,r.pts).toLocaleString()}/${r.pts.toLocaleString()}</div>
+      ${unlocked?`<div style="margin-top:8px;font-size:11px;font-weight:900;color:${r.col};background:rgba(255,255,255,.6);border-radius:6px;padding:4px 8px;text-align:center">🎉 UNLOCKED! Show Mamma!</div>`:''}`;
+    g.appendChild(div);
+  });
+}
+
+// ════════════════════════════════════════════
+// SPEND TAB
+// ════════════════════════════════════════════
+function renderSpend(){
+  const avail=availablePts();
+  const el=document.getElementById('spend-avail');if(el)el.textContent=avail;
+  const spendData=(()=>{try{return JSON.parse(localStorage.getItem('vaanya_admin_spend_items')||'null')||SPEND_ITEMS;}catch(e){return SPEND_ITEMS;}})();
+  const g=document.getElementById('spend-grid');if(!g)return;g.innerHTML='';
+  spendData.filter(s=>s.active!==false).forEach(item=>{
+    const can=avail>=item.cost;
+    const div=document.createElement('div');div.className='scard';
+    div.innerHTML=`<div class="sc-icon">${item.icon}</div>
+      <div class="sc-title">${item.title}</div>
+      <div class="sc-cost" style="color:${item.col}">${item.cost} pts</div>
+      <div class="sc-desc">${item.desc}</div>
+      <button class="sc-btn" style="border-color:${item.col};color:${item.col};background:${item.col}18" ${can?'':'disabled'}
+        onclick="spendPts('${item.id}',${item.cost},'${item.title}','${item.col}')">
+        ${can?'Spend '+item.cost+' pts 🛒':'Need '+(item.cost-avail)+' more pts'}</button>`;
+    g.appendChild(div);
+  });
+  const hl=document.getElementById('spend-hist-list');if(!hl)return;
+  if(!spendHist.length){hl.innerHTML='<div style="color:var(--muted);padding:12px 0">No spending yet!</div>';return;}
+  hl.innerHTML='<table><thead><tr><th>Date</th><th>Reward</th><th>Pts spent</th></tr></thead><tbody>'+
+    spendHist.slice(0,20).map(s=>`<tr><td style="color:var(--muted)">${s.date}</td><td>${s.title}</td><td style="font-weight:800;color:var(--a)">−${s.cost}</td></tr>`).join('')+
+    '</tbody></table>';
+}
+
+function spendPts(id,cost,title,col){
+  if(availablePts()<cost){toast('Not enough points! Keep earning!');return;}
+  if(!confirm('Spend '+cost+' points for: '+title+'?\n\nTell Mamma or Papa before using this reward!'))return;
+  totalSpent+=cost;
+  localStorage.setItem('vaanya_spent_total',totalSpent);
+  spendHist.unshift({id,cost,title,date:new Date().toISOString().split('T')[0]});
+  localStorage.setItem('vaanya_spend_hist',JSON.stringify(spendHist));
+  updateTopBar();
+  showPop('🎉','Enjoy your '+title+'!','You spent '+cost+' points. Have fun! 🌟');
+  renderSpend();
+}
+
+// ════════════════════════════════════════════
+// HISTORY TAB — fix #1
+// ════════════════════════════════════════════
+function renderHistory(){
+  const dl=document.getElementById('day-list');if(!dl)return;
+  dl.innerHTML='';
+  const nh=document.getElementById('no-hist');
+  if(!savedDays.length){if(nh)nh.style.display='block';return;}
+  if(nh)nh.style.display='none';
+  savedDays.forEach((d,i)=>{
+    const div=document.createElement('div');div.className='day-item';
+    const mands=[d.shlokaD?'🕉️':'❌',d.creativeD?'🎨':'❌',d.brainD?'🧠':'❌',d.odda?'💻':'❌'].join(' ');
+    div.innerHTML=`<div>
+        <div style="font-size:13px;font-weight:800">${fmtDate(d.date)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">HW: ${d.hwDone||0}/7 · ${mands} ${d.approved?'· ✅ Parent Approved':''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div><div class="di-pts">${d.pts}</div><div style="font-size:10px;color:var(--muted)">pts</div></div>
+        <button class="btn btn-o" style="padding:6px 12px;font-size:12px" onclick="viewDay(${i})">View</button>
+      </div>`;
+    dl.appendChild(div);
+  });
+}
+
+function viewDay(i){
+  const d=savedDays[i];
+  const box=document.getElementById('hist-detail-box');
+  box.innerHTML=`<div class="hist-detail">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:15px;font-weight:900;color:var(--pd)">${fmtDate(d.date)}</div>
+      <button style="background:var(--pd);color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:800" onclick="document.getElementById('hist-detail-box').innerHTML=''">Close</button>
+    </div>
+    <div class="g4" style="margin-bottom:10px">
+      <div style="background:#fff;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--a)">${d.pts}</div><div style="font-size:10px;color:var(--muted)">Points</div></div>
+      <div style="background:#fff;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--g)">${d.hwDone||0}/7</div><div style="font-size:10px;color:var(--muted)">HW done</div></div>
+      <div style="background:#fff;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px">${d.shlokaD?'✅':'❌'} ${d.creativeD?'✅':'❌'} ${d.brainD?'✅':'❌'}</div><div style="font-size:10px;color:var(--muted)">🕉️ 🎨 🧠</div></div>
+      <div style="background:#fff;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px">${d.approved?'✅':'⏳'}</div><div style="font-size:10px;color:var(--muted)">Parent Approved</div></div>
+    </div>
+    ${d.r1?`<div style="background:#fff;border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:12px"><b style="color:var(--p)">Best thing:</b> ${d.r1}</div>`:''}
+    ${d.r2?`<div style="background:#fff;border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:12px"><b style="color:var(--a)">Improve:</b> ${d.r2}</div>`:''}
+    ${d.r3?`<div style="background:#fff;border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:12px"><b style="color:var(--g)">Tomorrow:</b> ${d.r3}</div>`:''}
+    ${d.parentComment?`<div style="background:#fff;border-radius:8px;padding:8px 12px;font-size:12px"><b style="color:var(--t)">Mamma/Papa said:</b> ${d.parentComment}</div>`:''}
+  </div>`;
+  box.scrollIntoView({behavior:'smooth'});
+}
+
+// ════════════════════════════════════════════
+// GRAPHS / PROGRESS TAB — fix #1 + #2
+// ════════════════════════════════════════════
+function renderGraphs(){
+  const days=[...savedDays].reverse().slice(-30);
+  if(days.length<1){
+    const pc=document.getElementById('perf-card');
+    if(pc)pc.innerHTML='<p style="color:var(--muted)">Save at least 3 days to see your progress charts!</p>';
+    return;
+  }
+  const labels=days.map(d=>new Date(d.date+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}));
+  mkChart('ch-pts','Points',labels,days.map(d=>d.pts),'#8B5CF6','#EDE9FE80','bar');
+  mkChart('ch-hw','HW %',labels,days.map(d=>Math.round((d.hwDone||0)/7*100)),'#10B981','#ECFDF580','line');
+  mkChart('ch-odda','Odda',labels,days.map(d=>d.odda?1:0),'#06B6D4','#ECFEFF80','bar');
+  mkChart('ch-mandatory','Mandatory',labels,days.map(d=>(d.shlokaD?1:0)+(d.creativeD?1:0)+(d.brainD?1:0)),'#EC4899','#FDF2F880','bar');
+  renderPerfCard(days);
+}
+
+function mkChart(id,label,labels,data,color,bg,type){
+  const el=document.getElementById(id);if(!el)return;
+  if(charts[id])charts[id].destroy();
+  charts[id]=new Chart(el,{
+    type,
+    data:{labels,datasets:[{label,data,backgroundColor:bg,borderColor:color,borderWidth:2,
+      fill:type==='line',tension:.3,pointBackgroundColor:color,pointRadius:4,borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true,grid:{color:'#F0F4FF'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+}
+
+function renderPerfCard(days){
+  const el=document.getElementById('perf-card');if(!el)return;
+  const recent=days.slice(-7);
+  const avgPts=Math.round(recent.reduce((a,d)=>a+d.pts,0)/recent.length);
+  const mandPct=Math.round(recent.reduce((a,d)=>a+(d.shlokaD&&d.creativeD&&d.brainD?1:0),0)/recent.length*100);
+  const hwPct=Math.round(recent.reduce((a,d)=>a+((d.hwDone||0)/7),0)/recent.length*100);
+  let stars,msg,col;
+  if(avgPts>=220){stars=5;msg='OUTSTANDING! Vaanya is a total champion! 🏆';col='#10B981';}
+  else if(avgPts>=170){stars=4;msg='Excellent! Keep this amazing effort up!';col='#06B6D4';}
+  else if(avgPts>=120){stars=3;msg='Good work! Push a little harder for the big rewards!';col='#3B82F6';}
+  else if(avgPts>=70){stars=2;msg='Getting there! More consistency will unlock big prizes!';col='#F59E0B';}
+  else{stars=1;msg="Let's try harder — the rewards are waiting!";col='#EF4444';}
+  el.innerHTML=`<div class="sh"><div class="si" style="background:var(--al);color:var(--a)">🏅</div>Vaanya's performance rating (last 7 days)</div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+      <div style="font-size:36px">${'⭐'.repeat(stars)}${'☆'.repeat(5-stars)}</div>
+      <div>
+        <div style="font-size:15px;font-weight:900;color:${col};margin-bottom:3px">${msg}</div>
+        <div style="font-size:12px;color:var(--muted)">Avg pts: <b style="color:${col}">${avgPts}</b> · Mandatory tasks: <b style="color:${mandPct>=80?'#10B981':'#EF4444'}">${mandPct}%</b> · HW rate: <b style="color:var(--g)">${hwPct}%</b></div>
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════
+// CLEAR
+// ════════════════════════════════════════════
+function clearDay(){
+  if(!confirm('Clear all entries for today? Saved history is kept.'))return;
+  document.querySelectorAll('input[type=text],input[type=number],textarea').forEach(e=>e.value='');
+  document.querySelectorAll('input[type=checkbox]').forEach(e=>e.checked=false);
+  document.querySelectorAll('select').forEach(e=>e.selectedIndex=0);
+  PCLS.forEach(c=>document.querySelectorAll('.'+c).forEach(e=>e.classList.remove(c)));
+  document.querySelectorAll('.star').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.creative-option').forEach(o=>o.classList.remove('chosen'));
+  document.getElementById('creative-detail').style.display='none';
+  document.getElementById('odda-assign-detail').style.display='none';
+  document.getElementById('approval-section').style.display='block';
+  document.getElementById('approved-section').style.display='none';
+  creativeChosen=null;brainPtsToday=0;todayApproved=false;
+  updateHW();calcDayPts();setTodayDate();
+}
+
+// ════════════════════════════════════════════
+// POPUP / TOAST
+// ════════════════════════════════════════════
+function showPop(icon,title,msg){
+  document.getElementById('pop-icon').textContent=icon;
+  document.getElementById('pop-title').textContent=title;
+  document.getElementById('pop-msg').textContent=msg;
+  document.getElementById('pop').classList.add('show');
+}
+function closePop(){document.getElementById('pop').classList.remove('show');}
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// ════════════════════════════════════════════
+// SUDOKU ENGINE
+// ════════════════════════════════════════════
+function genSudoku(diff){
+  sudokuDifficulty=diff;
+  document.getElementById('sudoku-msg').textContent='';
+  const base=generateSudokuPuzzle(diff);
+  sudokuGrid=base.puzzle;sudokuSolution=base.solution;selectedCell=null;
+  renderSudokuGrid();renderNumpad();
+}
+function generateSudokuPuzzle(diff){
+  const solution=solveSudoku(createBase());
+  const puzzle=solution.map(r=>[...r]);
+  const removes={easy:35,medium:45,hard:52}[diff]||35;
+  let removed=0;
+  const cells=[];for(let r=0;r<9;r++)for(let c=0;c<9;c++)cells.push([r,c]);
+  cells.sort(()=>Math.random()-.5);
+  for(const[r,c]of cells){
+    if(removed>=removes)break;
+    const bk=puzzle[r][c];puzzle[r][c]=0;removed++;
+    if(!hasUniqueSolution(puzzle)){puzzle[r][c]=bk;removed--;}
+  }
+  return{puzzle,solution};
+}
+function createBase(){
+  const g=Array.from({length:9},()=>Array(9).fill(0));
+  for(let b=0;b<9;b+=3){const n=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-.5);for(let r=0;r<3;r++)for(let c=0;c<3;c++)g[b+r][b+c]=n[r*3+c];}
+  return g;
+}
+function solveSudoku(grid){
+  const g=grid.map(r=>[...r]);
+  const valid=(g,r,c,n)=>{
+    for(let i=0;i<9;i++){if(g[r][i]===n||g[i][c]===n)return false;}
+    const br=Math.floor(r/3)*3,bc=Math.floor(c/3)*3;
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++)if(g[br+i][bc+j]===n)return false;
+    return true;
+  };
+  const solve=g=>{
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+      if(g[r][c]===0){
+        const nums=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-.5);
+        for(const n of nums){if(valid(g,r,c,n)){g[r][c]=n;if(solve(g))return true;g[r][c]=0;}}
+        return false;
+      }
+    }return true;
+  };
+  solve(g);return g;
+}
+function hasUniqueSolution(puzzle){
+  let count=0;
+  const isV=(g,r,c,n)=>{
+    for(let i=0;i<9;i++){if(g[r][i]===n||g[i][c]===n)return false;}
+    const br=Math.floor(r/3)*3,bc=Math.floor(c/3)*3;
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++)if(g[br+i][bc+j]===n)return false;
+    return true;
+  };
+  const cnt=g=>{
+    if(count>1)return;
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+      if(g[r][c]===0){for(let n=1;n<=9;n++){if(isV(g,r,c,n)){g[r][c]=n;cnt(g);g[r][c]=0;}}return;}
+    }count++;
+  };
+  cnt(puzzle.map(r=>[...r]));return count===1;
+}
+function renderSudokuGrid(){
+  const container=document.getElementById('sudoku-grid');container.innerHTML='';
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+    const cell=document.createElement('div');
+    const given=sudokuGrid[r][c]!==0;
+    let cls='sc-cell'+(given?' given':'');
+    if(c===2||c===5)cls+=' bb';if(r===2||r===5)cls+=' bt';
+    cell.className=cls;cell.textContent=sudokuGrid[r][c]||'';
+    cell.dataset.r=r;cell.dataset.c=c;
+    if(!given)cell.onclick=()=>selectSudokuCell(r,c);
+    container.appendChild(cell);
+  }
+}
+function renderNumpad(){
+  const np=document.getElementById('numpad');np.innerHTML='';
+  for(let n=1;n<=9;n++){
+    const btn=document.createElement('button');btn.className='npbtn';
+    btn.textContent=n;btn.onclick=()=>enterSudokuNum(n);np.appendChild(btn);
+  }
+  const er=document.createElement('button');er.className='npbtn erase';er.textContent='✕';er.onclick=()=>enterSudokuNum(0);np.appendChild(er);
+}
+function selectSudokuCell(r,c){
+  selectedCell={r,c};
+  document.querySelectorAll('.sc-cell').forEach(el=>el.classList.remove('selected'));
+  const cells=document.querySelectorAll('.sc-cell');
+  if(cells[r*9+c])cells[r*9+c].classList.add('selected');
+}
+function enterSudokuNum(n){
+  if(!selectedCell)return;
+  const{r,c}=selectedCell;
+  const cells=document.querySelectorAll('.sc-cell');
+  if(cells[r*9+c]?.classList.contains('given'))return;
+  sudokuGrid[r][c]=n;
+  const cell=cells[r*9+c];
+  cell.textContent=n||'';
+  cell.classList.remove('correct','wrong');
+  if(n>0){if(sudokuSolution[r][c]===n)cell.classList.add('correct');else cell.classList.add('wrong');}
+}
+function checkSudoku(){
+  let allCorrect=true,allFilled=true;
+  const cells=document.querySelectorAll('.sc-cell');
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+    const cell=cells[r*9+c];
+    if(sudokuGrid[r][c]===0){allFilled=false;allCorrect=false;}
+    else if(sudokuGrid[r][c]!==sudokuSolution[r][c]){allCorrect=false;cell.classList.add('wrong');}
+    else cell.classList.add('correct');
+  }
+  const msg=document.getElementById('sudoku-msg');
+  if(allCorrect&&allFilled){
+    const bonus={easy:0,medium:5,hard:10}[sudokuDifficulty]||0;
+    brainPtsToday=Math.max(brainPtsToday,30+bonus);
+    document.getElementById('brain-pts-disp').textContent=brainPtsToday;
+    msg.innerHTML=`<span style="color:#10B981;font-size:16px">🎉 PERFECT! +${30+bonus} pts!</span>`;
+    toast('Sudoku solved! +'+(30+bonus)+' brain pts!');
+  }else if(!allFilled){msg.innerHTML='<span style="color:#F97316">Fill all cells first!</span>';}
+  else{msg.innerHTML='<span style="color:#EF4444">Some cells have errors. Keep trying! 💪</span>';}
+}
+function revealSudokuHint(){
+  brainPtsToday=Math.max(0,brainPtsToday-5);
+  document.getElementById('brain-pts-disp').textContent=brainPtsToday;
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+    if(sudokuGrid[r][c]===0){
+      sudokuGrid[r][c]=sudokuSolution[r][c];
+      const cells=document.querySelectorAll('.sc-cell');
+      cells[r*9+c].textContent=sudokuSolution[r][c];
+      cells[r*9+c].classList.add('correct');
+      toast('Hint revealed! −5 pts');return;
+    }
+  }
+}
+
+// ════════════════════════════════════════════
+// LOGIC PUZZLES
+// ════════════════════════════════════════════
+function genLogicPuzzles(){
+  logicAnswered=[];logicPts=0;
+  const shuffled=[...LOGIC_PUZZLES].sort(()=>Math.random()-.5).slice(0,3);
+  const c=document.getElementById('logic-puzzles');if(!c)return;c.innerHTML='';
+  shuffled.forEach((p,i)=>{
+    const div=document.createElement('div');div.className='logic-card';
+    div.innerHTML=`<div class="logic-q">Q${i+1}: ${p.q}</div>
+      ${p.opts.map((o,oi)=>`<button class="opt-btn" onclick="answerLogic(${i},${oi},${p.ans},'${p.exp.replace(/'/g,"\\'").replace(/"/g,'\\"')}',this)">${String.fromCharCode(65+oi)}) ${o}</button>`).join('')}
+      <div id="lexpl-${i}" style="display:none;margin-top:8px;font-size:12px;background:var(--gl);border-radius:6px;padding:8px 10px;color:var(--gd)"></div>`;
+    c.appendChild(div);
+  });
+}
+function answerLogic(qi,chosen,correct,exp,btn){
+  if(logicAnswered.includes(qi))return;
+  logicAnswered.push(qi);
+  const isRight=chosen===correct;
+  btn.className='opt-btn '+(isRight?'correct':'wrong');
+  if(isRight){
+    logicPts+=15;brainPtsToday+=15;
+    document.getElementById('brain-pts-disp').textContent=brainPtsToday;
+    toast('Correct! +15 brain pts! 🧠');
+  }else{toast('Not quite! Right answer: '+String.fromCharCode(65+correct));}
+  const expl=document.getElementById('lexpl-'+qi);
+  if(expl){expl.style.display='block';expl.textContent='💡 Explanation: '+exp;}
+}
+
+// ════════════════════════════════════════════
+// RIDDLES
+// ════════════════════════════════════════════
+function genRiddles(){
+  riddleAnswered=[];riddlePts=0;
+  const shuffled=[...RIDDLES].sort(()=>Math.random()-.5).slice(0,3);
+  const c=document.getElementById('riddle-section');if(!c)return;c.innerHTML='';
+  shuffled.forEach((r,i)=>{
+    const div=document.createElement('div');
+    div.style.cssText='background:var(--pkl);border-radius:var(--rads);border:2px solid var(--pkm);padding:14px;margin-bottom:10px';
+    div.innerHTML=`<div style="font-size:14px;font-weight:800;color:var(--pkd);margin-bottom:10px">Riddle ${i+1}: ${r.q}</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <input type="text" id="rid-ans-${i}" placeholder="Your answer..." style="flex:1;border-color:var(--pkm)">
+        <button class="btn btn-p" style="font-size:12px;padding:7px 14px;background:linear-gradient(135deg,var(--pk),var(--pkd));border:none" onclick="checkRiddle(${i},'${r.a.replace(/'/g,"\\'")}','${r.hint.replace(/'/g,"\\'")}')">Check!</button>
+      </div>
+      <div id="rid-hint-${i}" style="font-size:11px;color:var(--pkd);cursor:pointer;text-decoration:underline" onclick="document.getElementById('rid-hint-${i}').textContent='Hint: ${r.hint}'">Show hint</div>
+      <div id="rid-result-${i}" style="margin-top:6px"></div>`;
+    c.appendChild(div);
+  });
+}
+function checkRiddle(i,correct,hint){
+  if(riddleAnswered.includes(i))return;
+  const ans=(document.getElementById('rid-ans-'+i)?.value||'').trim().toLowerCase();
+  const isRight=ans===correct.toLowerCase()||correct.toLowerCase().includes(ans)&&ans.length>2;
+  riddleAnswered.push(i);
+  if(isRight){
+    riddlePts+=10;brainPtsToday+=10;
+    document.getElementById('brain-pts-disp').textContent=brainPtsToday;
+    document.getElementById('rid-result-'+i).innerHTML='<span style="color:#10B981;font-weight:800">🎉 Correct! +10 pts! Answer: '+correct+'</span>';
+    toast('Riddle solved! +10 brain pts!');
+  }else{
+    document.getElementById('rid-result-'+i).innerHTML='<span style="color:#EF4444;font-weight:800">❌ Not quite! Answer: '+correct+'</span>';
+  }
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+buildAll();
+updateTopBar();
+calcDayPts();
+</script>
+</body>
+</html>
