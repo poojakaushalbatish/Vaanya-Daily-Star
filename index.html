@@ -536,27 +536,20 @@ tr:hover td{background:#FAFBFF}
 <div class="sec" style="border-color:var(--am)">
   <div class="sh">
     <div class="si" style="background:var(--al);color:var(--a)">🤸</div>
-    Gymnastics & exercise
-    <span class="ptag">20 pts gym · 10 pts exercise</span>
+    Physical activity today
+    <span class="ptag">Up to 10 pts</span>
   </div>
-  <div class="g2">
-    <div>
-      <div class="fl">Activity today?</div>
-      <div class="pills" id="gym-today">
-        <div class="pill" onclick="toggleEx(this,'gym-today','pa');calcDayPts()">🤸 Gym class! (+20)</div>
-        <div class="pill" onclick="toggleEx(this,'gym-today','pb');calcDayPts()">🏃 Exercise (+10)</div>
-        <div class="pill" onclick="toggleEx(this,'gym-today','pt');calcDayPts()">🚴 Outdoor play (+10)</div>
-        <div class="pill" onclick="toggleEx(this,'gym-today','pr');calcDayPts()">💤 Rest day</div>
-      </div>
-      <div class="fl mt10">Duration</div>
-      <input type="text" id="gym-dur" placeholder="e.g. 1.5 hrs, 45 mins">
-    </div>
-    <div>
-      <div class="fl">What I practised today</div>
-      <textarea id="gym-notes" placeholder="Skills, drills, what coach said..."></textarea>
-      <div class="fl mt10">Energy level ⭐</div>
-      <div class="stars mt6" id="gym-stars"></div>
-    </div>
+  <div>
+    <div class="fl">What activity did I do today?</div>
+    <select id="gym-today" onchange="calcDayPts()" style="margin-top:4px">
+      <option value="0">Select activity...</option>
+      <option value="5">🤸 Gymnastics (+5 pts)</option>
+      <option value="10">💃 Kathak (+10 pts)</option>
+      <option value="5">🥋 Taekwondo (+5 pts)</option>
+      <option value="7">👧 Playing with Kinnu (+7 pts)</option>
+      <option value="0">💤 Rest day (0 pts)</option>
+    </select>
+    <div id="gym-pts-msg" style="margin-top:6px;font-size:11px;font-weight:800"></div>
   </div>
   <div class="sec-pts-row" id="gym-pts-row">
     <span class="sec-pts-label">🤸 Activity points earned today</span>
@@ -575,11 +568,10 @@ tr:hover td{background:#FAFBFF}
 
   <!-- Screen time: 10 pts within limits -->
   <div style="background:var(--pkl);border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--pkm)">
-    <div class="fl" style="color:var(--pkd);margin-bottom:6px">📺 Screen time within allowed window? <span style="font-size:10px;color:var(--pkd)">(+10 pts)</span></div>
+    <div class="fl" style="color:var(--pkd);margin-bottom:6px">📺 Screen time today <span style="font-size:10px;color:var(--pkd)">(limit: 30 mins)</span></div>
     <div class="pills" id="screen-check">
-      <div class="pill" onclick="toggleEx(this,'screen-check','pg');calcDayPts()">✅ Within limits! (+10)</div>
-      <div class="pill" onclick="toggleEx(this,'screen-check','pa');calcDayPts()">🟡 A little over (+5)</div>
-      <div class="pill" onclick="toggleEx(this,'screen-check','pr');calcDayPts()">❌ Went over (+0)</div>
+      <div class="pill" onclick="toggleEx(this,'screen-check','pg');calcDayPts()">✅ 30 mins or less (+10)</div>
+      <div class="pill" onclick="toggleEx(this,'screen-check','pr');calcDayPts()">❌ More than 30 mins (−10)</div>
     </div>
     <div style="margin-top:8px">
       <div class="fl">What I watched / played</div>
@@ -587,16 +579,22 @@ tr:hover td{background:#FAFBFF}
     </div>
   </div>
 
-  <!-- Skill builder: 10 pts -->
+  <!-- Skill builder: AI evaluated -->
   <div style="background:var(--bl);border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--bm);background:#EFF6FF">
-    <div class="fl" style="color:var(--bd);margin-bottom:6px">🎯 Skill builder activity today <span style="font-size:10px;color:var(--bd)">(+10 pts)</span></div>
-    <div class="pills" id="skill-check">
-      <div class="pill" onclick="toggleEx(this,'skill-check','pb');calcDayPts()">✅ Did a skill activity! (+10)</div>
-      <div class="pill" onclick="toggleEx(this,'skill-check','pr');calcDayPts()">❌ Not today (+0)</div>
+    <div class="fl" style="color:var(--bd);margin-bottom:6px">🎯 Skill builder activity today <span style="font-size:10px;color:var(--bd)">(AI awards up to +10 pts · No activity = −10 pts)</span></div>
+    <select id="skill-did" onchange="handleSkillSelect()" style="margin-bottom:8px">
+      <option value="">Did I do a skill activity today?</option>
+      <option value="yes">✅ Yes, I did!</option>
+      <option value="no">❌ No, not today</option>
+    </select>
+    <div id="skill-yes-box" style="display:none">
+      <div class="fl" style="color:var(--bd);margin-bottom:4px">What did I learn or practise? (describe in detail)</div>
+      <textarea id="skill-desc" placeholder="e.g. I learnt how to fold an origami crane, I practised sketching faces, I solved a new type of puzzle..." style="min-height:60px;border-color:var(--bm)"></textarea>
+      <button onclick="evaluateSkillWithAI()" class="btn btn-p" style="margin-top:8px;font-size:12px;padding:7px 16px;background:linear-gradient(135deg,var(--b),var(--bd));border:none">🤖 Ask AI to evaluate my skill!</button>
+      <div id="skill-ai-result" style="display:none;margin-top:10px"></div>
     </div>
-    <div style="margin-top:8px">
-      <input type="text" id="skill-act" placeholder="e.g. Drawing, origami, puzzle, Rubik's cube...">
-    </div>
+    <div id="skill-no-msg" style="display:none;margin-top:6px;font-size:12px;font-weight:800;color:var(--rd)">😔 No skill activity today — that's −10 pts. Try something new tomorrow!</div>
+    <div id="skill-pts-final" style="display:none;margin-top:6px"></div>
   </div>
 
   <!-- Reading: 10 pts with book type dropdown -->
@@ -1220,6 +1218,7 @@ function showSyncStatus(state) {
   el.innerHTML = `<span style="color:${s.col};font-size:11px;font-weight:800">${s.icon} ${s.text}</span>`;
 }
 let brainPtsToday = 0;
+let aiSkillPts = 0; // set by AI skill evaluator
 let sudokuGrid    = null, sudokuSolution = null, selectedCell = null, sudokuDifficulty = 'easy';
 let currentShloka = 0;
 let creativeChosen = null;
@@ -1322,7 +1321,7 @@ function showPuzzle(type,btn){
 // ════════════════════════════════════════════
 function buildAll(){
   buildHW();
-  buildStars('gym-stars',5);buildStars('creative-stars',5);
+  buildStars('creative-stars',5);
   buildCreativeOptions();buildShlokaDisplay();
   genSudoku('easy');genLogicPuzzles();genRiddles();
   buildEarnGuide();
@@ -1537,23 +1536,28 @@ function calcDayPts(){
   const oddaPtEl=document.getElementById('odda-pts-display');
   if(oddaPtEl)oddaPtEl.textContent=oddaPts+' pts';
 
-  // Gym — fix #7: pills pa/pb/pt all detected
+  // Gym — now a dropdown select
   let gymPts=0;
-  const gym=document.getElementById('gym-today');
-  if(gym?.querySelector('.pa'))gymPts=20;
-  else if(gym?.querySelector('.pb')||gym?.querySelector('.pt'))gymPts=10;
+  const gymSel=document.getElementById('gym-today');
+  gymPts=parseInt(gymSel?.value||0);
   pts+=gymPts;breakdown.gym=gymPts;
   const gymPtEl=document.getElementById('gym-pts-display');
   if(gymPtEl)gymPtEl.textContent=gymPts+' pts';
+  // Gym message
+  const gymMsg=document.getElementById('gym-pts-msg');
+  if(gymMsg){
+    if(gymPts>0)gymMsg.innerHTML=`<span style="color:var(--g);font-weight:800">🎉 Great! +${gymPts} pts earned!</span>`;
+    else if(gymSel?.value==='0'&&gymSel?.selectedIndex>0)gymMsg.innerHTML=`<span style="color:var(--muted)">Rest day — recharge for tomorrow!</span>`;
+    else gymMsg.innerHTML='';
+  }
 
-  // Screen — new multi-part: screen 10pts + skill 10pts + book 5/10pts + free act +/-10
+  // Screen — screen check: +10 within 30 mins, -10 if over
   let screenPts=0;
   const sc=document.getElementById('screen-check');
   if(sc?.querySelector('.pg'))screenPts+=10;
-  else if(sc?.querySelector('.pa'))screenPts+=5;
-  // skill builder
-  const skillChk=document.getElementById('skill-check');
-  if(skillChk?.querySelector('.pb'))screenPts+=10;
+  else if(sc?.querySelector('.pr'))screenPts-=10;
+  // skill builder — pts awarded by AI, stored in aiSkillPts
+  screenPts+=aiSkillPts;
   // book type
   const bookType=parseInt(document.getElementById('book-type')?.value||0);
   screenPts+=bookType;
@@ -1626,9 +1630,12 @@ function calcDayPts(){
   const scOdda=document.getElementById('sc-odda');
   if(scOdda)scOdda.textContent=oAttQ?.querySelector('.pg')?'Yes ✅':'No';
 
-  const gymEl=document.getElementById('gym-today');
+  const gymSelEl=document.getElementById('gym-today');
   const scPhys=document.getElementById('sc-phys');
-  if(scPhys)scPhys.textContent=gymEl?.querySelector('.pa')?'Gym! 🤸':gymEl?.querySelector('.pb')||gymEl?.querySelector('.pt')?'Active 🏃':'Rest 💤';
+  if(scPhys){
+    const gv=gymSelEl?.options[gymSelEl?.selectedIndex]?.text||'–';
+    if(scPhys)scPhys.textContent=gymSelEl?.value&&gymSelEl.value!=='0'?gymSelEl.options[gymSelEl.selectedIndex].text.split('(')[0].trim():'Rest 💤';
+  }
 
   // Points breakdown display — fix #9
   renderBreakdown(breakdown,pts);
@@ -2357,6 +2364,84 @@ function checkRiddle(i,correct,hint){
     toast('Riddle solved! +10 brain pts!');
   }else{
     document.getElementById('rid-result-'+i).innerHTML='<span style="color:#EF4444;font-weight:800">❌ Not quite! Answer: '+correct+'</span>';
+  }
+}
+
+// ════════════════════════════════════════════
+// SKILL BUILDER — AI evaluation
+// ════════════════════════════════════════════
+function handleSkillSelect(){
+  const val=document.getElementById('skill-did')?.value;
+  document.getElementById('skill-yes-box').style.display=val==='yes'?'block':'none';
+  document.getElementById('skill-no-msg').style.display=val==='no'?'block':'none';
+  document.getElementById('skill-pts-final').style.display='none';
+  document.getElementById('skill-ai-result').style.display='none';
+  if(val==='no'){aiSkillPts=-10;}
+  else{aiSkillPts=0;}
+  calcDayPts();
+}
+
+async function evaluateSkillWithAI(){
+  const desc=(document.getElementById('skill-desc')?.value||'').trim();
+  if(!desc){toast('Please describe what you learnt first!');return;}
+
+  const resultBox=document.getElementById('skill-ai-result');
+  resultBox.style.display='block';
+  resultBox.innerHTML=`<div style="color:var(--bd);font-size:12px;font-weight:800">🤖 AI is checking your skill activity...</div>`;
+
+  // Get past skill descriptions from savedDays full_data to check for repeats
+  const pastSkills=savedDays.slice(0,14).map(d=>{
+    try{const fd=typeof d.full_data==='string'?JSON.parse(d.full_data):d;return fd.skillDesc||'';}catch{return '';}
+  }).filter(Boolean).join(' | ');
+
+  const prompt=`You are an evaluator for a child named Vaanya (Class 6, ~11 years old, Delhi, India).
+
+She claims to have done a skill-building activity today. Your job is to:
+1. Check if what she described is actually a genuine SKILL activity (creative, physical, intellectual, artistic — not just watching TV or scrolling).
+2. Check if it's age-appropriate for an 11-year-old.
+3. Check if it seems like a repeat of what she has done in the past 14 days (past activities: "${pastSkills||'none recorded'}").
+4. Award points from 0 to 10 based on: genuineness of skill (3pts), effort/detail described (4pts), novelty/not repeated (3pts).
+
+Her description today: "${desc}"
+
+Reply ONLY in this exact JSON format (no extra text):
+{"valid":true/false,"pts":0-10,"reason":"short encouraging reason in 1-2 sentences","repeated":true/false,"feedback":"one friendly sentence to Vaanya"}`;
+
+  try{
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:300,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data=await response.json();
+    let text=(data.content?.[0]?.text||'').trim();
+    // strip markdown code fences if any
+    text=text.replace(/```json|```/g,'').trim();
+    const result=JSON.parse(text);
+
+    aiSkillPts=result.valid?(result.pts||0):-10;
+    const col=aiSkillPts>=7?'var(--gd)':aiSkillPts>=4?'var(--bd)':aiSkillPts>0?'var(--ad)':'var(--rd)';
+    const icon=aiSkillPts>=7?'🌟':aiSkillPts>=4?'👍':aiSkillPts>0?'🙂':'❌';
+
+    resultBox.innerHTML=`
+      <div style="background:${aiSkillPts>0?'var(--gl)':'var(--rl)'};border:1.5px solid ${aiSkillPts>0?'var(--gm)':'var(--rm)'};border-radius:10px;padding:12px">
+        <div style="font-size:13px;font-weight:900;color:${col};margin-bottom:6px">${icon} AI Verdict: ${aiSkillPts>0?'+'+aiSkillPts+' pts awarded':'Not counted as a skill activity'}</div>
+        <div style="font-size:12px;color:var(--ink);margin-bottom:4px">${result.reason}</div>
+        <div style="font-size:11px;color:${col};font-weight:700">${result.feedback}</div>
+        ${result.repeated?'<div style="font-size:11px;color:var(--ad);margin-top:4px">⚠️ Looks like you\'ve done something similar recently — try something new next time for full points!</div>':''}
+      </div>`;
+
+    document.getElementById('skill-pts-final').style.display='block';
+    document.getElementById('skill-pts-final').innerHTML=`<span style="font-size:12px;font-weight:800;color:${col}">${icon} Skill points added: ${aiSkillPts>=0?'+':''}${aiSkillPts}</span>`;
+    calcDayPts();
+    toast(aiSkillPts>0?`Skill evaluated! +${aiSkillPts} pts earned! 🎯`:'Skill not counted this time — try something new!');
+  }catch(err){
+    resultBox.innerHTML=`<div style="color:var(--rd);font-size:12px;font-weight:700">⚠️ Could not evaluate right now. Trying again later!</div>`;
+    console.error('Skill AI error:',err);
   }
 }
 
