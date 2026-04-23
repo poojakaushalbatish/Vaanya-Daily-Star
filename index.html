@@ -1767,7 +1767,7 @@ function unlockParentActions(){
 
 async function approveReport(){
   const date=document.getElementById('rpt-date').value;
-  if(!date){toast('Please set today's date first!');return;}
+  if(!date){toast("Please set today's date first!");return;}
   todayApproved=true;
   const pts=calcDayPts();
 
@@ -1901,17 +1901,7 @@ function markUsedToday(id){
   localStorage.setItem(SPEND_USED_KEY,JSON.stringify({date:today,ids:used}));
 }
 
-// Spend tracking helpers
-const SPEND_USED_KEY='vaanya_spend_used_today';
-function getUsedToday(){
-  const today=new Date().toISOString().split('T')[0];
-  try{const raw=JSON.parse(localStorage.getItem(SPEND_USED_KEY)||'{}');return raw.date===today?(raw.ids||[]):[]; }catch(e){return [];}
-}
-function markUsedToday(id){
-  const today=new Date().toISOString().split('T')[0];
-  const used=getUsedToday();if(!used.includes(id))used.push(id);
-  localStorage.setItem(SPEND_USED_KEY,JSON.stringify({date:today,ids:used}));
-}
+// Spend tracking helpers (SPEND_USED_KEY already declared above)
 
 
 function renderSpend(){
