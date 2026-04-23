@@ -349,10 +349,10 @@ tr:hover td{background:#FAFBFF}
     <div class="tb-title">Vaanya's Daily Star ⭐</div>
     <div class="tb-sub">Class 6 · DPS Noida · CBSE 2026–27</div>
     <div style="font-size:10px;opacity:.85;margin-top:4px;background:rgba(255,255,255,.15);border-radius:8px;padding:4px 10px;display:inline-block">
-      🏆 Max daily pts: <b>Daily Report ~430 + Brain Lab ~55 + Shloka 25 + Creative 20 = ~530 pts</b>
+      🏆 Max daily pts: <b>Daily Report ~415 + Brain Lab ~55 + Shloka 25 + Creative 20 = ~515 pts</b>
     </div>
     <div class="xp-wrap" style="margin-top:6px"><div class="xp-fill" id="xp-bar" style="width:0%"></div></div>
-    <div style="font-size:9px;opacity:.7;margin-top:2px" id="xp-lbl">0 / 530 pts today</div>
+    <div style="font-size:9px;opacity:.7;margin-top:2px" id="xp-lbl">0 / 515 pts today</div>
   </div>
   <div class="tb-pts">
     <div class="pts-chip"><div class="pts-chip-num" id="day-pts-live">0</div><div class="pts-chip-lbl">Today's pts</div></div>
@@ -398,21 +398,21 @@ tr:hover td{background:#FAFBFF}
       <input type="date" id="rpt-date" onchange="checkPenalty();calcDayPts()">
     </div>
     <div>
-      <div class="fl">Timetable followed? <span style="color:var(--a)">(up to +25 pts)</span></div>
+      <div class="fl">Timetable followed? <span style="color:var(--a)">(up to +15 pts)</span></div>
       <select id="rpt-tt" onchange="calcDayPts()">
         <option value="0">Select...</option>
-        <option value="25">✅ Fully followed! (+25)</option>
-        <option value="15">🟡 Mostly (+15)</option>
+        <option value="15">✅ Fully followed! (+15)</option>
+        <option value="10">🟡 Mostly (+10)</option>
         <option value="5">🔶 A bit (+5)</option>
         <option value="0">❌ Not followed (+0)</option>
       </select>
     </div>
     <div>
-      <div class="fl">School attended? <span style="color:var(--a)">(+10 pts)</span></div>
+      <div class="fl">School attended? <span style="color:var(--a)">(+5 pts)</span></div>
       <select id="rpt-school" onchange="calcDayPts()">
         <option value="0">Select...</option>
-        <option value="10">Yes, full day (+10)</option>
-        <option value="5">Partial day (+5)</option>
+        <option value="5">Yes, full day (+5)</option>
+        <option value="2">Partial day (+2)</option>
         <option value="0">Holiday / absent</option>
       </select>
     </div>
@@ -501,8 +501,7 @@ tr:hover td{background:#FAFBFF}
     <span class="must-badge">Mandatory — −15 pts if missed!</span>
     <span class="ptag">15 pts attended</span>
   </div>
-  <div class="g2">
-    <div>
+  <div>
       <div class="fl">Did I attend today?</div>
       <div class="pills" id="odda-att">
         <div class="pill" onclick="toggleEx(this,'odda-att','pg');calcDayPts()">✅ Yes! (+15)</div>
@@ -510,7 +509,6 @@ tr:hover td{background:#FAFBFF}
       </div>
       <div class="fl mt10">Subject covered</div>
       <input type="text" id="odda-subj" placeholder="e.g. Maths — fractions, decimals">
-      <!-- Assignment instead of question -->
       <div class="fl mt10">Odda assignment completed?</div>
       <div class="pills" id="odda-assign">
         <div class="pill" onclick="toggleEx(this,'odda-assign','pg');showOddaAssign(true);calcDayPts()">✅ Yes, completed!</div>
@@ -526,15 +524,6 @@ tr:hover td{background:#FAFBFF}
         </div>
         <div id="odda-assign-result" style="margin-top:6px;font-size:13px;font-weight:800"></div>
       </div>
-    </div>
-    <div>
-      <div class="fl">How well did I understand?</div>
-      <div class="stars mt6" id="odda-stars"></div>
-      <div class="fl mt10">What I learnt</div>
-      <textarea id="odda-notes" placeholder="Key concepts from today's Odda class..."></textarea>
-      <div class="fl mt10">Topic to revise</div>
-      <input type="text" id="odda-rev" placeholder="e.g. HCF problems, algebra basics">
-    </div>
   </div>
   <div class="sec-pts-row" id="odda-pts-row">
     <span class="sec-pts-label">💻 Odda points earned today</span>
@@ -1333,7 +1322,7 @@ function showPuzzle(type,btn){
 // ════════════════════════════════════════════
 function buildAll(){
   buildHW();
-  buildStars('odda-stars',5);buildStars('gym-stars',5);buildStars('creative-stars',5);
+  buildStars('gym-stars',5);buildStars('creative-stars',5);
   buildCreativeOptions();buildShlokaDisplay();
   genSudoku('easy');genLogicPuzzles();genRiddles();
   buildEarnGuide();
@@ -1675,7 +1664,7 @@ function renderBreakdown(bd,total){
 }
 
 function updateXP(pts){
-  const max=530;
+  const max=515;
   const pct=Math.min(100,Math.round(Math.max(0,pts)/max*100));
   const el=document.getElementById('xp-bar');if(el)el.style.width=pct+'%';
   const lbl=document.getElementById('xp-lbl');if(lbl)lbl.textContent=pts+' / '+max+' max pts today';
