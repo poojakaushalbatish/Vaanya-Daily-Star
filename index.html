@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vaanya's Daily Star ⭐</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 :root{
@@ -57,6 +58,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--ink);font-
 .nb.t4.active{background:linear-gradient(135deg,#EC4899,#9D174D)}
 .nb.t5.active{background:linear-gradient(135deg,#F97316,#C2410C)}
 .nb.t6.active{background:linear-gradient(135deg,#3B82F6,#1D4ED8)}
+#nb-parent.active{color:#fff!important;background:linear-gradient(135deg,#7C3AED,#DB2777)!important;box-shadow:0 2px 8px rgba(0,0,0,.15)!important}
 .tab{display:none}.tab.active{display:block}
 
 /* SECTION */
@@ -346,8 +348,11 @@ tr:hover td{background:#FAFBFF}
   <div class="tb-info">
     <div class="tb-title">Vaanya's Daily Star ⭐</div>
     <div class="tb-sub">Class 6 · DPS Noida · CBSE 2026–27</div>
-    <div class="xp-wrap"><div class="xp-fill" id="xp-bar" style="width:0%"></div></div>
-    <div style="font-size:9px;opacity:.7;margin-top:2px" id="xp-lbl">0 / 300 pts</div>
+    <div style="font-size:10px;opacity:.85;margin-top:4px;background:rgba(255,255,255,.15);border-radius:8px;padding:4px 10px;display:inline-block">
+      🏆 Max daily pts: <b>Daily Report ~430 + Brain Lab ~55 + Shloka 25 + Creative 20 = ~530 pts</b>
+    </div>
+    <div class="xp-wrap" style="margin-top:6px"><div class="xp-fill" id="xp-bar" style="width:0%"></div></div>
+    <div style="font-size:9px;opacity:.7;margin-top:2px" id="xp-lbl">0 / 530 pts today</div>
   </div>
   <div class="tb-pts">
     <div class="pts-chip"><div class="pts-chip-num" id="day-pts-live">0</div><div class="pts-chip-lbl">Today's pts</div></div>
@@ -355,6 +360,12 @@ tr:hover td{background:#FAFBFF}
     <div class="pts-chip"><div class="pts-chip-num" id="streak-top">0🔥</div><div class="pts-chip-lbl">Streak</div></div>
     <div class="date-pill" id="today-pill"></div>
   </div>
+</div>
+
+<!-- SYNC STATUS BAR -->
+<div style="background:rgba(255,255,255,0.9);border-radius:10px;padding:6px 14px;margin-bottom:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+  <div id="sync-status"><span style="color:#F59E0B;font-size:11px;font-weight:800">⏳ Connecting to cloud...</span></div>
+  <button onclick="exportBackup()" style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;border:1.5px solid var(--border);background:#F9FAFB;cursor:pointer;color:var(--muted)">⬇️ Download Backup</button>
 </div>
 
 <!-- PENALTY BAR -->
@@ -367,6 +378,7 @@ tr:hover td{background:#FAFBFF}
   <button class="nb t2" onclick="showTab('spend',this)">🛒 Spend</button>
   <button class="nb t3" onclick="showTab('brain',this)">🧠 Brain Lab</button>
   <button class="nb t4" onclick="showTab('soul',this)">🕉️ Geeta & Creative</button>
+  <button class="nb t4" onclick="showTab('parent',this)" style="">👩‍👧‍👦 Mamma & Papa</button>
   <button class="nb t5" onclick="showTab('history',this)">📅 History</button>
   <button class="nb t6" onclick="showTab('graphs',this)">📈 Progress</button>
 </div>
@@ -414,17 +426,30 @@ tr:hover td{background:#FAFBFF}
 
 <!-- TESTS & ASSESSMENTS -->
 <div id="monday-test-sec">
-  <div class="divlbl">Tests & assessments</div>
+  <div class="divlbl">Monday / Weekly Test</div>
   <div class="sec" style="border-color:var(--pkm)">
     <div class="sh">
       <div class="si" style="background:var(--pkl);color:var(--pk)">📝</div>
-      Test / Assessment
+      Monday / Weekly Test
       <span class="ptag">Up to 80 pts based on %</span>
     </div>
     <div class="g3">
       <div>
         <div class="fl">Subject tested today</div>
-        <input type="text" id="test-subj" placeholder="e.g. Maths, English...">
+        <select id="test-subj" onchange="showTestChapters()">
+          <option value="">Select subject...</option>
+          <option value="Maths">📐 Maths</option>
+          <option value="English">📖 English</option>
+          <option value="Hindi">📚 Hindi</option>
+          <option value="Science">🔬 Science</option>
+          <option value="Social Science">🌍 Social Science</option>
+          <option value="Sanskrit">🕉️ Sanskrit</option>
+          <option value="Computer Sc.">💻 Computer Sc.</option>
+        </select>
+        <div id="test-chapters-box" style="display:none;margin-top:10px">
+          <div class="fl">Chapters / Topics in the test</div>
+          <textarea id="test-chapters" placeholder="e.g. Chapter 4 – Fractions, Chapter 5 – Decimals..." style="min-height:60px"></textarea>
+        </div>
         <div class="fl mt10">Marks got / Total marks</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
           <input type="number" id="test-got" min="0" max="200" placeholder="Got" oninput="calcScore()" style="text-align:center;font-size:16px;font-weight:900">
@@ -437,13 +462,11 @@ tr:hover td{background:#FAFBFF}
         <div id="test-grade" style="text-align:center"></div>
       </div>
       <div>
-        <div style="background:var(--gl);border-radius:var(--rads);padding:12px;text-align:center;margin-bottom:10px">
+        <div style="background:var(--gl);border-radius:var(--rads);padding:12px;text-align:center">
           <div style="font-size:11px;font-weight:800;color:var(--gd);margin-bottom:4px">POINTS AWARDED</div>
           <div style="font-size:28px;font-weight:900;color:var(--gd)" id="test-pts-display">0 pts</div>
-          <div style="font-size:10px;color:var(--gd);margin-top:3px">90%+=80 · 75%+=60 · 60%+=40 · else+20</div>
+          <div style="font-size:10px;color:var(--gd);margin-top:3px">90%+ = 80 · 75–89% = 60 · 60–74% = 40 · &lt;60% = 20</div>
         </div>
-        <div class="fl">Topics to revise</div>
-        <textarea id="test-revise" placeholder="e.g. LCM chapter..."></textarea>
       </div>
     </div>
   </div>
@@ -558,32 +581,68 @@ tr:hover td{background:#FAFBFF}
   <div class="sh">
     <div class="si" style="background:var(--pkl);color:var(--pk)">📺</div>
     Screen & free time balance
-    <span class="ptag">20 pts within limits</span>
+    <span class="ptag">Up to 40 pts</span>
   </div>
-  <div class="g2">
-    <div>
-      <div class="fl">Screen within allowed window?</div>
-      <div class="pills" id="screen-check">
-        <div class="pill" onclick="toggleEx(this,'screen-check','pg');calcDayPts()">✅ Within limits! (+20)</div>
-        <div class="pill" onclick="toggleEx(this,'screen-check','pa');calcDayPts()">🟡 A little over (+10)</div>
-        <div class="pill" onclick="toggleEx(this,'screen-check','pr');calcDayPts()">❌ Went over (+0)</div>
-      </div>
-      <div class="fl mt10">What I watched / played</div>
-      <input type="text" id="screen-what" placeholder="Show/YouTube/game name">
-      <div class="fl mt10">Total screen time today</div>
-      <input type="text" id="screen-time" placeholder="e.g. 1 hr 30 mins">
+
+  <!-- Screen time: 10 pts within limits -->
+  <div style="background:var(--pkl);border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--pkm)">
+    <div class="fl" style="color:var(--pkd);margin-bottom:6px">📺 Screen time within allowed window? <span style="font-size:10px;color:var(--pkd)">(+10 pts)</span></div>
+    <div class="pills" id="screen-check">
+      <div class="pill" onclick="toggleEx(this,'screen-check','pg');calcDayPts()">✅ Within limits! (+10)</div>
+      <div class="pill" onclick="toggleEx(this,'screen-check','pa');calcDayPts()">🟡 A little over (+5)</div>
+      <div class="pill" onclick="toggleEx(this,'screen-check','pr');calcDayPts()">❌ Went over (+0)</div>
     </div>
-    <div>
-      <div class="fl">Skill builder activity today</div>
-      <input type="text" id="skill-act" placeholder="e.g. Drawing, origami, puzzle, Rubik's cube">
-      <div class="fl mt10">Reading today</div>
-      <input type="text" id="book-read" placeholder="Book + pages e.g. Wimpy Kid p.40–55">
-      <div class="fl mt10">Free time activity</div>
-      <input type="text" id="free-act" placeholder="e.g. Played with friends, cycling...">
+    <div style="margin-top:8px">
+      <div class="fl">What I watched / played</div>
+      <input type="text" id="screen-what" placeholder="Show / YouTube / game name">
     </div>
   </div>
+
+  <!-- Skill builder: 10 pts -->
+  <div style="background:var(--bl);border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--bm);background:#EFF6FF">
+    <div class="fl" style="color:var(--bd);margin-bottom:6px">🎯 Skill builder activity today <span style="font-size:10px;color:var(--bd)">(+10 pts)</span></div>
+    <div class="pills" id="skill-check">
+      <div class="pill" onclick="toggleEx(this,'skill-check','pb');calcDayPts()">✅ Did a skill activity! (+10)</div>
+      <div class="pill" onclick="toggleEx(this,'skill-check','pr');calcDayPts()">❌ Not today (+0)</div>
+    </div>
+    <div style="margin-top:8px">
+      <input type="text" id="skill-act" placeholder="e.g. Drawing, origami, puzzle, Rubik's cube...">
+    </div>
+  </div>
+
+  <!-- Reading: 10 pts with book type dropdown -->
+  <div style="background:#ECFDF5;border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--gm)">
+    <div class="fl" style="color:var(--gd);margin-bottom:6px">📚 Reading today <span style="font-size:10px;color:var(--gd)">(up to +10 pts)</span></div>
+    <select id="book-type" onchange="showBookKnowledge();calcDayPts()">
+      <option value="0">Did I read today?</option>
+      <option value="5">📖 Story book / fiction (+5 pts)</option>
+      <option value="10">🧠 Knowledge-enhancing book (+10 pts)</option>
+      <option value="0">❌ No reading today</option>
+    </select>
+    <div style="margin-top:8px">
+      <input type="text" id="book-read" placeholder="Book name + pages e.g. Wimpy Kid p.40–55">
+    </div>
+    <div id="book-knowledge-box" style="display:none;margin-top:8px">
+      <div class="fl" style="color:var(--gd)">💡 What new knowledge did I gain?</div>
+      <textarea id="book-knowledge" placeholder="Write what interesting/new things you learned from this book..." style="min-height:52px"></textarea>
+    </div>
+  </div>
+
+  <!-- Free time: dropdown with points -->
+  <div style="background:var(--al);border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--am)">
+    <div class="fl" style="color:var(--ad);margin-bottom:6px">🎮 Free time activity <span style="font-size:10px;color:var(--ad)">(varies)</span></div>
+    <select id="free-act" onchange="calcDayPts()">
+      <option value="0">What did I do in free time?</option>
+      <option value="-10">😴 Timepass / wasted time (−10 pts)</option>
+      <option value="10">👧 Played with Kinnu (+10 pts)</option>
+      <option value="10">🧹 Cleaned room / almirah (+10 pts)</option>
+      <option value="5">🎨 Other fun activity (+5 pts)</option>
+    </select>
+    <div id="free-act-msg" style="margin-top:6px;font-size:11px;font-weight:800"></div>
+  </div>
+
   <div class="sec-pts-row" id="screen-pts-row">
-    <span class="sec-pts-label">📺 Screen time points earned</span>
+    <span class="sec-pts-label">📺 Screen & free time points earned</span>
     <span class="sec-pts-val" id="screen-pts-display">0 pts</span>
   </div>
 </div>
@@ -611,10 +670,9 @@ tr:hover td{background:#FAFBFF}
   </div>
 </div>
 
-<!-- SUMMARY -->
+<!-- SUMMARY (daily report only - no parent section here anymore) -->
 <div class="sec">
-  <div style="font-size:14px;font-weight:900;margin-bottom:12px">📊 Today's Summary</div>
-  <!-- Points breakdown by category -->
+  <div style="font-size:15px;font-weight:900;margin-bottom:12px;color:var(--ink)">📊 Today's Points Summary</div>
   <div id="pts-breakdown" style="margin-bottom:14px"></div>
   <div class="sum-grid">
     <div class="scard2" style="background:var(--pl);border-color:var(--pm)">
@@ -634,39 +692,10 @@ tr:hover td{background:#FAFBFF}
       <div class="slbl" style="color:var(--ad)">⭐ Points today</div>
     </div>
   </div>
-
-  <!-- PARENT APPROVAL SECTION -->
-  <div id="approval-section">
-    <div class="parent-approval-box">
-      <div style="font-size:36px;margin-bottom:8px">👩‍👧</div>
-      <div style="font-size:16px;font-weight:900;color:var(--ad);margin-bottom:6px">Submit to Parent for Approval</div>
-      <div style="font-size:12px;color:var(--ad);margin-bottom:14px;line-height:1.6">
-        Vaanya, show this to Mamma or Papa!<br>They will review and award your points 🌟
-      </div>
-      <div class="fl" style="text-align:left;margin-bottom:4px">Mamma / Papa comments <span style="color:var(--a)">(+25 pts)</span></div>
-      <textarea id="parent-comment" placeholder="Proud of you for... / Tomorrow focus on... / Great job with..." oninput="calcDayPts()" style="margin-bottom:14px"></textarea>
-      <button class="approval-btn" onclick="openPinModal()">
-        🔐 Parent Approval — Enter PIN to Award Points
-      </button>
-      <div style="font-size:10px;color:var(--ad);margin-top:8px;opacity:.7">PIN is set by parents in the Admin Portal</div>
-    </div>
-  </div>
-
-  <div id="approved-section" style="display:none">
-    <div class="approved-banner">
-      <div style="font-size:44px">✅</div>
-      <div>
-        <div style="font-size:16px;font-weight:900">Approved by Parent!</div>
-        <div style="font-size:13px;opacity:.9" id="approved-msg">Points awarded!</div>
-        <div style="font-size:11px;opacity:.7;margin-top:3px" id="approved-time"></div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <div class="btn-row">
   <button class="btn btn-o" onclick="clearDay()">🗑️ Clear today</button>
-  <button class="btn btn-g" onclick="saveDay()">💾 Save report</button>
   <button class="btn btn-p" onclick="window.print()">🖨️ Print</button>
 </div>
 </div><!-- end tab-report -->
@@ -699,15 +728,26 @@ tr:hover td{background:#FAFBFF}
      TAB: SPEND
 ═══════════════════════════════════════ -->
 <div class="tab" id="tab-spend">
-<div class="topbar" style="margin-bottom:12px">
-  <div style="font-size:28px">🛒</div>
-  <div class="tb-info"><div class="tb-title">Spend your points!</div>
-    <div class="tb-sub">Use points for daily treats — save up for big rewards!</div></div>
-  <div class="pts-chip"><div class="pts-chip-num" id="spend-avail">0</div><div class="pts-chip-lbl">Available pts</div></div>
+<div class="topbar" style="margin-bottom:14px">
+  <div style="font-size:32px">🛒</div>
+  <div class="tb-info">
+    <div class="tb-title">Spend your points!</div>
+    <div class="tb-sub">Use points for daily treats · Each reward can only be used once per day · Always tell Mamma or Papa!</div>
+  </div>
+  <div class="tb-pts">
+    <div class="pts-chip"><div class="pts-chip-num" id="spend-avail">0</div><div class="pts-chip-lbl">Available pts</div></div>
+    <div class="pts-chip"><div class="pts-chip-num" id="streak-spend">0🔥</div><div class="pts-chip-lbl">Streak</div></div>
+  </div>
 </div>
-<div id="spend-grid" class="g2" style="margin-bottom:12px"></div>
+<div style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border-radius:var(--rad);border:2px solid var(--am);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+  <div style="font-size:24px">💡</div>
+  <div style="font-size:12px;color:var(--ad);font-weight:700;line-height:1.6">
+    <b>How spending works:</b> Each reward below costs points from your bank. Once you use a reward today, it locks for the day — but stays available tomorrow! Save your big points for the milestone rewards in the 🎁 Rewards tab!
+  </div>
+</div>
+<div id="spend-grid" class="g2" style="margin-bottom:14px"></div>
 <div class="sec">
-  <div class="sh"><div class="si" style="background:var(--al);color:var(--a)">📜</div>Spending history</div>
+  <div class="sh"><div class="si" style="background:var(--al);color:var(--a)">📜</div>My spending history</div>
   <div id="spend-hist-list"></div>
 </div>
 </div>
@@ -855,6 +895,88 @@ tr:hover td{background:#FAFBFF}
 <!-- ═══════════════════════════════════════
      TAB: HISTORY
 ═══════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════
+     TAB: MAMMA & PAPA REVIEW
+═══════════════════════════════════════ -->
+<div class="tab" id="tab-parent">
+
+<!-- Header banner -->
+<div style="background:linear-gradient(135deg,#1E1B4B,#4F46E5,#7C3AED);border-radius:var(--rad);padding:20px 22px;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+  <div style="font-size:48px">👩‍👧‍👦</div>
+  <div style="flex:1">
+    <div style="font-size:20px;font-weight:900;margin-bottom:4px">Mamma &amp; Papa's Review</div>
+    <div style="font-size:12px;opacity:.85;line-height:1.6">Review Vaanya's daily work across all sections, award or adjust points, then APPROVE or REJECT the report.</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div class="pts-chip" style="background:rgba(255,255,255,.15)"><div class="pts-chip-num" id="pr-daily-pts">0</div><div class="pts-chip-lbl">Daily report</div></div>
+    <div class="pts-chip" style="background:rgba(255,255,255,.15)"><div class="pts-chip-num" id="pr-brain-pts">0</div><div class="pts-chip-lbl">Brain lab</div></div>
+    <div class="pts-chip" style="background:rgba(255,255,255,.15)"><div class="pts-chip-num" id="pr-soul-pts">0</div><div class="pts-chip-lbl">Geeta &amp; Creative</div></div>
+    <div class="pts-chip" style="background:rgba(255,255,255,.15);border:2px solid #FCD34D"><div class="pts-chip-num" id="pr-total-pts">0</div><div class="pts-chip-lbl">Total today ⭐</div></div>
+  </div>
+</div>
+
+<!-- Points bars -->
+<div class="sec" style="border-color:var(--pm)">
+  <div class="sh"><div class="si" style="background:var(--pl);color:var(--p)">📊</div>Points earned across all sections today</div>
+  <div id="parent-breakdown-bars"></div>
+</div>
+
+<!-- Rating dropdown -->
+<div class="sec" style="border-color:var(--am)">
+  <div class="sh"><div class="si" style="background:var(--al);color:var(--ad)">⭐</div>Mamma &amp; Papa's performance rating for today</div>
+  <div class="fl">How did Vaanya perform today overall?</div>
+  <select id="parent-rating" onchange="calcParentRating()" style="font-size:13px;font-weight:800;margin-bottom:12px;padding:10px">
+    <option value="0">Select today's rating...</option>
+    <option value="-100">😟 Below Average — needs to do much better (−100 pts)</option>
+    <option value="-50">😐 Average — can improve (−50 pts)</option>
+    <option value="0">🙂 Satisfactory — okay for today (no change)</option>
+    <option value="25">😊 Good — well done! (+25 pts)</option>
+    <option value="50">😄 Excellent — great effort! (+50 pts)</option>
+    <option value="80">🌟 Extraordinary — outstanding! (+80 pts)</option>
+  </select>
+  <div id="parent-rating-result" style="margin-bottom:14px;font-size:14px;font-weight:800;padding:10px;border-radius:var(--rads)"></div>
+  <div class="fl">Mamma &amp; Papa's comments on today's performance</div>
+  <textarea id="parent-comment" placeholder="Write your thoughts here... e.g. 'Proud of you for completing all homework! Tomorrow focus on shloka practice...'" style="min-height:80px;margin-bottom:4px" oninput="calcDayPts()"></textarea>
+  <div style="font-size:10px;color:var(--muted)">Comments add +25 pts when filled</div>
+</div>
+
+<!-- Approve / Reject -->
+<div class="sec" style="border-color:var(--gm)">
+  <div class="sh"><div class="si" style="background:var(--gl);color:var(--gd)">🔐</div>Approve or Reject today's report</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">
+    <b style="color:var(--gd)">✅ APPROVE</b> — saves report in history, awards all points including your rating, and counts toward progress report.<br>
+    <b style="color:var(--rd)">❌ REJECT</b> — resets the entire sheet for this date. Vaanya must refill and resubmit.
+  </div>
+  <div id="parent-pending-section">
+    <div style="background:var(--al);border-radius:var(--rads);padding:12px 14px;margin-bottom:12px;font-size:12px;font-weight:700;color:var(--ad);border:1.5px solid var(--am)">
+      ⚠️ Enter your Parent PIN below to unlock the Approve / Reject buttons.
+    </div>
+    <button class="approval-btn" onclick="openPinModal()">🔐 Enter Parent PIN to Review</button>
+  </div>
+  <div id="parent-action-section" style="display:none;margin-top:4px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <button onclick="approveReport()" style="background:linear-gradient(135deg,#10B981,#047857);color:#fff;border:none;border-radius:var(--rad);padding:18px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(16,185,129,.4)">
+        ✅ APPROVE<br><span style="font-size:11px;font-weight:700;opacity:.9">Save &amp; award points</span>
+      </button>
+      <button onclick="rejectReport()" style="background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;border:none;border-radius:var(--rad);padding:18px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(239,68,68,.4)">
+        ❌ REJECT<br><span style="font-size:11px;font-weight:700;opacity:.9">Reset — refill required</span>
+      </button>
+    </div>
+  </div>
+  <div id="approved-section" style="display:none;margin-top:12px">
+    <div class="approved-banner">
+      <div style="font-size:44px">✅</div>
+      <div>
+        <div style="font-size:16px;font-weight:900">Report Approved!</div>
+        <div style="font-size:13px;opacity:.9" id="approved-msg">Points awarded!</div>
+        <div style="font-size:11px;opacity:.7;margin-top:3px" id="approved-time"></div>
+      </div>
+    </div>
+    <div id="ai-comment-box" style="display:none;margin-top:12px"></div>
+  </div>
+</div>
+</div><!-- end tab-parent -->
+
 <div class="tab" id="tab-history">
 <div style="font-size:20px;font-weight:900;margin-bottom:5px">📅 My Daily History</div>
 <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Every saved day is stored here. Tap a day to see full details!</div>
@@ -1002,9 +1124,112 @@ const RIDDLES=[
 // ════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════
-let savedDays     = JSON.parse(localStorage.getItem('vaanya_days')||'[]');
-let spendHist     = JSON.parse(localStorage.getItem('vaanya_spend_hist')||'[]');
-let totalSpent    = parseInt(localStorage.getItem('vaanya_spent_total')||'0');
+// ════════════════════════════════════════════
+// SUPABASE SETUP
+// ════════════════════════════════════════════
+const SUPABASE_URL = 'https://mlxoxzbpzpjfjwsppmgi.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seG94emJwenBqZmp3c3BwbWdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NTMyMTIsImV4cCI6MjA5MjQyOTIxMn0._w5nd9ZWcmTnK1k_pwq4rEc5P4oJxGawou36dvLVU-E';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Local state — loaded from Supabase on startup
+let savedDays     = [];
+let spendHist     = [];
+let totalSpent    = 0;
+let dbReady       = false;
+
+async function loadFromSupabase() {
+  try {
+    showSyncStatus('loading');
+    // Load daily reports
+    const { data: days, error: e1 } = await _supabase
+      .from('daily_reports')
+      .select('*')
+      .order('date', { ascending: false });
+    if (!e1 && days) {
+      savedDays = days.map(d => ({
+        date: d.date, pts: d.pts, hwDone: d.hw_done,
+        shlokaD: d.shloka_done, creativeD: d.creative_done,
+        brainD: d.brain_done, odda: d.odda_done,
+        parentComment: d.notes, parentRating: d.parent_rating || 0,
+        approved: d.approved, savedAt: d.saved_at,
+        ...(d.full_data ? JSON.parse(d.full_data) : {})
+      }));
+    }
+    // Load spend history
+    const { data: spend, error: e2 } = await _supabase
+      .from('spend_history')
+      .select('*')
+      .order('date', { ascending: false });
+    if (!e2 && spend) {
+      spendHist = spend.map(s => ({ id: s.item_id, cost: s.pts_spent, title: s.item_name, date: s.date }));
+      totalSpent = spend.reduce((a, s) => a + (s.pts_spent || 0), 0);
+    }
+    dbReady = true;
+    showSyncStatus('ok');
+    updateTopBar();
+    return true;
+  } catch(err) {
+    showSyncStatus('error');
+    console.error('Supabase load error:', err);
+    return false;
+  }
+}
+
+async function saveToSupabase(data) {
+  try {
+    showSyncStatus('saving');
+    const row = {
+      date: data.date,
+      pts: data.pts,
+      hw_done: data.hwDone || 0,
+      shloka_done: data.shlokaD || false,
+      creative_done: data.creativeD || false,
+      brain_done: data.brainD || false,
+      odda_done: data.odda || false,
+      notes: data.parentComment || '',
+      parent_rating: data.parentRating || 0,
+      approved: data.approved || false,
+      saved_at: data.savedAt || new Date().toISOString(),
+      full_data: JSON.stringify(data)
+    };
+    const { error } = await _supabase
+      .from('daily_reports')
+      .upsert(row, { onConflict: 'date' });
+    if (error) throw error;
+    showSyncStatus('ok');
+    return true;
+  } catch(err) {
+    showSyncStatus('error');
+    toast('⚠️ Could not save to cloud — check your connection!');
+    console.error('Save error:', err);
+    return false;
+  }
+}
+
+async function saveSpendToSupabase(item) {
+  try {
+    const { error } = await _supabase.from('spend_history').insert({
+      date: item.date,
+      item_id: item.id,
+      item_name: item.title,
+      pts_spent: item.cost
+    });
+    if (error) console.error('Spend save error:', error);
+  } catch(err) { console.error(err); }
+}
+
+function showSyncStatus(state) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const states = {
+    loading: { icon: '⏳', text: 'Loading data...', col: '#F59E0B' },
+    saving:  { icon: '💾', text: 'Saving...', col: '#3B82F6' },
+    ok:      { icon: '✅', text: 'All saved to cloud!', col: '#10B981' },
+    error:   { icon: '❌', text: 'Cloud sync error', col: '#EF4444' }
+  };
+  const s = states[state] || states.ok;
+  el.innerHTML = `<span style="color:${s.col};font-size:11px;font-weight:800">${s.icon} ${s.text}</span>`;
+}
 let brainPtsToday = 0;
 let sudokuGrid    = null, sudokuSolution = null, selectedCell = null, sudokuDifficulty = 'easy';
 let currentShloka = 0;
@@ -1056,6 +1281,39 @@ function showTab(id,btn){
   if(id==='spend')renderSpend();
   if(id==='history')renderHistory();
   if(id==='graphs')renderGraphs();
+  if(id==='parent')renderParentTab();
+}
+
+// ── Test: show chapters textarea when subject selected
+function showTestChapters(){
+  const val=document.getElementById('test-subj')?.value;
+  const box=document.getElementById('test-chapters-box');
+  if(box)box.style.display=val?'block':'none';
+}
+
+// ── Book knowledge box
+function showBookKnowledge(){
+  const val=document.getElementById('book-type')?.value;
+  const box=document.getElementById('book-knowledge-box');
+  if(box)box.style.display=val==='10'?'block':'none';
+}
+
+// ── Parent rating calc
+function calcParentRating(){
+  const val=parseInt(document.getElementById('parent-rating')?.value||0);
+  const el=document.getElementById('parent-rating-result');
+  if(!el)return;
+  if(!document.getElementById('parent-rating').value){el.innerHTML='';return;}
+  let col,icon,msg;
+  if(val<=-100){col='#B91C1C';icon='😟';msg='Below Average — needs to work much harder tomorrow!';}
+  else if(val<0){col='#D97706';icon='😐';msg='Average — Vaanya can definitely do better!';}
+  else if(val===0){col='#6B7280';icon='🙂';msg='Satisfactory — an okay day. Keep improving!';}
+  else if(val===25){col='#3B82F6';icon='😊';msg='Good — well done today, Vaanya!';}
+  else if(val===50){col='#10B981';icon='😄';msg='Excellent — great effort and performance!';}
+  else{col='#7C3AED';icon='🌟';msg='Extraordinary — outstanding day! We are so proud!';}
+  el.style.background=col+'15';el.style.color=col;el.style.border='1.5px solid '+col+'40';
+  el.innerHTML=`${icon} ${msg} <b style="margin-left:8px">${val>0?'+':''}${val} pts</b>`;
+  calcDayPts();
 }
 
 function showPuzzle(type,btn){
@@ -1299,11 +1557,28 @@ function calcDayPts(){
   const gymPtEl=document.getElementById('gym-pts-display');
   if(gymPtEl)gymPtEl.textContent=gymPts+' pts';
 
-  // Screen — fix #8: pills working
+  // Screen — new multi-part: screen 10pts + skill 10pts + book 5/10pts + free act +/-10
   let screenPts=0;
   const sc=document.getElementById('screen-check');
-  if(sc?.querySelector('.pg'))screenPts=20;
-  else if(sc?.querySelector('.pa'))screenPts=10;
+  if(sc?.querySelector('.pg'))screenPts+=10;
+  else if(sc?.querySelector('.pa'))screenPts+=5;
+  // skill builder
+  const skillChk=document.getElementById('skill-check');
+  if(skillChk?.querySelector('.pb'))screenPts+=10;
+  // book type
+  const bookType=parseInt(document.getElementById('book-type')?.value||0);
+  screenPts+=bookType;
+  // free time activity
+  const freeActVal=parseInt(document.getElementById('free-act')?.value||0);
+  screenPts+=freeActVal;
+  const freeMsg=document.getElementById('free-act-msg');
+  if(freeMsg){
+    const fv=document.getElementById('free-act')?.value;
+    if(fv==='-10')freeMsg.innerHTML='<span style="color:var(--r)">😴 Timepass — that\'s −10 pts! Use time better tomorrow.</span>';
+    else if(fv==='10')freeMsg.innerHTML='<span style="color:var(--g)">🎉 Great choice! +10 pts earned!</span>';
+    else if(fv==='5')freeMsg.innerHTML='<span style="color:var(--b)">👍 Nice! +5 pts earned!</span>';
+    else freeMsg.innerHTML='';
+  }
   pts+=screenPts;breakdown.screen=screenPts;
   const scPtEl=document.getElementById('screen-pts-display');
   if(scPtEl)scPtEl.textContent=screenPts+' pts';
@@ -1341,6 +1616,11 @@ function calcDayPts(){
   if(br?.querySelector('.pg'))brPts=brainPtsToday;
   pts+=brPts;breakdown.brain=brPts;
 
+  // Parent rating (in parent tab)
+  const ratingVal=parseInt(document.getElementById('parent-rating')?.value||0);
+  let parentRatingPts=ratingVal;
+  pts+=parentRatingPts;breakdown.parentRating=parentRatingPts;
+
   // Penalty
   const penEl=document.getElementById('pen-bar');
   if(penEl&&penEl.style.display==='flex')pts=Math.max(0,pts-20);
@@ -1371,33 +1651,34 @@ function renderBreakdown(bd,total){
   const el=document.getElementById('pts-breakdown');if(!el)return;
   const rows=[
     {label:'📅 Timetable + School',pts:bd.overview||0,col:'var(--p)'},
-    {label:'📝 Test / Assessment',pts:bd.test||0,col:'var(--pk)'},
+    {label:'📝 Weekly Test',pts:bd.test||0,col:'var(--pk)'},
     {label:'📚 Homework',pts:bd.hw||0,col:'var(--g)'},
     {label:'💻 Odda class',pts:bd.odda||0,col:'var(--p)'},
     {label:'🤸 Physical activity',pts:bd.gym||0,col:'var(--a)'},
-    {label:'📺 Screen time',pts:bd.screen||0,col:'var(--pk)'},
+    {label:'📺 Screen & free time',pts:bd.screen||0,col:'var(--pk)'},
     {label:'💭 Reflection',pts:bd.refl||0,col:'var(--t)'},
     {label:'✍️ Parent comment',pts:bd.parent||0,col:'var(--b)'},
     {label:'🕉️ Shloka',pts:bd.shloka||0,col:'var(--o)'},
     {label:'🎨 Creative',pts:bd.creative||0,col:'var(--pk)'},
     {label:'🧠 Brain Lab',pts:bd.brain||0,col:'var(--b)'},
-  ].filter(r=>r.pts>0);
+    {label:'⭐ Parent rating',pts:bd.parentRating||0,col:bd.parentRating>=0?'var(--g)':'var(--r)'},
+  ].filter(r=>r.pts!==0);
 
   if(!rows.length){el.innerHTML='';return;}
-  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">
-    ${rows.map(r=>`<span style="font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;background:${r.col}15;color:${r.col};border:1.5px solid ${r.col}40">${r.label}: +${r.pts}</span>`).join('')}
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+    ${rows.map(r=>`<span style="font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;background:${r.col}15;color:${r.col};border:1.5px solid ${r.col}40">${r.label}: ${r.pts>=0?'+':''}${r.pts}</span>`).join('')}
   </div>
   <div style="background:linear-gradient(135deg,var(--pl),var(--al));border-radius:var(--rads);padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
-    <span style="font-size:13px;font-weight:800;color:var(--pd)">⭐ Total points today</span>
+    <span style="font-size:13px;font-weight:800;color:var(--pd)">⭐ Total points today (all sections)</span>
     <span style="font-size:28px;font-weight:900;color:var(--gold)">${total} pts</span>
   </div>`;
 }
 
 function updateXP(pts){
-  const max=300;
-  const pct=Math.min(100,Math.round(pts/max*100));
+  const max=530;
+  const pct=Math.min(100,Math.round(Math.max(0,pts)/max*100));
   const el=document.getElementById('xp-bar');if(el)el.style.width=pct+'%';
-  const lbl=document.getElementById('xp-lbl');if(lbl)lbl.textContent=pts+' / '+max+' pts';
+  const lbl=document.getElementById('xp-lbl');if(lbl)lbl.textContent=pts+' / '+max+' max pts today';
 }
 
 // ════════════════════════════════════════════
@@ -1422,65 +1703,27 @@ function checkPenalty(){
   }else pen.style.display='none';
 }
 
-// ════════════════════════════════════════════
-// SAVE DAY
-// ════════════════════════════════════════════
+// saveDay is now triggered only via Parent Approval (approveReport function)
+// Quick draft save for Vaanya to record progress before showing to parents
 function saveDay(){
   const date=document.getElementById('rpt-date').value;
   if(!date){toast('Please set today\'s date first!');return;}
   const pts=calcDayPts();
-
-  const shD=!!document.getElementById('shloka-done')?.querySelector('.pg');
-  const crD=!!(document.getElementById('creative-done')?.querySelector('.pg')||document.getElementById('creative-done')?.querySelector('.pa'));
-  const brD=!!(document.getElementById('brain-done')?.querySelector('.pg')||document.getElementById('brain-done')?.querySelector('.pa'));
-  const odD=!!document.getElementById('odda-att')?.querySelector('.pg');
-  let hwDone=0;
-  SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwDone++;});
-  let avgConf=0;
-  {let tot=0,cnt=0;SUBJECTS.forEach((_,i)=>{const v=getStarVal('sconf-'+i);if(v>0){tot+=v;cnt++;}});avgConf=cnt>0?parseFloat((tot/cnt).toFixed(1)):0;}
-
-  const data={date,pts,hwDone,avgConf,shlokaD:shD,creativeD:crD,brainD:brD,odda:odD,
-    tt:document.getElementById('rpt-tt')?.value||'',
-    gymType:document.getElementById('gym-today')?.querySelector('.pa')?'gym':document.getElementById('gym-today')?.querySelector('.pb')||document.getElementById('gym-today')?.querySelector('.pt')?'exercise':'rest',
-    r1:document.getElementById('r1')?.value||'',
-    r2:document.getElementById('r2')?.value||'',
-    r3:document.getElementById('r3')?.value||'',
-    parentComment:document.getElementById('parent-comment')?.value||'',
-    approved:todayApproved,
-    savedAt:new Date().toISOString()};
-
-  const idx=savedDays.findIndex(d=>d.date===date);
-  if(idx>=0)savedDays[idx]=data;else savedDays.unshift(data);
-  savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  localStorage.setItem('vaanya_days',JSON.stringify(savedDays));
-
-  const streak=getStreak();
-  if([5,10,15,20,30].includes(streak)){
-    const bonus=streak>=20?150:streak>=10?120:50;
-    showPop('🔥',streak+'-Day Streak!','Amazing consistency Vaanya! +'+bonus+' bonus points! Keep going!');
-  }
-  updateTopBar();
-  toast('Day saved! ⭐ '+pts+' pts recorded!');
-  if(pts>=250)showPop('🌟','Superstar day!','You earned '+pts+' points today! Incredible, Vaanya!');
-  else if(pts>=180)showPop('⭐','Brilliant day!',pts+' points! You are doing amazingly well!');
-  else{
-    const thresholds=[200,400,600,900,1200,1600,2200,3000];
-    const earned=totalEarned();
-    const justHit=thresholds.find(t=>earned>=t&&(earned-pts)<t);
-    if(justHit){const r=REWARDS.find(rw=>rw.pts===justHit);if(r)showPop(r.icon,'You unlocked: '+r.title,'🎉 Show Mamma and Papa! '+r.items.join(' · '));}
-  }
+  toast('Draft saved ✏️ — '+pts+' pts so far. Show to Mamma/Papa to finalise!');
 }
 
 function updateTopBar(){
   const avail=availablePts();
   const el=document.getElementById('total-pts-top');if(el)el.textContent=avail;
   const st=document.getElementById('streak-top');if(st)st.textContent=getStreak()+'🔥';
+  const ss=document.getElementById('streak-spend');if(ss)ss.textContent=getStreak()+'🔥';
+  const sa=document.getElementById('spend-avail');if(sa)sa.textContent=avail;
 }
 
 // ════════════════════════════════════════════
 // PIN MODAL — fix #10: parent approval working
 // ════════════════════════════════════════════
-function getPin(){return localStorage.getItem('vaanya_admin_pin')||'1234';}
+function getPin(){return localStorage.getItem('vaanya_admin_pin')||'1234';} // PIN stays local for security
 
 function openPinModal(){
   pinBuf='';updatePinDots();
@@ -1506,21 +1749,97 @@ function updatePinDots(){
 function pinSubmit(){
   if(pinBuf===getPin()){
     closePinModal();
-    approveReport();
+    unlockParentActions();
   }else{
     document.getElementById('pin-err').textContent='❌ Wrong PIN — try again!';
     pinBuf='';updatePinDots();
   }
 }
-function approveReport(){
+
+function unlockParentActions(){
+  // Show the Approve/Reject buttons, hide the PIN button
+  const pending=document.getElementById('parent-pending-section');
+  const actions=document.getElementById('parent-action-section');
+  if(pending)pending.style.display='none';
+  if(actions)actions.style.display='block';
+  toast('PIN accepted! Now choose Approve or Reject.');
+}
+
+async function approveReport(){
+  const date=document.getElementById('rpt-date').value;
+  if(!date){toast('Please set today's date first!');return;}
   todayApproved=true;
   const pts=calcDayPts();
-  document.getElementById('approval-section').style.display='none';
-  document.getElementById('approved-section').style.display='block';
-  document.getElementById('approved-msg').textContent='✅ +'+pts+' points approved! Keep shining, Vaanya! 🌟';
-  document.getElementById('approved-time').textContent='Approved: '+new Date().toLocaleString('en-IN');
-  showPop('✅','Parent Approved! 🎉','Your report has been approved, Vaanya! You earned '+pts+' points today! ⭐');
-  toast('Parent approved! +'+pts+' points awarded!');
+
+  const shD=!!document.getElementById('shloka-done')?.querySelector('.pg');
+  const crD=!!(document.getElementById('creative-done')?.querySelector('.pg')||document.getElementById('creative-done')?.querySelector('.pa'));
+  const brD=!!(document.getElementById('brain-done')?.querySelector('.pg')||document.getElementById('brain-done')?.querySelector('.pa'));
+  const odD=!!document.getElementById('odda-att')?.querySelector('.pg');
+  let hwDone=0;
+  SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwDone++;});
+
+  const data={date,pts,hwDone,shlokaD:shD,creativeD:crD,brainD:brD,odda:odD,
+    tt:document.getElementById('rpt-tt')?.value||'',
+    gymType:document.getElementById('gym-today')?.querySelector('.pa')?'gym':
+             document.getElementById('gym-today')?.querySelector('.pb')||document.getElementById('gym-today')?.querySelector('.pt')?'exercise':'rest',
+    r1:document.getElementById('r1')?.value||'',
+    r2:document.getElementById('r2')?.value||'',
+    r3:document.getElementById('r3')?.value||'',
+    parentComment:document.getElementById('parent-comment')?.value||'',
+    parentRating:parseInt(document.getElementById('parent-rating')?.value||0),
+    approved:true,
+    savedAt:new Date().toISOString()};
+
+  const idx=savedDays.findIndex(d=>d.date===date);
+  if(idx>=0)savedDays[idx]=data;else savedDays.unshift(data);
+  savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  localStorage.setItem('vaanya_days',JSON.stringify(savedDays)); // keep local backup too
+  await saveToSupabase(data);
+
+  // Show approved banner
+  const actions=document.getElementById('parent-action-section');
+  if(actions)actions.style.display='none';
+  const appSec=document.getElementById('approved-section');
+  if(appSec)appSec.style.display='block';
+  const appMsg=document.getElementById('approved-msg');
+  if(appMsg)appMsg.textContent='✅ +'+pts+' points approved! Keep shining, Vaanya! 🌟';
+  const appTime=document.getElementById('approved-time');
+  if(appTime)appTime.textContent='Approved: '+new Date().toLocaleString('en-IN');
+
+  updateTopBar();
+  showPop('✅','Report Approved! 🎉','Vaanya your report has been approved! You earned '+pts+' points today! ⭐ Keep it up!');
+  toast('Report approved! +'+pts+' points saved!');
+
+  // Save to Supabase cloud
+  await saveToSupabase(data);
+
+  // Generate AI encouraging comment
+  generateAIComment(data);
+
+  // Streak celebration
+  const streak=getStreak();
+  if([5,10,15,20,30].includes(streak)){
+    const bonus=streak>=20?150:streak>=10?120:50;
+    setTimeout(()=>showPop('🔥',streak+'-Day Streak!','Amazing consistency Vaanya! +'+bonus+' bonus points!'),1800);
+  }
+}
+
+function rejectReport(){
+  if(!confirm('REJECT this report?\n\nThis will clear all of Vaanya\'s entries for today. She will need to fill the form again from scratch.'))return;
+  // Clear everything
+  clearDay();
+  // Reset parent section
+  const pending=document.getElementById('parent-pending-section');
+  const actions=document.getElementById('parent-action-section');
+  const appSec=document.getElementById('approved-section');
+  if(pending)pending.style.display='block';
+  if(actions)actions.style.display='none';
+  if(appSec)appSec.style.display='none';
+  todayApproved=false;
+  showPop('❌','Report Rejected','The report has been reset. Vaanya, please fill in all sections carefully and resubmit! 💪');
+  toast('Report rejected — form cleared. Please refill!');
+  // Go back to daily report tab
+  showTab('report', document.querySelector('.nb.t0'));
 }
 
 // ════════════════════════════════════════════
@@ -1554,42 +1873,176 @@ function renderRewards(){
 }
 
 // ════════════════════════════════════════════
-// SPEND TAB
+// SPEND TAB — redesigned #9
 // ════════════════════════════════════════════
+const SPEND_MESSAGES={
+  tv30:  '📺 Nice! 30 extra minutes of YouTube/TV unlocked for today! Remember to watch something good! 😊',
+  tv60:  '📺✨ Wow, a full extra hour! Enjoy your show — and back to work after! 💪',
+  play45:'🏃 Great choice! 45 more minutes outside — fresh air and fun! 🌳',
+  sleep30:'🌙 Sleep 30 mins later tonight — Mamma/Papa must agree first! Sweet dreams 😴',
+  dinner:'🍽️ Tonight YOU pick dinner! What shall we eat? 🎉',
+  'skip-reading':'📖 No reading tonight — just this once! Back to books tomorrow 😄',
+  snack: '🍦 Go pick your favourite snack from the kitchen — you earned it! 🎊',
+  movie: '🎬 Movie time! Pick your film and grab some popcorn — tell Mamma/Papa first! 🍿',
+};
+const SPEND_USED_KEY='vaanya_spend_used_today';
+
+function getUsedToday(){
+  const today=new Date().toISOString().split('T')[0];
+  try{
+    const raw=JSON.parse(localStorage.getItem(SPEND_USED_KEY)||'{}');
+    return raw.date===today?(raw.ids||[]):[];
+  }catch(e){return [];}
+}
+function markUsedToday(id){
+  const today=new Date().toISOString().split('T')[0];
+  const used=getUsedToday();
+  if(!used.includes(id))used.push(id);
+  localStorage.setItem(SPEND_USED_KEY,JSON.stringify({date:today,ids:used}));
+}
+
+// Spend tracking helpers
+const SPEND_USED_KEY='vaanya_spend_used_today';
+function getUsedToday(){
+  const today=new Date().toISOString().split('T')[0];
+  try{const raw=JSON.parse(localStorage.getItem(SPEND_USED_KEY)||'{}');return raw.date===today?(raw.ids||[]):[]; }catch(e){return [];}
+}
+function markUsedToday(id){
+  const today=new Date().toISOString().split('T')[0];
+  const used=getUsedToday();if(!used.includes(id))used.push(id);
+  localStorage.setItem(SPEND_USED_KEY,JSON.stringify({date:today,ids:used}));
+}
+
+
 function renderSpend(){
   const avail=availablePts();
   const el=document.getElementById('spend-avail');if(el)el.textContent=avail;
   const spendData=(()=>{try{return JSON.parse(localStorage.getItem('vaanya_admin_spend_items')||'null')||SPEND_ITEMS;}catch(e){return SPEND_ITEMS;}})();
+  const usedToday=getUsedToday();
   const g=document.getElementById('spend-grid');if(!g)return;g.innerHTML='';
   spendData.filter(s=>s.active!==false).forEach(item=>{
     const can=avail>=item.cost;
+    const used=usedToday.includes(item.id);
     const div=document.createElement('div');div.className='scard';
-    div.innerHTML=`<div class="sc-icon">${item.icon}</div>
-      <div class="sc-title">${item.title}</div>
+    if(used)div.style.cssText='border:2px solid #6EE7B7;background:#F0FDF4;opacity:.75';
+    const btnHtml=used
+      ?`<div style="background:#ECFDF5;border:2px solid #6EE7B7;border-radius:var(--rads);padding:9px;text-align:center;font-size:12px;font-weight:900;color:#047857">✅ Already used today — enjoy!</div>`
+      :`<button class="sc-btn" style="border-color:${item.col};color:${item.col};background:${item.col}18;font-weight:900" ${can?'':'disabled'}
+          onclick="spendPts('${item.id}',${item.cost},'${item.title}','${item.col}')">
+          ${can?'🛒 Spend '+item.cost+' pts':'🔒 Need '+(item.cost-avail)+' more pts'}</button>`;
+    const tipHtml=!can&&!used?`<div style="font-size:10px;color:var(--muted);margin-top:5px;text-align:center">Earn ${item.cost-avail} more points to unlock! 💪</div>`:'';
+    div.innerHTML=`
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px">
+        <div class="sc-icon" style="margin-bottom:0">${item.icon}</div>
+        ${used?'<span style="font-size:20px">✅</span>':''}
+      </div>
+      <div class="sc-title" style="font-size:14px;font-weight:900;margin-bottom:4px">${item.title}</div>
       <div class="sc-cost" style="color:${item.col}">${item.cost} pts</div>
       <div class="sc-desc">${item.desc}</div>
-      <button class="sc-btn" style="border-color:${item.col};color:${item.col};background:${item.col}18" ${can?'':'disabled'}
-        onclick="spendPts('${item.id}',${item.cost},'${item.title}','${item.col}')">
-        ${can?'Spend '+item.cost+' pts 🛒':'Need '+(item.cost-avail)+' more pts'}</button>`;
+      ${btnHtml}${tipHtml}`;
     g.appendChild(div);
   });
   const hl=document.getElementById('spend-hist-list');if(!hl)return;
-  if(!spendHist.length){hl.innerHTML='<div style="color:var(--muted);padding:12px 0">No spending yet!</div>';return;}
-  hl.innerHTML='<table><thead><tr><th>Date</th><th>Reward</th><th>Pts spent</th></tr></thead><tbody>'+
-    spendHist.slice(0,20).map(s=>`<tr><td style="color:var(--muted)">${s.date}</td><td>${s.title}</td><td style="font-weight:800;color:var(--a)">−${s.cost}</td></tr>`).join('')+
+  if(!spendHist.length){
+    hl.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px">🛒</div><div style="font-weight:800">No spending yet!</div><div style="font-size:11px;margin-top:4px">Earn points and treat yourself!</div></div>`;
+    return;
+  }
+  hl.innerHTML='<table><thead><tr><th>Date</th><th>Reward</th><th>Points spent</th></tr></thead><tbody>'+
+    spendHist.slice(0,20).map(s=>`<tr><td style="color:var(--muted);white-space:nowrap">${s.date}</td><td style="font-weight:700">${s.title}</td><td style="font-weight:900;color:var(--r)">−${s.cost} pts</td></tr>`).join('')+
     '</tbody></table>';
 }
 
 function spendPts(id,cost,title,col){
-  if(availablePts()<cost){toast('Not enough points! Keep earning!');return;}
-  if(!confirm('Spend '+cost+' points for: '+title+'?\n\nTell Mamma or Papa before using this reward!'))return;
+  if(availablePts()<cost){toast('Not enough points yet! Keep earning! 💪');return;}
+  const MSGS={
+    tv30:'📺 30 extra minutes of screen time unlocked for today! Watch something great!',
+    tv60:'📺✨ A full extra hour! Enjoy — back to work after! 💪',
+    play45:'🏃 45 extra minutes outside — fresh air and fun! 🌳',
+    sleep30:'🌙 Sleep 30 mins later tonight — but Mamma/Papa must agree! 😴',
+    dinner:'🍽️ Tonight YOU choose dinner — tell the family! 🎉',
+    'skip-reading':'📖 No reading tonight — just today! Back to books tomorrow 😄',
+    snack:'🍦 Go grab your favourite snack — you earned it! 🎊',
+    movie:'🎬 Movie time! Pick your film and tell Mamma/Papa first! 🍿',
+  };
+  const msg=MSGS[id]||'You spent '+cost+' points for: '+title+'! Enjoy! 🌟';
+  if(!confirm('Spend '+cost+' points for: '+title+'?\n\n⚠️ Always tell Mamma or Papa before using!\n\nThis option will be locked for the rest of today.'))return;
   totalSpent+=cost;
-  localStorage.setItem('vaanya_spent_total',totalSpent);
-  spendHist.unshift({id,cost,title,date:new Date().toISOString().split('T')[0]});
-  localStorage.setItem('vaanya_spend_hist',JSON.stringify(spendHist));
+  const spendItem={id,cost,title,date:new Date().toISOString().split('T')[0]};
+  spendHist.unshift(spendItem);
+  localStorage.setItem('vaanya_spent_total',totalSpent); // local backup
+  localStorage.setItem('vaanya_spend_hist',JSON.stringify(spendHist)); // local backup
+  saveSpendToSupabase(spendItem); // save to cloud
+  markUsedToday(id);
   updateTopBar();
-  showPop('🎉','Enjoy your '+title+'!','You spent '+cost+' points. Have fun! 🌟');
+  showPop('🎉','Reward Unlocked! 🌟',msg);
   renderSpend();
+}
+
+
+// ════════════════════════════════════════════
+// PARENT REVIEW TAB
+// ════════════════════════════════════════════
+function renderParentTab(){
+  const pts=calcDayPts();
+  // Compute section sub-totals for the parent view
+  const ttVal=parseInt(document.getElementById('rpt-tt')?.value||0);
+  const schVal=parseInt(document.getElementById('rpt-school')?.value||0);
+  let testPts=0;
+  const got=parseFloat(document.getElementById('test-got')?.value);
+  const tot=parseFloat(document.getElementById('test-tot')?.value)||0;
+  if(!isNaN(got)&&tot>0){const pct=got/tot*100;if(pct>=90)testPts=80;else if(pct>=75)testPts=60;else if(pct>=60)testPts=40;else testPts=20;}
+  let hwPts=0;SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwPts+=15;});
+  let oddaPts=0;const oAtt=document.getElementById('odda-att');
+  if(oAtt?.querySelector('.pg'))oddaPts=15;
+  let gymPts=0;const gym=document.getElementById('gym-today');
+  if(gym?.querySelector('.pa'))gymPts=20;else if(gym?.querySelector('.pb')||gym?.querySelector('.pt'))gymPts=10;
+  let screenPts=0;
+  const sc=document.getElementById('screen-check');if(sc?.querySelector('.pg'))screenPts+=10;else if(sc?.querySelector('.pa'))screenPts+=5;
+  const skillChk=document.getElementById('skill-check');if(skillChk?.querySelector('.pb'))screenPts+=10;
+  screenPts+=parseInt(document.getElementById('book-type')?.value||0);
+  screenPts+=parseInt(document.getElementById('free-act')?.value||0);
+  let reflPts=0;
+  if((document.getElementById('r1')?.value||'').trim()&&(document.getElementById('r2')?.value||'').trim()&&(document.getElementById('r3')?.value||'').trim())reflPts=20;
+  const dailyPts=ttVal+schVal+testPts+hwPts+oddaPts+gymPts+screenPts+reflPts;
+
+  let shlokaPts=0;const sh=document.getElementById('shloka-done');if(sh?.querySelector('.pg'))shlokaPts=25;
+  let crPts=0;const cr=document.getElementById('creative-done');if(cr?.querySelector('.pg'))crPts=20;else if(cr?.querySelector('.pa'))crPts=10;
+  const soulPts=shlokaPts+crPts;
+
+  let brPts=0;const br=document.getElementById('brain-done');if(br?.querySelector('.pg'))brPts=brainPtsToday;
+  const parentRating=parseInt(document.getElementById('parent-rating')?.value||0);
+  const parentComment=(document.getElementById('parent-comment')?.value||'').trim();
+  const parentCommentPts=parentComment.length>5?25:0;
+
+  // Update header chips
+  const el1=document.getElementById('pr-daily-pts');if(el1)el1.textContent=dailyPts;
+  const el2=document.getElementById('pr-brain-pts');if(el2)el2.textContent=brPts;
+  const el3=document.getElementById('pr-soul-pts');if(el3)el3.textContent=soulPts;
+  const el4=document.getElementById('pr-total-pts');if(el4)el4.textContent=pts;
+
+  // Render section bars
+  const bars=document.getElementById('parent-breakdown-bars');if(!bars)return;
+  const sections=[
+    {label:'📝 Daily Report',pts:dailyPts,max:430,col:'#8B5CF6',detail:`TT/School: ${ttVal+schVal} · Test: ${testPts} · HW: ${hwPts} · Odda: ${oddaPts} · Gym: ${gymPts} · Screen: ${screenPts} · Reflection: ${reflPts}`},
+    {label:'🧠 Brain Lab',pts:brPts,max:55,col:'#3B82F6',detail:'Puzzles, Sudoku, Riddles completed today'},
+    {label:'🕉️ Geeta & Creative',pts:soulPts,max:45,col:'#7C3AED',detail:`Shloka: ${shlokaPts} · Creative: ${crPts}`},
+    {label:'⭐ Parent Rating',pts:parentRating,max:80,col:parentRating>=0?'#10B981':'#EF4444',detail:parentRating>=0?`+${parentRating} pts bonus from Mamma & Papa`:`${parentRating} pts deducted by Mamma & Papa`},
+    {label:'💬 Parent Comment',pts:parentCommentPts,max:25,col:'#06B6D4',detail:parentCommentPts>0?'Comment written — +25 pts!':'No comment yet'},
+  ];
+  bars.innerHTML=sections.map(s=>{
+    const pct=s.max>0?Math.min(100,Math.max(0,Math.round(s.pts/s.max*100))):0;
+    const displayPts=s.pts>=0?'+'+s.pts:s.pts;
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:900;color:${s.col}">${s.label}</span>
+        <span style="font-size:16px;font-weight:900;color:${s.col}">${displayPts} pts</span>
+      </div>
+      <div style="background:#F0F4FF;border-radius:6px;height:14px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,${s.col}80,${s.col});border-radius:6px;transition:width .5s"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:3px">${s.detail}</div>
+    </div>`;
+  }).join('');
 }
 
 // ════════════════════════════════════════════
@@ -1702,9 +2155,14 @@ function clearDay(){
   document.querySelectorAll('.star').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.creative-option').forEach(o=>o.classList.remove('chosen'));
   document.getElementById('creative-detail').style.display='none';
-  document.getElementById('odda-assign-detail').style.display='none';
-  document.getElementById('approval-section').style.display='block';
-  document.getElementById('approved-section').style.display='none';
+  const oaDet=document.getElementById('odda-assign-detail');if(oaDet)oaDet.style.display='none';
+  const tcBox=document.getElementById('test-chapters-box');if(tcBox)tcBox.style.display='none';
+  const bkBox=document.getElementById('book-knowledge-box');if(bkBox)bkBox.style.display='none';
+  const prPend=document.getElementById('parent-pending-section');if(prPend)prPend.style.display='block';
+  const prAct=document.getElementById('parent-action-section');if(prAct)prAct.style.display='none';
+  const prApp=document.getElementById('approved-section');if(prApp)prApp.style.display='none';
+  const freeMsg=document.getElementById('free-act-msg');if(freeMsg)freeMsg.innerHTML='';
+  const prRatRes=document.getElementById('parent-rating-result');if(prRatRes)prRatRes.innerHTML='';
   creativeChosen=null;brainPtsToday=0;todayApproved=false;
   updateHW();calcDayPts();setTodayDate();
 }
@@ -1924,11 +2382,98 @@ function checkRiddle(i,correct,hint){
 }
 
 // ════════════════════════════════════════════
-// INIT
+// AI ENCOURAGING COMMENTS
+// ════════════════════════════════════════════
+async function generateAIComment(data) {
+  const el = document.getElementById('ai-comment-box');
+  if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = `<div style="color:#7C3AED;font-size:12px;font-weight:800">✨ Mamma & Papa's AI message is being written for you...</div>`;
+
+  const streak = getStreak();
+  const hwMax = 7;
+  const prompt = `You are writing a warm, loving, encouraging message from a parent to their child Vaanya (Class 6 student, ~11 years old, Delhi, India). 
+
+Today's report:
+- Points earned: ${data.pts}
+- Homework done: ${data.hwDone}/${hwMax} subjects
+- Shloka/Geeta done: ${data.shlokaD ? 'Yes ✅' : 'No ❌'}
+- Creative activity: ${data.creativeD ? 'Yes ✅' : 'No ❌'}
+- Brain Lab: ${data.brainD ? 'Yes ✅' : 'No ❌'}
+- ODDA class: ${data.odda ? 'Yes ✅' : 'No ❌'}
+- Current streak: ${streak} days
+- Parent rating: ${data.parentRating > 0 ? '+' : ''}${data.parentRating} pts
+
+Write a short (4-5 sentences), warm, personal message from Mamma and Papa to Vaanya. 
+- Celebrate what she did well specifically
+- Gently encourage what she can improve tomorrow (if anything)
+- End with a loving motivating line about her future
+- Use emojis naturally
+- Mention her name at least once
+- Keep it heartfelt and real, not generic
+- Write in a mix of warm English (you can add 1-2 Hindi words of endearment like "beta" or "pyaari")`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const result = await response.json();
+    const comment = result.content?.[0]?.text || 'We are so proud of you, Vaanya! Keep shining! ⭐';
+    el.innerHTML = `
+      <div style="background:linear-gradient(135deg,#7C3AED15,#EC489915);border:2px solid #7C3AED40;border-radius:12px;padding:14px">
+        <div style="font-size:11px;font-weight:900;color:#7C3AED;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">✨ Message from Mamma & Papa</div>
+        <div style="font-size:13px;line-height:1.8;color:#1E1B4B;font-weight:600">${comment}</div>
+        <div style="font-size:10px;color:#9CA3AF;margin-top:8px">💜 Written with love using AI</div>
+      </div>`;
+    // Update the parent comment field too
+    const pcf = document.getElementById('parent-comment');
+    if (pcf && !pcf.value) pcf.value = comment;
+  } catch(err) {
+    el.innerHTML = `<div style="color:#10B981;font-size:13px;font-weight:700">💜 We are so proud of you, Vaanya! Every day you show up and try your best — that's what matters most. Keep shining, beta! ⭐</div>`;
+  }
+}
+
+// ════════════════════════════════════════════
+// BACKUP EXPORT
+// ════════════════════════════════════════════
+function exportBackup() {
+  const backup = {
+    exportDate: new Date().toISOString(),
+    savedDays, spendHist, totalSpent
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'vaanya-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  toast('✅ Backup downloaded to your PC!');
+}
+
+// ════════════════════════════════════════════
+// INIT — load cloud data then build UI
 // ════════════════════════════════════════════
 buildAll();
 updateTopBar();
 calcDayPts();
+// Load from Supabase cloud on startup
+loadFromSupabase().then(ok => {
+  if (ok) {
+    updateTopBar();
+    toast('☁️ Data loaded from cloud! All your history is here.');
+  } else {
+    // Fallback: try localStorage backup
+    try {
+      const local = localStorage.getItem('vaanya_days');
+      if (local) { savedDays = JSON.parse(local); updateTopBar(); toast('📱 Loaded from local backup (offline mode)'); }
+    } catch(e) {}
+  }
+});
 </script>
 </body>
 </html>
