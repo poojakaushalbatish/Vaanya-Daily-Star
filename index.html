@@ -2445,7 +2445,7 @@ function evaluateSkillWithAI(){
 
   if(isBad && !matched){
     pts=0; valid=false;
-    reason='Watching videos, gaming or timepass doesn't count as a skill activity.';
+    reason='Watching videos, gaming or timepass does not count as a skill activity.';
     feedback='Try something creative or educational tomorrow, Vaanya — you have so many talents! 💪';
   } else if(!matched){
     pts=4; valid=true;
@@ -2454,8 +2454,8 @@ function evaluateSkillWithAI(){
   } else if(isRepeat){
     pts=Math.max(1, matched.pts - repeatPenalty + detailBonus);
     valid=true;
-    reason=matched.label+' is great, but you've done something similar recently — try a new activity for full points!';
-    feedback='You're consistent, Vaanya! Mix in new activities to earn maximum points! 🌈';
+    reason=matched.label+' is great, but you have done something similar recently — try a new activity for full points!';
+    feedback='You are consistent, Vaanya! Mix in new activities to earn maximum points! 🌈';
   } else if(wordCount < 8){
     pts=Math.min(10, matched.pts - 1 + detailBonus);
     valid=true;
