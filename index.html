@@ -1219,6 +1219,7 @@ function showSyncStatus(state) {
 }
 let brainPtsToday = 0;
 let aiSkillPts = 0; // set by AI skill evaluator
+const GEMINI_KEY = 'AIzaSyALK9x-p1dyq5O0IuL7_I4-iBkHDCED318';
 let sudokuGrid    = null, sudokuSolution = null, selectedCell = null, sudokuDifficulty = 'easy';
 let currentShloka = 0;
 let creativeChosen = null;
@@ -2410,20 +2411,16 @@ Reply with ONLY this JSON (no other text):
 {"valid":true,"pts":7,"reason":"...","repeated":false,"feedback":"..."}`;
 
   try{
-    const response=await fetch('https://api.anthropic.com/v1/messages',{
+    const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:200,
-        messages:[{role:'user',content:prompt}]
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{temperature:0.3,maxOutputTokens:300}
       })
     });
     const data=await response.json();
-    let text=(data.content?.[0]?.text||'').trim();
+    let text=(data.candidates?.[0]?.content?.parts?.[0]?.text||'').trim();
     console.log('Skill AI raw response:',text);
 
     // Aggressively extract JSON — find first { to last }
@@ -2488,20 +2485,16 @@ Write a short (4-5 sentences), warm, personal message from Mamma and Papa to Vaa
 - Write in a mix of warm English (you can add 1-2 Hindi words of endearment like "beta" or "pyaari")`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        messages: [{ role: 'user', content: prompt }]
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{temperature:0.7,maxOutputTokens:400}
       })
     });
     const result = await response.json();
-    const comment = result.content?.[0]?.text || 'We are so proud of you, Vaanya! Keep shining! ⭐';
+    const comment = result.candidates?.[0]?.content?.parts?.[0]?.text || 'We are so proud of you, Vaanya! Keep shining! ⭐';
     el.innerHTML = `
       <div style="background:linear-gradient(135deg,#7C3AED15,#EC489915);border:2px solid #7C3AED40;border-radius:12px;padding:14px">
         <div style="font-size:11px;font-weight:900;color:#7C3AED;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">✨ Message from Mamma & Papa</div>
