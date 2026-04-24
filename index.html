@@ -2389,49 +2389,59 @@ async function evaluateSkillWithAI(){
   resultBox.style.display='block';
   resultBox.innerHTML=`<div style="color:var(--bd);font-size:12px;font-weight:800">🤖 AI is checking your skill activity...</div>`;
 
-  // Get past skill descriptions from savedDays full_data to check for repeats
+  // Get past skill descriptions from savedDays to check for repeats
   const pastSkills=savedDays.slice(0,14).map(d=>{
     try{const fd=typeof d.full_data==='string'?JSON.parse(d.full_data):d;return fd.skillDesc||'';}catch{return '';}
   }).filter(Boolean).join(' | ');
 
-  const prompt=`You are an evaluator for a child named Vaanya (Class 6, ~11 years old, Delhi, India).
+  const prompt=`You are an evaluator for Vaanya (Class 6, ~11 years old, Delhi, India). Evaluate her skill activity and reply ONLY with a single valid JSON object — no markdown, no explanation, no backticks, nothing else before or after the JSON.
 
-She claims to have done a skill-building activity today. Your job is to:
-1. Check if what she described is actually a genuine SKILL activity (creative, physical, intellectual, artistic — not just watching TV or scrolling).
-2. Check if it's age-appropriate for an 11-year-old.
-3. Check if it seems like a repeat of what she has done in the past 14 days (past activities: "${pastSkills||'none recorded'}").
-4. Award points from 0 to 10 based on: genuineness of skill (3pts), effort/detail described (4pts), novelty/not repeated (3pts).
+Activity she described: "${desc}"
+Past 14 days activities: "${pastSkills||'none'}"
 
-Her description today: "${desc}"
+Rules:
+- "valid": true if it is a genuine skill (creative, physical, intellectual, artistic). false if it is just watching TV, timepass, or not a real skill.
+- "pts": integer 0-10. Give 0 if not valid. Give 1-4 if valid but vague/repeated. Give 5-7 if good effort. Give 8-10 if detailed, new, and impressive.
+- "repeated": true if very similar to past activities.
+- "reason": 1 sentence explaining the score.
+- "feedback": 1 warm friendly sentence addressed to Vaanya.
 
-Reply ONLY in this exact JSON format (no extra text):
-{"valid":true/false,"pts":0-10,"reason":"short encouraging reason in 1-2 sentences","repeated":true/false,"feedback":"one friendly sentence to Vaanya"}`;
+Reply with ONLY this JSON (no other text):
+{"valid":true,"pts":7,"reason":"...","repeated":false,"feedback":"..."}`;
 
   try{
     const response=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{
+        'Content-Type':'application/json',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
-        max_tokens:300,
+        max_tokens:200,
         messages:[{role:'user',content:prompt}]
       })
     });
     const data=await response.json();
     let text=(data.content?.[0]?.text||'').trim();
-    // strip markdown code fences if any
-    text=text.replace(/```json|```/g,'').trim();
-    const result=JSON.parse(text);
+    console.log('Skill AI raw response:',text);
 
-    aiSkillPts=result.valid?(result.pts||0):-10;
+    // Aggressively extract JSON — find first { to last }
+    const start=text.indexOf('{');
+    const end=text.lastIndexOf('}');
+    if(start===-1||end===-1)throw new Error('No JSON found in response: '+text);
+    const jsonStr=text.slice(start,end+1);
+    const result=JSON.parse(jsonStr);
+
+    aiSkillPts=result.valid?(parseInt(result.pts)||0):-10;
     const col=aiSkillPts>=7?'var(--gd)':aiSkillPts>=4?'var(--bd)':aiSkillPts>0?'var(--ad)':'var(--rd)';
     const icon=aiSkillPts>=7?'🌟':aiSkillPts>=4?'👍':aiSkillPts>0?'🙂':'❌';
 
     resultBox.innerHTML=`
       <div style="background:${aiSkillPts>0?'var(--gl)':'var(--rl)'};border:1.5px solid ${aiSkillPts>0?'var(--gm)':'var(--rm)'};border-radius:10px;padding:12px">
         <div style="font-size:13px;font-weight:900;color:${col};margin-bottom:6px">${icon} AI Verdict: ${aiSkillPts>0?'+'+aiSkillPts+' pts awarded':'Not counted as a skill activity'}</div>
-        <div style="font-size:12px;color:var(--ink);margin-bottom:4px">${result.reason}</div>
-        <div style="font-size:11px;color:${col};font-weight:700">${result.feedback}</div>
+        <div style="font-size:12px;color:var(--ink);margin-bottom:4px">${result.reason||''}</div>
+        <div style="font-size:11px;color:${col};font-weight:700">${result.feedback||''}</div>
         ${result.repeated?'<div style="font-size:11px;color:var(--ad);margin-top:4px">⚠️ Looks like you\'ve done something similar recently — try something new next time for full points!</div>':''}
       </div>`;
 
@@ -2440,8 +2450,8 @@ Reply ONLY in this exact JSON format (no extra text):
     calcDayPts();
     toast(aiSkillPts>0?`Skill evaluated! +${aiSkillPts} pts earned! 🎯`:'Skill not counted this time — try something new!');
   }catch(err){
-    resultBox.innerHTML=`<div style="color:var(--rd);font-size:12px;font-weight:700">⚠️ Could not evaluate right now. Trying again later!</div>`;
     console.error('Skill AI error:',err);
+    resultBox.innerHTML=`<div style="background:var(--rl);border:1.5px solid var(--rm);border-radius:10px;padding:10px;font-size:12px;font-weight:700;color:var(--rd)">⚠️ Could not evaluate right now — please try again in a moment!</div>`;
   }
 }
 
@@ -2480,7 +2490,10 @@ Write a short (4-5 sentences), warm, personal message from Mamma and Papa to Vaa
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 300,
