@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vaanya's Daily Star ⭐</title>
+<title>Vaanya's Performance Report 🏆</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -26,7 +26,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--ink);font-
 .page{max-width:980px;margin:0 auto;padding:14px}
 
 /* TOP BAR */
-.topbar{background:linear-gradient(135deg,#4F46E5,#7C3AED,#DB2777);border-radius:var(--rad);
+.topbar{background:linear-gradient(135deg,#FF6B6B,#FF8E53,#FF6B9D,#C44FFF,#4FACFE);background-size:300% 300%;animation:gradientShift 6s ease infinite;border-radius:var(--rad);
   padding:14px 18px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .av{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);
   display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;flex-shrink:0}
@@ -297,6 +297,17 @@ tr:hover td{background:#FAFBFF}
   body{background:#fff}
   @page{margin:1.2cm}
 }
+
+@keyframes gradientShift{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+@keyframes titlePulse{
+  0%,100%{text-shadow:0 0 10px rgba(255,255,255,.6),0 0 30px rgba(255,255,255,.3)}
+  50%{text-shadow:0 0 20px rgba(255,255,255,1),0 0 60px rgba(255,200,0,.8)}
+}
+.tb-title{font-size:18px;font-weight:900;animation:titlePulse 2.5s ease-in-out infinite;letter-spacing:.03em}
 </style>
 </head>
 <body>
@@ -346,7 +357,7 @@ tr:hover td{background:#FAFBFF}
 <div class="topbar">
   <div class="av">V</div>
   <div class="tb-info">
-    <div class="tb-title">Vaanya's Daily Star ⭐</div>
+    <div class="tb-title">VAANYA'S PERFORMANCE REPORT 🏆</div>
     <div class="tb-sub">Class 6 · DPS Noida · CBSE 2026–27</div>
     <div style="font-size:10px;opacity:.85;margin-top:4px;background:rgba(255,255,255,.15);border-radius:8px;padding:4px 10px;display:inline-block">
       🏆 Max daily pts: <b>Daily Report ~415 + Brain Lab ~55 + Shloka 25 + Creative 20 = ~515 pts</b>
@@ -374,11 +385,11 @@ tr:hover td{background:#FAFBFF}
 <!-- TABS -->
 <div class="nav">
   <button class="nb t0 active" onclick="showTab('report',this)">📝 Daily Report</button>
+  <button class="nb t3" onclick="showTab('brain',this)">🧠 Brain Lab</button>
+  <button class="nb t4" onclick="showTab('soul',this)">🕉️ Geeta & Shloka</button>
+  <button class="nb t4" onclick="showTab('parent',this)">👨‍👩‍👧 Parents Review</button>
   <button class="nb t1" onclick="showTab('rewards',this)">🎁 Rewards</button>
   <button class="nb t2" onclick="showTab('spend',this)">🛒 Spend</button>
-  <button class="nb t3" onclick="showTab('brain',this)">🧠 Brain Lab</button>
-  <button class="nb t4" onclick="showTab('soul',this)">🕉️ Geeta & Creative</button>
-  <button class="nb t4" onclick="showTab('parent',this)" style="">👩‍👧‍👦 Mamma & Papa</button>
   <button class="nb t5" onclick="showTab('history',this)">📅 History</button>
   <button class="nb t6" onclick="showTab('graphs',this)">📈 Progress</button>
 </div>
@@ -499,30 +510,34 @@ tr:hover td{background:#FAFBFF}
     <div class="si" style="background:var(--pl);color:var(--p)">💻</div>
     Odda class today
     <span class="must-badge">Mandatory — −15 pts if missed!</span>
-    <span class="ptag">15 pts attended</span>
+    <span class="ptag">Max 10 pts · late/miss penalties apply</span>
   </div>
   <div>
       <div class="fl">Did I attend today?</div>
       <div class="pills" id="odda-att">
-        <div class="pill" onclick="toggleEx(this,'odda-att','pg');calcDayPts()">✅ Yes! (+15)</div>
+        <div class="pill" onclick="toggleEx(this,'odda-att','pg');calcDayPts()">✅ Yes, attended! (+10)</div>
         <div class="pill" onclick="toggleEx(this,'odda-att','pr');calcDayPts()">❌ Missed (−15)</div>
+      </div>
+      <div class="fl mt10">Did I join on time?</div>
+      <div class="pills" id="odda-time">
+        <div class="pill" onclick="toggleEx(this,'odda-time','pg');calcDayPts()">⏰ Joined on time! (+5)</div>
+        <div class="pill" onclick="toggleEx(this,'odda-time','pr');calcDayPts()">🐢 Slightly late (−10)</div>
       </div>
       <div class="fl mt10">Subject covered</div>
       <input type="text" id="odda-subj" placeholder="e.g. Maths — fractions, decimals">
       <div class="fl mt10">Odda assignment completed?</div>
       <div class="pills" id="odda-assign">
         <div class="pill" onclick="toggleEx(this,'odda-assign','pg');showOddaAssign(true);calcDayPts()">✅ Yes, completed!</div>
-        <div class="pill" onclick="toggleEx(this,'odda-assign','pa');showOddaAssign(false);calcDayPts()">🟡 Partially</div>
-        <div class="pill" onclick="toggleEx(this,'odda-assign','pr');showOddaAssign(false);calcDayPts()">❌ Not done</div>
+        <div class="pill" onclick="toggleEx(this,'odda-assign','pr');showOddaAssign(false);calcDayPts()">❌ Incomplete</div>
       </div>
-      <div id="odda-assign-detail" style="display:none;margin-top:8px">
-        <div class="fl">Correct answers / Total questions</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-          <input type="number" id="odda-correct" min="0" max="100" placeholder="Correct" oninput="calcOddaAssign()" style="text-align:center;font-size:15px;font-weight:800">
-          <span style="font-size:16px;font-weight:900;color:var(--muted)">/</span>
-          <input type="number" id="odda-total-q" min="1" max="100" placeholder="Total" oninput="calcOddaAssign()" style="text-align:center;font-size:15px;font-weight:800">
+      <div id="odda-assign-detail" style="display:none;margin-top:10px;background:var(--gl);border-radius:10px;padding:10px;border:1.5px solid var(--gm)">
+        <div class="fl" style="color:var(--gd)">Marks obtained / Total marks</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+          <input type="number" id="odda-correct" min="0" max="100" placeholder="Got" oninput="calcOddaAssign()" style="text-align:center;font-size:16px;font-weight:900;width:80px">
+          <span style="font-size:18px;font-weight:900;color:var(--muted)">/</span>
+          <input type="number" id="odda-total-q" min="1" max="100" placeholder="Total" oninput="calcOddaAssign()" style="text-align:center;font-size:16px;font-weight:900;width:80px">
         </div>
-        <div id="odda-assign-result" style="margin-top:6px;font-size:13px;font-weight:800"></div>
+        <div id="odda-assign-result" style="margin-top:8px;font-size:12px;font-weight:800"></div>
       </div>
   </div>
   <div class="sec-pts-row" id="odda-pts-row">
@@ -549,6 +564,11 @@ tr:hover td{background:#FAFBFF}
       <option value="7">👧 Playing with Kinnu (+7 pts)</option>
       <option value="0">💤 Rest day (0 pts)</option>
     </select>
+    <div class="fl mt10">Did I join on time?</div>
+    <div class="pills" id="gym-time">
+      <div class="pill" onclick="toggleEx(this,'gym-time','pg');calcDayPts()">✅ Joined on time! (+5)</div>
+      <div class="pill" onclick="toggleEx(this,'gym-time','pr');calcDayPts()">🐢 Slightly late (−10)</div>
+    </div>
     <div id="gym-pts-msg" style="margin-top:6px;font-size:11px;font-weight:800"></div>
   </div>
   <div class="sec-pts-row" id="gym-pts-row">
@@ -640,50 +660,41 @@ tr:hover td{background:#FAFBFF}
   <div class="sh">
     <div class="si" style="background:var(--pl);color:var(--p)">💭</div>
     Vaanya's daily reflection
-    <span class="must-badge">Mandatory — −10 pts if all 3 empty!</span>
-    <span class="ptag">20 pts for all 3 filled</span>
+    <span class="must-badge">Mandatory — fill all 3!</span>
+    <span class="ptag">Up to 7 pts each</span>
   </div>
+
+  <!-- R1: Best thing today -->
   <div class="rbox" style="background:var(--pl);border-left:4px solid var(--p)">
     <div class="rlbl" style="color:var(--pd)">⭐ Best thing I did today...</div>
-    <textarea id="r1" placeholder="One win — big or small!" style="background:transparent;border:none;padding:0" oninput="calcDayPts()"></textarea>
+    <textarea id="r1" placeholder="One win — big or small!" style="background:transparent;border:none;padding:0" oninput="calcDayPts()" onblur="evalReflection(1)"></textarea>
+    <div id="r1-verdict" style="display:none;margin-top:8px;font-size:11px;border-radius:8px;padding:8px 10px"></div>
   </div>
+
+  <!-- R2: One thing to improve -->
   <div class="rbox" style="background:var(--al);border-left:4px solid var(--a)">
     <div class="rlbl" style="color:var(--ad)">🔧 One thing I want to improve...</div>
-    <textarea id="r2" placeholder="Honest self-reflection." style="background:transparent;border:none;padding:0" oninput="calcDayPts()"></textarea>
+    <textarea id="r2" placeholder="Honest self-reflection." style="background:transparent;border:none;padding:0" oninput="calcDayPts()" onblur="evalReflection(2)"></textarea>
+    <div id="r2-verdict" style="display:none;margin-top:8px;font-size:11px;border-radius:8px;padding:8px 10px"></div>
   </div>
+
+  <!-- R3: Tomorrow plan -->
   <div class="rbox" style="background:var(--gl);border-left:4px solid var(--g)">
     <div class="rlbl" style="color:var(--gd)">🎯 Tomorrow I will...</div>
-    <textarea id="r3" placeholder="One clear plan for tomorrow." style="background:transparent;border:none;padding:0" oninput="calcDayPts()"></textarea>
+    <textarea id="r3" placeholder="One clear plan for tomorrow." style="background:transparent;border:none;padding:0" oninput="calcDayPts()" onblur="evalReflection(3)"></textarea>
+    <div id="r3-verdict" style="display:none;margin-top:8px;font-size:11px;border-radius:8px;padding:8px 10px"></div>
+  </div>
+
+  <div class="sec-pts-row" id="refl-pts-row">
+    <span class="sec-pts-label">💭 Reflection points earned</span>
+    <span class="sec-pts-val" id="refl-pts-display">0 pts</span>
   </div>
 </div>
 
-<!-- SUMMARY (daily report only - no parent section here anymore) -->
-<div class="sec">
-  <div style="font-size:15px;font-weight:900;margin-bottom:12px;color:var(--ink)">📊 Today's Points Summary</div>
-  <div id="pts-breakdown" style="margin-bottom:14px"></div>
-  <div class="sum-grid">
-    <div class="scard2" style="background:var(--pl);border-color:var(--pm)">
-      <div class="snum" style="color:var(--p)" id="sc-hw">–</div>
-      <div class="slbl" style="color:var(--pd)">HW done</div>
-    </div>
-    <div class="scard2" style="background:var(--al);border-color:var(--am)">
-      <div class="snum" style="color:var(--a)" id="sc-phys">–</div>
-      <div class="slbl" style="color:var(--ad)">Activity</div>
-    </div>
-    <div class="scard2" style="background:var(--gl);border-color:var(--gm)">
-      <div class="snum" style="color:var(--g)" id="sc-odda">–</div>
-      <div class="slbl" style="color:var(--gd)">Odda</div>
-    </div>
-    <div class="scard2" style="background:var(--al);border-color:var(--am)">
-      <div class="snum" style="color:var(--gold)" id="sc-pts">0</div>
-      <div class="slbl" style="color:var(--ad)">⭐ Points today</div>
-    </div>
-  </div>
-</div>
 
 <div class="btn-row">
   <button class="btn btn-o" onclick="clearDay()">🗑️ Clear today</button>
-  <button class="btn btn-p" onclick="window.print()">🖨️ Print</button>
+  <button class="btn btn-p" onclick="saveDraftAndGoBrainLab()">💾 Save &amp; Go to Brain Lab →</button>
 </div>
 </div><!-- end tab-report -->
 
@@ -1001,7 +1012,7 @@ const REWARDS=[
   {pts:600,icon:'📚',title:'New comic book',col:'#10B981',light:'#ECFDF5',items:['Any comic or storybook','From your favourite series!','Visit bookstore together!']},
   {pts:900,icon:'🎮',title:'New board game / toy',col:'#8B5CF6',light:'#F3EFFE',items:['Any game up to ₹500','Shop together with Mamma','Your pick!']},
   {pts:1200,icon:'🎬',title:'Cinema outing!',col:'#D97706',light:'#FFFBEB',items:['Movie at the theatre!','Popcorn + cold drink','You pick the film!','Dinner after!']},
-  {pts:1600,icon:'🎁',title:'Mystery surprise gift!',col:'#EC4899',light:'#FDF2F8',items:['A wrapped mystery gift!','Mamma & Papa choose!','Could be anything amazing!']},
+  {pts:1600,icon:'🎁',title:'Mystery surprise gift!',col:'#EC4899',light:'#FDF2F8',items:['A wrapped mystery gift!','Parents Review choose!','Could be anything amazing!']},
   {pts:2200,icon:'🎡',title:'Theme park day!',col:'#6D28D9',light:'#EDE9FE',items:['Full day at a theme park!','All rides!','Family trip!']},
   {pts:3000,icon:'✈️',title:'Weekend trip!',col:'#DC2626',light:'#FEF2F2',items:['Family weekend getaway!','Hotel stay!','You pick destination!']},
 ];
@@ -1219,6 +1230,7 @@ function showSyncStatus(state) {
 }
 let brainPtsToday = 0;
 let aiSkillPts = 0; // set by AI skill evaluator
+let reflPts1=0,reflPts2=0,reflPts3=0; // per-reflection pts
 const GEMINI_KEY = 'AIzaSyALK9x-p1dyq5O0IuL7_I4-iBkHDCED318';
 let sudokuGrid    = null, sudokuSolution = null, selectedCell = null, sudokuDifficulty = 'easy';
 let currentShloka = 0;
@@ -1456,8 +1468,6 @@ function updateHW(){
   if(prog)prog.style.width=pct+'%';
   const hwpct=document.getElementById('hw-pct');
   if(hwpct)hwpct.textContent=pct+'% ('+done+'/'+SUBJECTS.length+' subjects)';
-  const schw=document.getElementById('sc-hw');
-  if(schw)schw.textContent=done+'/'+SUBJECTS.length;
   const hwPtsEl=document.getElementById('hw-pts-display');
   if(hwPtsEl)hwPtsEl.textContent=(done*15)+' pts';
   calcDayPts();
@@ -1490,6 +1500,25 @@ function calcOddaAssign(){
 // ════════════════════════════════════════════
 // POINTS CALC — fixes #7,#8,#9 (gym/screen/summary working)
 // ════════════════════════════════════════════
+function calcOddaAssign(){
+  const el=document.getElementById('odda-assign-result');
+  if(!el)return;
+  const corr=parseFloat(document.getElementById('odda-correct')?.value)||0;
+  const totQ=parseFloat(document.getElementById('odda-total-q')?.value)||0;
+  if(!totQ){el.innerHTML='';return;}
+  const pct=Math.round(corr/totQ*100);
+  let assignPts=0;
+  if(pct>=90)assignPts=10;
+  else if(pct>=75)assignPts=8;
+  else if(pct>=60)assignPts=6;
+  else if(pct>=40)assignPts=4;
+  else assignPts=2;
+  const col=pct>=75?'var(--gd)':pct>=50?'var(--ad)':'var(--rd)';
+  const icon=pct>=90?'🌟':pct>=75?'🎉':pct>=60?'👍':pct>=40?'🙂':'💪';
+  el.innerHTML=`<span style="color:${col}">${icon} ${pct}% — Assignment pts: +${assignPts}/10</span>`;
+  calcDayPts();
+}
+
 function calcDayPts(){
   let pts=0;
   let breakdown={};
@@ -1517,30 +1546,42 @@ function calcDayPts(){
   SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwPts+=15;});
   pts+=hwPts;breakdown.hw=hwPts;
 
-  // Odda — fix #7: attendance check working
+  // Odda — attendance (+10 yes / -15 missed) + timing (+5 on time / -10 late) + assignment (% based max +10 / incomplete 0)
   let oddaPts=0;
   const oAtt=document.getElementById('odda-att');
-  if(oAtt?.querySelector('.pg'))oddaPts+=15;
-  else if(oAtt?.querySelector('.pr'))oddaPts-=15; // missed penalty
-  // Odda assignment bonus
+  if(oAtt?.querySelector('.pg'))oddaPts+=10;       // attended +10
+  else if(oAtt?.querySelector('.pr'))oddaPts-=15;  // missed -15
+  const oTime=document.getElementById('odda-time');
+  if(oTime?.querySelector('.pg'))oddaPts+=5;       // on time +5
+  else if(oTime?.querySelector('.pr'))oddaPts-=10; // late -10
+  // Assignment — % based pts (max +10), incomplete = 0 pts added
   const oAssign=document.getElementById('odda-assign');
   if(oAssign?.querySelector('.pg')){
-    // assignment completed — calc bonus
     const corr=parseFloat(document.getElementById('odda-correct')?.value)||0;
     const totQ=parseFloat(document.getElementById('odda-total-q')?.value)||0;
     if(totQ>0){
-      const pct2=corr/totQ*100;
-      if(pct2>=90)oddaPts+=20;else if(pct2>=75)oddaPts+=15;else if(pct2>=60)oddaPts+=10;else oddaPts+=5;
+      const pct=corr/totQ*100;
+      if(pct>=90)oddaPts+=10;
+      else if(pct>=75)oddaPts+=8;
+      else if(pct>=60)oddaPts+=6;
+      else if(pct>=40)oddaPts+=4;
+      else oddaPts+=2;
     }
   }
-  pts+=oddaPts;breakdown.odda=Math.max(0,oddaPts);
+  // else incomplete = 0 bonus pts (no deduction for assignment)
+  // Cap maximum at 10 (can still go negative for attendance/timing penalties)
+  const oddaFinal=Math.min(10,oddaPts);
+  pts+=oddaFinal;breakdown.odda=oddaFinal;
   const oddaPtEl=document.getElementById('odda-pts-display');
-  if(oddaPtEl)oddaPtEl.textContent=oddaPts+' pts';
+  if(oddaPtEl)oddaPtEl.textContent=oddaFinal+' pts';
 
-  // Gym — now a dropdown select
+  // Gym — dropdown activity pts + timing pill (+5 on time / -10 late)
   let gymPts=0;
   const gymSel=document.getElementById('gym-today');
   gymPts=parseInt(gymSel?.value||0);
+  const gymTime=document.getElementById('gym-time');
+  if(gymTime?.querySelector('.pg'))gymPts+=5;       // on time +5
+  else if(gymTime?.querySelector('.pr'))gymPts-=10; // late -10
   pts+=gymPts;breakdown.gym=gymPts;
   const gymPtEl=document.getElementById('gym-pts-display');
   if(gymPtEl)gymPtEl.textContent=gymPts+' pts';
@@ -1577,13 +1618,14 @@ function calcDayPts(){
   const scPtEl=document.getElementById('screen-pts-display');
   if(scPtEl)scPtEl.textContent=screenPts+' pts';
 
-  // Reflection
+  // Reflection — individual smart pts stored in globals
   const r1=(document.getElementById('r1')?.value||'').trim();
   const r2=(document.getElementById('r2')?.value||'').trim();
   const r3=(document.getElementById('r3')?.value||'').trim();
-  let reflPts=0;
-  if(r1&&r2&&r3)reflPts=20;
-  pts+=reflPts;breakdown.refl=reflPts;
+  const reflPts = (r1?reflPts1:0) + (r2?reflPts2:0) + (r3?reflPts3:0);
+  pts+=reflPts; breakdown.refl=reflPts;
+  const reflDisp=document.getElementById('refl-pts-display');
+  if(reflDisp) reflDisp.textContent=reflPts+' / 21 pts';
 
   // Parent comment
   const pc=(document.getElementById('parent-comment')?.value||'').trim();
@@ -1622,21 +1664,11 @@ function calcDayPts(){
   // Update all displays — fix #9
   const livePts=document.getElementById('day-pts-live');
   if(livePts)livePts.textContent=pts;
-  const scPts=document.getElementById('sc-pts');
-  if(scPts)scPts.textContent=pts;
   updateXP(pts);
 
   // Summary indicators
   const oAttQ=document.getElementById('odda-att');
-  const scOdda=document.getElementById('sc-odda');
-  if(scOdda)scOdda.textContent=oAttQ?.querySelector('.pg')?'Yes ✅':'No';
-
-  const gymSelEl=document.getElementById('gym-today');
-  const scPhys=document.getElementById('sc-phys');
-  if(scPhys){
-    const gv=gymSelEl?.options[gymSelEl?.selectedIndex]?.text||'–';
-    if(scPhys)scPhys.textContent=gymSelEl?.value&&gymSelEl.value!=='0'?gymSelEl.options[gymSelEl.selectedIndex].text.split('(')[0].trim():'Rest 💤';
-  }
+  // Summary cards removed — pts tracked via XP bar and breakdown chips only
 
   // Points breakdown display — fix #9
   renderBreakdown(breakdown,pts);
@@ -1698,6 +1730,89 @@ function checkPenalty(){
       document.getElementById('pen-msg').textContent="⚠️ Yesterday's mandatory tasks missed: "+penalties.join(', ')+'. Penalty today!';
     }else pen.style.display='none';
   }else pen.style.display='none';
+}
+
+// ════════════════════════════════════════════
+// REFLECTION SMART EVALUATOR
+// ════════════════════════════════════════════
+function evalReflection(n){
+  const val=(document.getElementById('r'+n)?.value||'').trim();
+  const box=document.getElementById('r'+n+'-verdict');
+  if(!box) return;
+  if(!val || val.length<3){ box.style.display='none'; return; }
+
+  const d=val.toLowerCase();
+  const words=val.trim().split(/\s+/).length;
+
+  // Generic/lazy answer detection
+  const lazy=['nothing','idk','ok','fine','good','bad','yes','no','same','dunno','whatever','none'];
+  const isLazy = lazy.some(w=>d===w||d===w+'.'||d===w+'!') || words<=1;
+
+  // Age-appropriate genuine content
+  const achieveWords=['finished','completed','helped','learnt','practised','read','wrote','drew','cooked','solved','scored','won','tried','studied','understood','improved','made','built'];
+  const improveWords=['focus','concentrate','distract','procrastinat','late','rush','complete','homework','study','practice','practice','listen','sleep','wake','organise','time','manage','patient','calm','temper','argue','fight','phone','screen','eat','exercise'];
+  const planWords=['will','going to','plan','study','practice','read','draw','help','sleep','wake','exercise','finish','complete','revise','prepare','try','learn','write','cook','clean','organise','spend','reduce','limit','start','stop','improve','focus'];
+
+  let pts=0, icon='', msg='', bg='', col='';
+
+  if(isLazy){
+    pts=0; icon='😐';
+    msg='Too vague! Write a real, specific answer to earn points.';
+    bg='var(--rl)'; col='var(--rd)';
+  } else if(n===1){
+    // Best thing today — should be a genuine achievement
+    const isGenuine = achieveWords.some(w=>d.includes(w)) || words>=6;
+    pts = isGenuine ? (words>=12?7:words>=7?5:3) : 2;
+    icon = pts>=6?'🌟':pts>=4?'👍':'🙂';
+    msg = pts>=6?'Wonderful reflection, Vaanya! That is a real achievement!':pts>=4?'Good effort! Being specific helps you remember your wins.':'Try to be more specific — what exactly did you do?';
+    bg='var(--pl)'; col='var(--pd)';
+  } else if(n===2){
+    // Improvement — should be honest and specific
+    const isGenuine = improveWords.some(w=>d.includes(w)) || words>=6;
+    pts = isGenuine ? (words>=12?7:words>=7?5:3) : 2;
+    icon = pts>=6?'💪':pts>=4?'👍':'🙂';
+    msg = pts>=6?'Excellent self-awareness, Vaanya! Knowing what to improve is the first step!':pts>=4?'Good honest reflection! The more specific, the better.':'Be more honest and specific — what exactly needs improving?';
+    bg='var(--al)'; col='var(--ad)';
+  } else if(n===3){
+    // Tomorrow plan — should be actionable
+    const isGenuine = planWords.some(w=>d.includes(w)) || words>=5;
+    pts = isGenuine ? (words>=12?7:words>=7?5:3) : 2;
+    icon = pts>=6?'🎯':pts>=4?'👍':'🙂';
+    msg = pts>=6?'Great plan, Vaanya! A clear goal for tomorrow sets you up for success!':pts>=4?'Good plan! Try to make it even more specific next time.':'Make your plan more actionable — say exactly what you will do!';
+    bg='var(--gl)'; col='var(--gd)';
+  }
+
+  // Update global pts store
+  if(n===1) reflPts1=pts;
+  if(n===2) reflPts2=pts;
+  if(n===3) reflPts3=pts;
+
+  box.style.display='block';
+  box.style.background=bg;
+  box.style.border='1px solid '+col+'60';
+  box.innerHTML=`<span style="font-weight:900;color:${col}">${icon} ${pts}/7 pts</span> <span style="color:var(--ink)">${msg}</span>`;
+  calcDayPts();
+}
+
+// ════════════════════════════════════════════
+// SAVE DRAFT + GO TO BRAIN LAB
+// ════════════════════════════════════════════
+function saveDraftAndGoBrainLab(){
+  const date=document.getElementById('rpt-date')?.value;
+  if(!date){toast('Please set today\'s date first!');return;}
+  const pts=calcDayPts();
+  // Save to localStorage as draft only (no bank credit, no Supabase)
+  try{
+    localStorage.setItem('vaanya_draft', JSON.stringify({
+      date, pts, savedAt: new Date().toISOString(),
+      r1:document.getElementById('r1')?.value||'',
+      r2:document.getElementById('r2')?.value||'',
+      r3:document.getElementById('r3')?.value||''
+    }));
+  }catch(e){}
+  toast('✏️ Draft saved ('+pts+' pts)! Show to Parents Review to bank your points. Going to Brain Lab now!');
+  // Switch to Brain Lab tab
+  setTimeout(()=>switchTab('brain'),800);
 }
 
 // saveDay is now triggered only via Parent Approval (approveReport function)
@@ -1980,7 +2095,12 @@ function renderParentTab(){
   if(!isNaN(got)&&tot>0){const pct=got/tot*100;if(pct>=90)testPts=80;else if(pct>=75)testPts=60;else if(pct>=60)testPts=40;else testPts=20;}
   let hwPts=0;SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwPts+=15;});
   let oddaPts=0;const oAtt=document.getElementById('odda-att');
-  if(oAtt?.querySelector('.pg'))oddaPts=15;
+  if(oAtt?.querySelector('.pg'))oddaPts=10;
+  const oTimeP=document.getElementById('odda-time');
+  if(oTimeP?.querySelector('.pg'))oddaPts+=5;else if(oTimeP?.querySelector('.pr'))oddaPts-=10;
+  const oAssignP=document.getElementById('odda-assign');
+  if(oAssignP?.querySelector('.pg'))oddaPts+=10;else if(oAssignP?.querySelector('.pr'))oddaPts-=15;
+  oddaPts=Math.min(10,oddaPts);
   let gymPts=0;const gym=document.getElementById('gym-today');
   if(gym?.querySelector('.pa'))gymPts=20;else if(gym?.querySelector('.pb')||gym?.querySelector('.pt'))gymPts=10;
   let screenPts=0;
@@ -2013,7 +2133,7 @@ function renderParentTab(){
     {label:'📝 Daily Report',pts:dailyPts,max:430,col:'#8B5CF6',detail:`TT/School: ${ttVal+schVal} · Test: ${testPts} · HW: ${hwPts} · Odda: ${oddaPts} · Gym: ${gymPts} · Screen: ${screenPts} · Reflection: ${reflPts}`},
     {label:'🧠 Brain Lab',pts:brPts,max:55,col:'#3B82F6',detail:'Puzzles, Sudoku, Riddles completed today'},
     {label:'🕉️ Geeta & Creative',pts:soulPts,max:45,col:'#7C3AED',detail:`Shloka: ${shlokaPts} · Creative: ${crPts}`},
-    {label:'⭐ Parent Rating',pts:parentRating,max:80,col:parentRating>=0?'#10B981':'#EF4444',detail:parentRating>=0?`+${parentRating} pts bonus from Mamma & Papa`:`${parentRating} pts deducted by Mamma & Papa`},
+    {label:'⭐ Parent Rating',pts:parentRating,max:80,col:parentRating>=0?'#10B981':'#EF4444',detail:parentRating>=0?`+${parentRating} pts bonus from Parents Review`:`${parentRating} pts deducted by Parents Review`},
     {label:'💬 Parent Comment',pts:parentCommentPts,max:25,col:'#06B6D4',detail:parentCommentPts>0?'Comment written — +25 pts!':'No comment yet'},
   ];
   bars.innerHTML=sections.map(s=>{
@@ -2143,6 +2263,8 @@ function clearDay(){
   document.querySelectorAll('.creative-option').forEach(o=>o.classList.remove('chosen'));
   document.getElementById('creative-detail').style.display='none';
   const oaDet=document.getElementById('odda-assign-detail');if(oaDet)oaDet.style.display='none';
+  const oaRes=document.getElementById('odda-assign-result');if(oaRes)oaRes.innerHTML='';
+  document.querySelectorAll('#odda-time .pill, #gym-time .pill').forEach(p=>{p.classList.remove('pg','pr','pa','pb','pt');});
   const tcBox=document.getElementById('test-chapters-box');if(tcBox)tcBox.style.display='none';
   const bkBox=document.getElementById('book-knowledge-box');if(bkBox)bkBox.style.display='none';
   const prPend=document.getElementById('parent-pending-section');if(prPend)prPend.style.display='block';
@@ -2499,7 +2621,7 @@ async function generateAIComment(data) {
   const el = document.getElementById('ai-comment-box');
   if (!el) return;
   el.style.display = 'block';
-  el.innerHTML = `<div style="color:#7C3AED;font-size:12px;font-weight:800">✨ Mamma & Papa's AI message is being written for you...</div>`;
+  el.innerHTML = `<div style="color:#7C3AED;font-size:12px;font-weight:800">✨ Parents Review's AI message is being written for you...</div>`;
 
   const streak = getStreak();
   const hwMax = 7;
@@ -2537,7 +2659,7 @@ Write a short (4-5 sentences), warm, personal message from Mamma and Papa to Vaa
     const comment = result.candidates?.[0]?.content?.parts?.[0]?.text || 'We are so proud of you, Vaanya! Keep shining! ⭐';
     el.innerHTML = `
       <div style="background:linear-gradient(135deg,#7C3AED15,#EC489915);border:2px solid #7C3AED40;border-radius:12px;padding:14px">
-        <div style="font-size:11px;font-weight:900;color:#7C3AED;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">✨ Message from Mamma & Papa</div>
+        <div style="font-size:11px;font-weight:900;color:#7C3AED;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">✨ Message from Parents Review</div>
         <div style="font-size:13px;line-height:1.8;color:#1E1B4B;font-weight:600">${comment}</div>
         <div style="font-size:10px;color:#9CA3AF;margin-top:8px">💜 Written with love using AI</div>
       </div>`;
