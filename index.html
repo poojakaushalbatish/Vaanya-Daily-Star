@@ -23,13 +23,20 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.5;min-height:100vh}
-.page{max-width:980px;margin:0 auto;padding:14px}
+.page{max-width:1280px;margin:0 auto;padding:14px}
+.page-layout{display:grid;grid-template-columns:130px 1fr 130px;gap:12px;align-items:start}
+.side-panel{position:sticky;top:14px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.main-content{min-width:0}
+@media(max-width:900px){
+  .page-layout{grid-template-columns:1fr}
+  .side-panel{display:none}
+}
 
 /* TOP BAR */
-.topbar{background:linear-gradient(135deg,#FF6B6B,#FF8E53,#FF6B9D,#C44FFF,#4FACFE);background-size:300% 300%;animation:gradientShift 6s ease infinite;border-radius:var(--rad);
-  padding:14px 18px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.av{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);
-  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;flex-shrink:0}
+.topbar{background:linear-gradient(135deg,#ECFDF5,#EFF6FF,#F0FDF4,#ECFEFF);background-size:300% 300%;animation:auroraShift 8s ease infinite;border-radius:var(--rad);
+  padding:14px 18px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  border:2px solid #6EE7B7;position:relative;overflow:hidden}
+.av{display:none}  /* replaced by photo avatar */
 .tb-info{flex:1;min-width:140px}
 .tb-title{font-size:18px;font-weight:900}
 .tb-sub{font-size:11px;opacity:.85;margin-top:1px}
@@ -308,6 +315,130 @@ tr:hover td{background:#FAFBFF}
   50%{text-shadow:0 0 20px rgba(255,255,255,1),0 0 60px rgba(255,200,0,.8)}
 }
 .tb-title{font-size:18px;font-weight:900;animation:titlePulse 2.5s ease-in-out infinite;letter-spacing:.03em}
+
+/* SIDE PANELS */
+
+.sp-mood.bounce{animation:moodBounce .4s ease}
+@keyframes ptsPop{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
+.sp-pts-num.pop{animation:ptsPop .35s ease}
+
+/* ═══════════════════════════════════════
+   AURORA THEME
+═══════════════════════════════════════ */
+@keyframes auroraShift{
+  0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}
+}
+.aurora-bg{
+  background:linear-gradient(135deg,#ECFDF5,#EFF6FF,#F0FDF4,#ECFEFF);
+  background-size:300% 300%;animation:auroraShift 8s ease infinite;
+}
+/* PHOTO AVATAR */
+.av-photo-wrap{position:relative;width:82px;height:82px;flex-shrink:0}
+.av-photo-spinner{position:absolute;inset:-3px;border-radius:50%;
+  background:conic-gradient(#10B981,#3B82F6,#8B5CF6,#EC4899,#10B981);
+  animation:avSpin 3s linear infinite;z-index:0}
+@keyframes avSpin{to{transform:rotate(360deg)}}
+.av-photo-inner{position:absolute;inset:3px;border-radius:50%;background:#ECFDF5;z-index:1}
+.av-photo-img{position:absolute;inset:5px;border-radius:50%;overflow:hidden;z-index:2}
+.av-photo-img img{width:100%;height:100%;object-fit:cover;object-position:center 8%}
+.av-photo-badge{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);
+  white-space:nowrap;font-size:8px;font-weight:900;
+  background:linear-gradient(135deg,#10B981,#3B82F6);
+  color:#fff;padding:2px 8px;border-radius:8px;z-index:5;letter-spacing:.04em;
+  box-shadow:0 2px 8px rgba(16,185,129,.4)}
+/* Light beams canvas */
+.beam-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+/* Aurora banner text colours */
+.aurora-title{font-size:18px;font-weight:900;color:#064E3B;
+  text-shadow:0 1px 0 rgba(255,255,255,.9);letter-spacing:.02em}
+.aurora-sub{font-size:11px;color:#0F766E;margin-top:1px;font-weight:700;opacity:.9}
+.aurora-xp-wrap{background:rgba(16,185,129,.18);border-radius:10px;height:12px;overflow:hidden;margin-top:6px;border:1.5px solid rgba(16,185,129,.35)}
+.aurora-xp-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,#10B981,#3B82F6,#8B5CF6);transition:width .5s;animation:xpGlowA 2s ease-in-out infinite}
+@keyframes xpGlowA{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4)}}
+.aurora-chip{background:rgba(16,185,129,.12);border:1.5px solid rgba(16,185,129,.35);border-radius:14px;padding:6px 14px;text-align:center}
+.aurora-chip .pts-chip-num{color:#065F46}
+.aurora-chip .pts-chip-lbl{color:#047857}
+
+/* ═══════════════════════════════════════
+   PAGE LAYOUT — 3 column with side panels
+═══════════════════════════════════════ */
+.page-layout{display:grid;grid-template-columns:168px 1fr 168px;gap:14px;align-items:start}
+.main-content{min-width:0}
+.side-panel{position:sticky;top:12px;display:flex;flex-direction:column;gap:14px}
+.side-panel .quote-card{flex:1}
+@media(max-width:1060px){
+  .page-layout{grid-template-columns:1fr}
+  .side-panel{display:none}
+}
+
+/* ── QUOTE CARD — big, bold, airy ── */
+.quote-card{
+  background:linear-gradient(160deg,#ECFDF5 0%,#EFF6FF 100%);
+  border:2px solid #6EE7B7;border-radius:18px;
+  padding:28px 18px 22px;text-align:center;
+  position:relative;overflow:hidden}
+.quote-card::after{content:'"';position:absolute;bottom:-10px;right:10px;
+  font-size:72px;color:rgba(16,185,129,.1);font-family:Georgia,serif;line-height:1;pointer-events:none}
+.quote-icon{font-size:32px;display:block;margin-bottom:12px;
+  animation:qFloat 3s ease-in-out infinite}
+@keyframes qFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.quote-text{font-size:14px;font-weight:800;color:#064E3B;
+  line-height:1.75;font-style:italic;margin:8px 0 12px;letter-spacing:.01em}
+.quote-author{font-size:11px;font-weight:900;color:#0F766E;
+  text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
+.q-nav{display:flex;gap:6px;justify-content:center}
+.q-nav-btn{padding:4px 14px;border-radius:10px;border:1.5px solid #6EE7B7;
+  background:rgba(16,185,129,.12);color:#047857;
+  font-size:14px;font-weight:900;cursor:pointer;transition:all .2s;
+  font-family:'Nunito',sans-serif}
+.q-nav-btn:hover{background:linear-gradient(135deg,#10B981,#3B82F6);color:#fff;border-color:transparent}
+
+/* ── POINTS CARD — single big number ── */
+.sp-pts-card{
+  background:linear-gradient(160deg,#F0FDF4,#EFF6FF);
+  border:2px solid #A7F3D0;border-radius:18px;
+  padding:18px 14px;text-align:center}
+.sp-pts-big{font-size:52px;font-weight:900;line-height:1;
+  background:linear-gradient(135deg,#10B981,#3B82F6,#8B5CF6);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  transition:all .3s}
+.sp-pts-lbl{font-size:11px;font-weight:800;color:#065F46;margin-top:4px;letter-spacing:.04em}
+.sp-pts-bar{width:100%;background:#D1FAE5;border-radius:8px;height:10px;
+  overflow:hidden;margin-top:10px;border:1px solid #6EE7B7}
+.sp-pts-bar-fill{height:100%;border-radius:8px;
+  background:linear-gradient(90deg,#10B981,#3B82F6,#8B5CF6);
+  transition:width .6s;position:relative;overflow:hidden}
+.sp-pts-bar-fill::after{content:'';position:absolute;top:0;left:-40%;width:25%;height:100%;
+  background:rgba(255,255,255,.4);animation:barShine 2s linear infinite}
+@keyframes barShine{to{left:130%}}
+.sp-pts-sub{font-size:10px;color:#0F766E;font-weight:700;margin-top:5px}
+
+/* ── MOOD CARD — big emoji, clear ── */
+.sp-mood-card{
+  background:linear-gradient(160deg,#F0FDF4,#EFF6FF);
+  border:2px solid #A7F3D0;border-radius:18px;
+  padding:18px 14px;text-align:center}
+.sp-mood-big{font-size:54px;line-height:1;display:block;
+  animation:moodBob 2s ease-in-out infinite;margin-bottom:8px}
+@keyframes moodBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.sp-mood-lbl{font-size:14px;font-weight:900;color:#065F46;
+  transition:all .4s;letter-spacing:.02em}
+.sp-mood-sub{font-size:10px;color:#0F766E;margin-top:4px;font-weight:700}
+
+/* ── STREAK CARD ── */
+.sp-streak-card{
+  background:linear-gradient(135deg,#FFF7ED,#FFEDD5);
+  border:2px solid #FDBA74;border-radius:18px;
+  padding:16px 14px;text-align:center}
+.sp-streak-big{font-size:42px;font-weight:900;color:#EA580C;line-height:1}
+.sp-streak-lbl{font-size:11px;font-weight:800;color:#C2410C;
+  text-transform:uppercase;letter-spacing:.06em;margin-top:5px}
+
+/* legacy compat — kept for JS refs but not shown */
+.a-mis,.a-mis-hdr,.a-mis-ttl,.a-mis-cnt,.a-mis-icon,.a-mis-name,.a-mis-st{font-size:8px}
+.a-mis.done .a-mis-name{color:#10B981}
+.a-boss-fill{transition:width .6s}
+
 </style>
 </head>
 <body>
@@ -353,23 +484,30 @@ tr:hover td{background:#FAFBFF}
 </div>
 <div class="toast" id="toast"></div>
 
-<!-- TOP BAR -->
-<div class="topbar">
-  <div class="av">V</div>
-  <div class="tb-info">
-    <div class="tb-title">VAANYA'S PERFORMANCE REPORT 🏆</div>
-    <div class="tb-sub">Class 6 · DPS Noida · CBSE 2026–27</div>
-    <div style="font-size:10px;opacity:.85;margin-top:4px;background:rgba(255,255,255,.15);border-radius:8px;padding:4px 10px;display:inline-block">
-      🏆 Max daily pts: <b>Daily Report ~415 + Brain Lab ~55 + Shloka 25 + Creative 20 = ~515 pts</b>
+<!-- TOP BAR — AURORA THEME -->
+<div class="topbar" id="aurora-topbar">
+  <canvas class="beam-canvas" id="beam-canvas"></canvas>
+  <!-- Photo Avatar -->
+  <div class="av-photo-wrap" style="position:relative;z-index:10">
+    <div class="av-photo-spinner"></div>
+    <div class="av-photo-inner"></div>
+    <div class="av-photo-img">
+      <img src="vaanya_blazer_pic.jpeg" alt="Vaanya"
+           onerror="this.style.display='none';this.parentElement.innerHTML='<div style='display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:26px;font-weight:900;color:#065F46;background:linear-gradient(135deg,#ECFDF5,#EFF6FF)'>V</div>'">
     </div>
-    <div class="xp-wrap" style="margin-top:6px"><div class="xp-fill" id="xp-bar" style="width:0%"></div></div>
-    <div style="font-size:9px;opacity:.7;margin-top:2px" id="xp-lbl">0 / 515 pts today</div>
+    <div class="av-photo-badge">🌈 AURORA STAR</div>
   </div>
-  <div class="tb-pts">
-    <div class="pts-chip"><div class="pts-chip-num" id="day-pts-live">0</div><div class="pts-chip-lbl">Today's pts</div></div>
-    <div class="pts-chip"><div class="pts-chip-num" id="total-pts-top">0</div><div class="pts-chip-lbl">Total bank</div></div>
-    <div class="pts-chip"><div class="pts-chip-num" id="streak-top">0🔥</div><div class="pts-chip-lbl">Streak</div></div>
-    <div class="date-pill" id="today-pill"></div>
+  <div class="tb-info" style="position:relative;z-index:10">
+    <div class="aurora-title">VAANYA'S PERFORMANCE REPORT 🏆</div>
+    <div class="aurora-sub">Class 6 · DPS Noida · CBSE 2026–27</div>
+    <div class="aurora-xp-wrap" style="margin-top:8px"><div class="aurora-xp-fill" id="xp-bar" style="width:0%"></div></div>
+    <div style="font-size:12px;color:#047857;margin-top:4px;font-weight:800" id="xp-lbl">0 / 515 pts earned today</div>
+  </div>
+  <div class="tb-pts" style="position:relative;z-index:10">
+    <div class="aurora-chip pts-chip"><div class="pts-chip-num" id="day-pts-live">0</div><div class="pts-chip-lbl">Today's pts</div></div>
+    <div class="aurora-chip pts-chip"><div class="pts-chip-num" id="total-pts-top">0</div><div class="pts-chip-lbl">Total bank</div></div>
+    <div class="aurora-chip pts-chip"><div class="pts-chip-num" id="streak-top">0🔥</div><div class="pts-chip-lbl">Streak</div></div>
+    <div class="date-pill" id="today-pill" style="background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.35);color:#065F46"></div>
   </div>
 </div>
 
@@ -398,6 +536,38 @@ tr:hover td{background:#FAFBFF}
      TAB: DAILY REPORT
 ═══════════════════════════════════════ -->
 <div class="tab active" id="tab-report">
+<div class="page-layout">
+
+<!-- ═══════ LEFT SIDE PANEL ═══════ -->
+<div class="side-panel" id="left-panel">
+
+  <!-- QUOTE ONLY -->
+  <div class="quote-card">
+    <span class="quote-icon" id="qL-icon">🌱</span>
+    <div class="quote-text" id="qL-text">Believe you can and you are halfway there.</div>
+    <div class="quote-author" id="qL-author">— Theodore Roosevelt</div>
+    <div class="q-nav">
+      <button class="q-nav-btn" onclick="prevQuote('L')">&#8249;</button>
+      <button class="q-nav-btn" onclick="nextQuote('L')">&#8250;</button>
+    </div>
+  </div>
+
+  <!-- hidden IDs for JS compat -->
+  <span id="sp-pts-num" style="display:none">0</span>
+  <span id="sp-pts-bar" style="display:none"></span>
+  <span id="sp-pct-lbl" style="display:none"></span>
+  <span id="sp-streak" style="display:none">0</span>
+  <span id="sp-ring-arc" style="display:none"></span>
+  <span id="sp-hw-num" style="display:none">0/7</span>
+  <span id="sp-hw-bar" style="display:none"></span>
+  <span id="sp-lvl-n" style="display:none">1</span>
+  <span id="sp-lvl-t" style="display:none">Beginner</span>
+  <span id="sp-lvl-s" style="display:none">0 total pts</span>
+
+</div><!-- end left panel -->
+
+<!-- ═══════ MAIN CONTENT ═══════ -->
+<div class="main-content">
 
 <!-- DAY OVERVIEW — mood removed, kept date + timetable + school -->
 <div class="divlbl">Day overview</div>
@@ -696,6 +866,41 @@ tr:hover td{background:#FAFBFF}
   <button class="btn btn-o" onclick="clearDay()">🗑️ Clear today</button>
   <button class="btn btn-p" onclick="saveDraftAndGoBrainLab()">💾 Save &amp; Go to Brain Lab →</button>
 </div>
+
+</div><!-- end main-content -->
+
+<!-- ═══════ RIGHT SIDE PANEL ═══════ -->
+<div class="side-panel" id="right-panel">
+
+  <!-- QUOTE ONLY -->
+  <div class="quote-card">
+    <span class="quote-icon" id="qR-icon">✨</span>
+    <div class="quote-text" id="qR-text">She believed she could, so she did.</div>
+    <div class="quote-author" id="qR-author">— R.S. Grey</div>
+    <div class="q-nav">
+      <button class="q-nav-btn" onclick="prevQuote('R')">&#8249;</button>
+      <button class="q-nav-btn" onclick="nextQuote('R')">&#8250;</button>
+    </div>
+  </div>
+
+  <!-- hidden IDs for JS compat -->
+  <span id="sp-mood" style="display:none">😴</span>
+  <span id="sp-mood-lbl" style="display:none"></span>
+  <span id="sp-mood-sub" style="display:none"></span>
+  <span id="sp-mis-cnt" style="display:none">0/7</span>
+  <span id="sp-m-hw" style="display:none"></span>
+  <span id="sp-m-od" style="display:none"></span>
+  <span id="sp-m-gy" style="display:none"></span>
+  <span id="sp-m-sh" style="display:none"></span>
+  <span id="sp-m-cr" style="display:none"></span>
+  <span id="sp-m-br" style="display:none"></span>
+  <span id="sp-m-rf" style="display:none"></span>
+  <span id="sp-boss-fill" style="display:none"></span>
+  <span id="sp-boss-lbl" style="display:none"></span>
+
+</div><!-- end right panel -->
+
+</div><!-- end page-layout -->
 </div><!-- end tab-report -->
 
 <!-- ═══════════════════════════════════════
@@ -1470,6 +1675,10 @@ function updateHW(){
   if(hwpct)hwpct.textContent=pct+'% ('+done+'/'+SUBJECTS.length+' subjects)';
   const hwPtsEl=document.getElementById('hw-pts-display');
   if(hwPtsEl)hwPtsEl.textContent=(done*15)+' pts';
+  // update hw side panel immediately
+  const done2=Array.from({length:7},(_,i)=>document.getElementById('hw-'+i)?.checked).filter(Boolean).length;
+  const spHw=document.getElementById('sp-hw');if(spHw)spHw.textContent=done2+'/7';
+  const spHwBar=document.getElementById('sp-hw-bar');if(spHwBar)spHwBar.style.width=Math.round(done2/7*100)+'%';
   calcDayPts();
 }
 
@@ -1707,7 +1916,8 @@ function updateXP(pts){
   const max=515;
   const pct=Math.min(100,Math.round(Math.max(0,pts)/max*100));
   const el=document.getElementById('xp-bar');if(el)el.style.width=pct+'%';
-  const lbl=document.getElementById('xp-lbl');if(lbl)lbl.textContent=pts+' / '+max+' max pts today';
+  const lbl=document.getElementById('xp-lbl');if(lbl)lbl.textContent=pts+' / '+max+' pts earned today';
+  updateSidePanels(pts);
 }
 
 // ════════════════════════════════════════════
@@ -2687,12 +2897,147 @@ function exportBackup() {
   toast('✅ Backup downloaded to your PC!');
 }
 
+
+// ════════════════════════════════════════════
+// AURORA LIGHT BEAMS
+// ════════════════════════════════════════════
+(function initBeams(){
+  const canvas = document.getElementById('beam-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const beams = Array.from({length:5},(_,i)=>({
+    x: -200 + i*175,
+    angle: 20 + i*7,
+    speed: 0.28 + i*0.12,
+    width: 32 + i*22,
+    op: 0.07 + i*0.02,
+    col: i%2===0 ? 'rgba(16,185,129,' : 'rgba(59,130,246,'
+  }));
+  function resize(){ canvas.width=canvas.offsetWidth; canvas.height=canvas.offsetHeight; }
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    beams.forEach(b=>{
+      b.x += b.speed;
+      if(b.x > canvas.width + 350) b.x = -350;
+      ctx.save();
+      ctx.translate(b.x, 0);
+      ctx.rotate(b.angle * Math.PI/180);
+      const g = ctx.createLinearGradient(0,-60,0,canvas.height+60);
+      g.addColorStop(0, b.col+'0)');
+      g.addColorStop(0.3, b.col+b.op+')');
+      g.addColorStop(0.7, b.col+(b.op*.65)+')');
+      g.addColorStop(1, b.col+'0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(-b.width/2, -220, b.width, canvas.height+440);
+      ctx.restore();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  requestAnimationFrame(draw);
+})();
+
+// ════════════════════════════════════════════
+// MOTIVATIONAL QUOTES
+// ════════════════════════════════════════════
+const QUOTES_L = [
+  {icon:'🌱', text:'Believe you can and you are halfway there.', author:'Theodore Roosevelt', tag:'Todays mantra'},
+  {icon:'💪', text:'Little by little, a little becomes a lot.', author:'Tanzanian proverb', tag:'Keep growing!'},
+  {icon:'🌟', text:'You are braver than you believe and stronger than you seem.', author:'A.A. Milne', tag:'You got this!'},
+  {icon:'🚀', text:'The secret of getting ahead is getting started.', author:'Mark Twain', tag:'Start now!'},
+  {icon:'🎯', text:'Every expert was once a beginner.', author:'Helen Hayes', tag:'Keep learning!'},
+  {icon:'🌈', text:'Do something today that your future self will thank you for.', author:'Sean Patrick Flanery', tag:'Future you!'},
+  {icon:'⭐', text:'Work hard in silence. Let your success make the noise.', author:'Frank Ocean', tag:'Stay focused!'},
+];
+const QUOTES_R = [
+  {icon:'✨', text:'She believed she could, so she did.', author:'R.S. Grey', tag:'Girl power!'},
+  {icon:'🦋', text:'Dream big. Work hard. Stay focused.', author:'Unknown', tag:'Keep going!'},
+  {icon:'📚', text:'Education is the most powerful weapon to change the world.', author:'Nelson Mandela', tag:'Study strong!'},
+  {icon:'🌸', text:'A little progress each day adds up to big results.', author:'Satya Nani', tag:'Day by day!'},
+  {icon:'🏆', text:'Success is the sum of small efforts repeated every day.', author:'Robert Collier', tag:'Consistency wins!'},
+  {icon:'🌙', text:'Shoot for the moon. Even if you miss, you will land among the stars.', author:'Norman Vincent Peale', tag:'Aim high!'},
+  {icon:'💡', text:'The more that you read, the more things you will know.', author:'Dr. Seuss', tag:'Read every day!'},
+];
+let qLi=0, qRi=0;
+function renderQuote(side, idx){
+  const quotes = side==='L' ? QUOTES_L : QUOTES_R;
+  const q = quotes[idx];
+  const el = id => document.getElementById('q'+side+'-'+id);
+  if(el('icon')) el('icon').textContent = q.icon;
+  if(el('text')) el('text').textContent = q.text;
+  if(el('author')) el('author').textContent = '— ' + q.author;
+  if(el('tag')) el('tag').textContent = q.tag;
+}
+function nextQuote(side){
+  if(side==='L'){qLi=(qLi+1)%QUOTES_L.length; renderQuote('L',qLi);}
+  else{qRi=(qRi+1)%QUOTES_R.length; renderQuote('R',qRi);}
+}
+function prevQuote(side){
+  if(side==='L'){qLi=(qLi-1+QUOTES_L.length)%QUOTES_L.length; renderQuote('L',qLi);}
+  else{qRi=(qRi-1+QUOTES_R.length)%QUOTES_R.length; renderQuote('R',qRi);}
+}
+setInterval(()=>nextQuote('L'), 9000);
+setInterval(()=>nextQuote('R'), 11000);
+
+// ════════════════════════════════════════════
+// SIDE PANELS — live update
+// ════════════════════════════════════════════
+const MOODS = [
+  [0,   '😴','Fill your report!','#6B7280'],
+  [60,  '😟','Keep going!','#EF4444'],
+  [130, '😏','Getting there!','#F97316'],
+  [200, '🙂','Good going!','#F59E0B'],
+  [280, '😊','Well done! 💚','#10B981'],
+  [360, '😄','Brilliant! 🌟','#3B82F6'],
+  [440, '🤩','AMAZING!! 🌈','#8B5CF6'],
+  [500, '🥳','LEGENDARY!! 👑','#EC4899'],
+];
+const LEVELS = [
+  [0,'1','Beginner'],[200,'2','Explorer'],[400,'3','Achiever'],
+  [700,'4','Warrior'],[1000,'5','Champion'],[1400,'6','Superstar'],[1800,'7','Legend'],
+];
+function updateSidePanels(pts){
+  const max = 515;
+  const pct = Math.min(100, Math.max(0, Math.round(pts/max*100)));
+
+  // LEFT — big points number + bar
+  const ptsNum = document.getElementById('sp-pts-num');
+  if(ptsNum) ptsNum.textContent = pts;
+  const ptsBar = document.getElementById('sp-pts-bar');
+  if(ptsBar) ptsBar.style.width = pct+'%';
+  const pctLbl = document.getElementById('sp-pct-lbl');
+  if(pctLbl) pctLbl.textContent = pts+' / 515 pts';
+
+  // LEFT — streak
+  const strEl = document.getElementById('sp-streak');
+  if(strEl) strEl.textContent = getStreak()+'🔥';
+
+  // RIGHT — mood (big emoji + bold label + sub)
+  let mood = MOODS[0];
+  for(const m of MOODS) if(pts>=m[0]) mood=m;
+  const moodEl = document.getElementById('sp-mood');
+  if(moodEl) moodEl.textContent = mood[1];
+  const moodLbl = document.getElementById('sp-mood-lbl');
+  if(moodLbl){ moodLbl.textContent=mood[2]; moodLbl.style.color=mood[3]; }
+  const moodSub = document.getElementById('sp-mood-sub');
+  if(moodSub){
+    if(pts<=0) moodSub.textContent='Fill your report!';
+    else if(pct<30) moodSub.textContent='Keep going, you can do it!';
+    else if(pct<60) moodSub.textContent='You are doing great!';
+    else if(pct<85) moodSub.textContent='Almost at the top!';
+    else moodSub.textContent='Absolutely brilliant today!';
+    moodSub.style.color=mood[3];
+  }
+}
+
 // ════════════════════════════════════════════
 // INIT — load cloud data then build UI
 // ════════════════════════════════════════════
 buildAll();
 updateTopBar();
 calcDayPts();
+updateSidePanels(0);
 // Load from Supabase cloud on startup
 loadFromSupabase().then(ok => {
   if (ok) {
