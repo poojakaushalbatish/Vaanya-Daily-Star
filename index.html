@@ -2382,74 +2382,114 @@ function handleSkillSelect(){
   calcDayPts();
 }
 
-async function evaluateSkillWithAI(){
+function evaluateSkillWithAI(){
   const desc=(document.getElementById('skill-desc')?.value||'').trim();
   if(!desc){toast('Please describe what you learnt first!');return;}
 
   const resultBox=document.getElementById('skill-ai-result');
   resultBox.style.display='block';
-  resultBox.innerHTML=`<div style="color:var(--bd);font-size:12px;font-weight:800">🤖 AI is checking your skill activity...</div>`;
+  resultBox.innerHTML=`<div style="color:var(--bd);font-size:12px;font-weight:800">🔍 Evaluating your skill activity...</div>`;
 
-  // Get past skill descriptions from savedDays to check for repeats
-  const pastSkills=savedDays.slice(0,14).map(d=>{
-    try{const fd=typeof d.full_data==='string'?JSON.parse(d.full_data):d;return fd.skillDesc||'';}catch{return '';}
-  }).filter(Boolean).join(' | ');
+  const d = desc.toLowerCase();
+  const wordCount = desc.trim().split(/\s+/).length;
 
-  const prompt=`You are an evaluator for Vaanya (Class 6, ~11 years old, Delhi, India). Evaluate her skill activity and reply ONLY with a single valid JSON object — no markdown, no explanation, no backticks, nothing else before or after the JSON.
+  // Not-a-skill keywords
+  const badWords = ['youtube','netflix','instagram','reel','tiktok','video','movie','tv','series',
+    'nothing','slept','sleep','nap','timepass','whatsapp','phone','scroll','chat',
+    'pubg','free fire','minecraft','watched','browsing','bored','sitting','lying'];
 
-Activity she described: "${desc}"
-Past 14 days activities: "${pastSkills||'none'}"
+  // Skill categories with keywords and base points
+  const skillCats = [
+    {label:'🎨 Art & Craft',    pts:8,  words:['draw','drawing','sketch','paint','painting','colour','color','craft','origami','clay','rangoli','mandala','doodle','art','stitch','knit','sew','crochet']},
+    {label:'🎵 Music',          pts:9,  words:['sing','singing','song','music','guitar','piano','tabla','harmonium','flute','beat','rhythm','raga','instrument','notes','practice','practise']},
+    {label:'💃 Dance',          pts:9,  words:['dance','dancing','choreograph','steps','kathak','classical','folk','mudra','expression']},
+    {label:'📚 Reading',        pts:7,  words:['read','reading','book','chapter','story','novel','encyclop','magazine','article','poem','poetry']},
+    {label:'✍️ Writing',        pts:8,  words:['write','writing','wrote','essay','diary','journal','letter','blog','script','compose','story','poem']},
+    {label:'🍳 Cooking',        pts:8,  words:['cook','cooking','bake','baking','recipe','made','prepared','kitchen','roti','sabzi','cake','sandwich','salad']},
+    {label:'🔬 Science',        pts:9,  words:['experiment','science','chemistry','physics','biology','observe','research','project','model','circuit','magnet','plant','grow']},
+    {label:'🧮 Maths & Logic',  pts:9,  words:['maths','math','puzzle','sudoku','calculate','algebra','geometry','fraction','equation','logic','rubik']},
+    {label:'🗣️ Language',       pts:8,  words:['hindi','english','sanskrit','french','language','vocabulary','grammar','translation','speak','essay']},
+    {label:'🏃 Sports',         pts:7,  words:['gymnastics','gymnastic','taekwondo','swim','swimming','yoga','exercise','skipping','badminton','cricket','football','sport','athletic','stretch','balance']},
+    {label:'💻 Coding & Tech',  pts:9,  words:['code','coding','program','python','website','app','computer','typing','type','excel','digital','robot']},
+    {label:'🏠 Life Skills',    pts:7,  words:['clean','organise','organize','arrange','manage','help','garden','plant','water','recycle','tidy','pack','fold','laundry']},
+    {label:'🧘 Mindfulness',    pts:8,  words:['meditat','prayer','shloka','mantra','gratitude','journal','reflect','breathe','calm','mindful','focus']},
+  ];
 
-Rules:
-- "valid": true if it is a genuine skill (creative, physical, intellectual, artistic). false if it is just watching TV, timepass, or not a real skill.
-- "pts": integer 0-10. Give 0 if not valid. Give 1-4 if valid but vague/repeated. Give 5-7 if good effort. Give 8-10 if detailed, new, and impressive.
-- "repeated": true if very similar to past activities.
-- "reason": 1 sentence explaining the score.
-- "feedback": 1 warm friendly sentence addressed to Vaanya.
-
-Reply with ONLY this JSON (no other text):
-{"valid":true,"pts":7,"reason":"...","repeated":false,"feedback":"..."}`;
-
-  try{
-    const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        contents:[{parts:[{text:prompt}]}],
-        generationConfig:{temperature:0.3,maxOutputTokens:300}
-      })
-    });
-    const data=await response.json();
-    let text=(data.candidates?.[0]?.content?.parts?.[0]?.text||'').trim();
-    console.log('Skill AI raw response:',text);
-
-    // Aggressively extract JSON — find first { to last }
-    const start=text.indexOf('{');
-    const end=text.lastIndexOf('}');
-    if(start===-1||end===-1)throw new Error('No JSON found in response: '+text);
-    const jsonStr=text.slice(start,end+1);
-    const result=JSON.parse(jsonStr);
-
-    aiSkillPts=result.valid?(parseInt(result.pts)||0):-10;
-    const col=aiSkillPts>=7?'var(--gd)':aiSkillPts>=4?'var(--bd)':aiSkillPts>0?'var(--ad)':'var(--rd)';
-    const icon=aiSkillPts>=7?'🌟':aiSkillPts>=4?'👍':aiSkillPts>0?'🙂':'❌';
-
-    resultBox.innerHTML=`
-      <div style="background:${aiSkillPts>0?'var(--gl)':'var(--rl)'};border:1.5px solid ${aiSkillPts>0?'var(--gm)':'var(--rm)'};border-radius:10px;padding:12px">
-        <div style="font-size:13px;font-weight:900;color:${col};margin-bottom:6px">${icon} AI Verdict: ${aiSkillPts>0?'+'+aiSkillPts+' pts awarded':'Not counted as a skill activity'}</div>
-        <div style="font-size:12px;color:var(--ink);margin-bottom:4px">${result.reason||''}</div>
-        <div style="font-size:11px;color:${col};font-weight:700">${result.feedback||''}</div>
-        ${result.repeated?'<div style="font-size:11px;color:var(--ad);margin-top:4px">⚠️ Looks like you\'ve done something similar recently — try something new next time for full points!</div>':''}
-      </div>`;
-
-    document.getElementById('skill-pts-final').style.display='block';
-    document.getElementById('skill-pts-final').innerHTML=`<span style="font-size:12px;font-weight:800;color:${col}">${icon} Skill points added: ${aiSkillPts>=0?'+':''}${aiSkillPts}</span>`;
-    calcDayPts();
-    toast(aiSkillPts>0?`Skill evaluated! +${aiSkillPts} pts earned! 🎯`:'Skill not counted this time — try something new!');
-  }catch(err){
-    console.error('Skill AI error:',err);
-    resultBox.innerHTML=`<div style="background:var(--rl);border:1.5px solid var(--rm);border-radius:10px;padding:10px;font-size:12px;font-weight:700;color:var(--rd)">⚠️ Could not evaluate right now — please try again in a moment!</div>`;
+  const isBad = badWords.some(k => d.includes(k));
+  let matched = null;
+  for(const cat of skillCats){
+    if(cat.words.some(k => d.includes(k))){ matched = cat; break; }
   }
+
+  // Repeat check against past 14 days
+  const pastDescs = savedDays.slice(0,14).map(day=>{
+    try{const fd=typeof day.full_data==='string'?JSON.parse(day.full_data):day; return (fd.skillDesc||'').toLowerCase();}catch{return '';}
+  }).filter(Boolean);
+
+  let isRepeat = false;
+  if(matched && pastDescs.length > 0){
+    isRepeat = pastDescs.some(past => matched.words.some(k => past.includes(k)));
+  }
+
+  // Scoring
+  const detailBonus = wordCount >= 25 ? 2 : wordCount >= 12 ? 1 : 0;
+  const repeatPenalty = isRepeat ? 2 : 0;
+
+  let pts=0, valid=false, reason='', feedback='';
+  const warmLines = [
+    'Every skill you learn today is a gift to your future self, Vaanya! 🌟',
+    'So proud of you Vaanya — keep building, keep growing! 💫',
+    'Consistent practice makes you unstoppable, Vaanya! 🏆',
+    'Amazing effort today, Vaanya — this is exactly the spirit! ⭐',
+  ];
+
+  if(isBad && !matched){
+    pts=0; valid=false;
+    reason='Watching videos, gaming or timepass doesn't count as a skill activity.';
+    feedback='Try something creative or educational tomorrow, Vaanya — you have so many talents! 💪';
+  } else if(!matched){
+    pts=4; valid=true;
+    reason='Looks like it could be a skill, but describe it in more detail next time to score higher!';
+    feedback='Good effort Vaanya! Write more detail about what you actually learnt or practised. 📝';
+  } else if(isRepeat){
+    pts=Math.max(1, matched.pts - repeatPenalty + detailBonus);
+    valid=true;
+    reason=matched.label+' is great, but you've done something similar recently — try a new activity for full points!';
+    feedback='You're consistent, Vaanya! Mix in new activities to earn maximum points! 🌈';
+  } else if(wordCount < 8){
+    pts=Math.min(10, matched.pts - 1 + detailBonus);
+    valid=true;
+    reason=matched.label+' detected — good skill, but write more detail to earn bonus points!';
+    feedback='Great start Vaanya! Next time write more about what exactly you learnt! ✨';
+  } else {
+    pts=Math.min(10, matched.pts + detailBonus);
+    valid=true;
+    reason=matched.label+' — genuine skill with great description!';
+    feedback=warmLines[Math.floor(Math.random()*warmLines.length)];
+  }
+
+  // Store aiSkillPts
+  aiSkillPts = valid ? pts : 0;
+
+  // Display result
+  const col=pts>=7?'var(--gd)':pts>=4?'var(--bd)':pts>0?'var(--ad)':'var(--rd)';
+  const bg=pts>=7?'var(--gl)':pts>=4?'#EFF6FF':pts>0?'var(--al)':'var(--rl)';
+  const border=pts>=7?'var(--gm)':pts>=4?'var(--bm)':pts>0?'var(--am)':'var(--rm)';
+  const icon=pts>=7?'🌟':pts>=4?'👍':pts>0?'🙂':'❌';
+
+  resultBox.innerHTML=`
+    <div style="background:${bg};border:1.5px solid ${border};border-radius:10px;padding:12px">
+      <div style="font-size:13px;font-weight:900;color:${col};margin-bottom:6px">${icon} Verdict: ${valid&&pts>0?'+'+pts+' pts awarded':'Not counted as a skill activity'}</div>
+      <div style="font-size:12px;color:var(--ink);margin-bottom:4px">${reason}</div>
+      <div style="font-size:11px;color:${col};font-weight:700">${feedback}</div>
+      ${isRepeat?'<div style="font-size:11px;color:var(--ad);margin-top:4px">⚠️ Similar activity found in past 14 days — try something new for full points!</div>':''}
+      ${detailBonus>0?'<div style="font-size:11px;color:var(--gd);margin-top:4px">✏️ +'+detailBonus+' bonus pts for detailed description!</div>':''}
+    </div>`;
+
+  document.getElementById('skill-pts-final').style.display='block';
+  document.getElementById('skill-pts-final').innerHTML=`<span style="font-size:12px;font-weight:800;color:${col}">${icon} Skill points added: ${aiSkillPts>=0?'+':''}${aiSkillPts}</span>`;
+  calcDayPts();
+  toast(aiSkillPts>0?`Skill evaluated! +${aiSkillPts} pts earned! 🎯`:'Skill not counted this time — try something creative!');
 }
 
 // ════════════════════════════════════════════
@@ -2485,7 +2525,7 @@ Write a short (4-5 sentences), warm, personal message from Mamma and Papa to Vaa
 - Write in a mix of warm English (you can add 1-2 Hindi words of endearment like "beta" or "pyaari")`;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,{
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
