@@ -1567,29 +1567,45 @@ async function loadFromSupabase() {
 async function saveToSupabase(data) {
   try {
     showSyncStatus('saving');
+
+    // Strip large/binary fields before saving to Supabase
+    // to avoid hitting column size limits (400 error)
+    const safeData = {};
+    const skipKeys = new Set(['full_data']);
+    for(const [k,v] of Object.entries(data)){
+      if(skipKeys.has(k)) continue;
+      // Skip any base64 image strings or values > 20KB
+      if(typeof v === 'string' && v.length > 20000) continue;
+      safeData[k] = v;
+    }
+
     const row = {
       date: data.date,
-      pts: data.pts,
+      pts: data.pts || 0,
       hw_done: data.hwDone || 0,
       shloka_done: data.shlokaD || false,
       creative_done: data.creativeD || false,
       brain_done: data.brainD || false,
       odda_done: data.odda || false,
-      notes: data.parentComment || '',
+      notes: (data.parentComment || '').substring(0, 2000),
       parent_rating: data.parentRating || 0,
       approved: data.approved || false,
       saved_at: data.savedAt || new Date().toISOString(),
-      full_data: JSON.stringify(data)
+      full_data: JSON.stringify(safeData)
     };
+
     const { error } = await _supabase
       .from('daily_reports')
       .upsert(row, { onConflict: 'date' });
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error details:', error);
+      throw error;
+    }
     showSyncStatus('ok');
     return true;
   } catch(err) {
     showSyncStatus('error');
-    toast('⚠️ Could not save to cloud — check your connection!');
+    toast('⚠️ Cloud sync error — data saved locally. Will retry on reload.');
     console.error('Save error:', err);
     return false;
   }
@@ -2354,12 +2370,10 @@ async function approveReport(){
 
   const data={date,pts,hwDone,shlokaD:shD,creativeD:crD,brainD:brD,odda:odD,
     tt:document.getElementById('rpt-tt')?.value||'',
-    gymType:document.getElementById('gym-today')?.querySelector('.pa')?'gym':
-             document.getElementById('gym-today')?.querySelector('.pb')||document.getElementById('gym-today')?.querySelector('.pt')?'exercise':'rest',
-    r1:document.getElementById('r1')?.value||'',
-    r2:document.getElementById('r2')?.value||'',
-    r3:document.getElementById('r3')?.value||'',
-    parentComment:document.getElementById('parent-comment')?.value||'',
+    r1:(document.getElementById('r1')?.value||'').substring(0,500),
+    r2:(document.getElementById('r2')?.value||'').substring(0,500),
+    r3:(document.getElementById('r3')?.value||'').substring(0,500),
+    parentComment:(document.getElementById('parent-comment')?.value||'').substring(0,2000),
     parentRating:parseInt(document.getElementById('parent-rating')?.value||0),
     approved:true,
     savedAt:new Date().toISOString()};
