@@ -677,7 +677,7 @@ tr:hover td{background:#FAFBFF}
     <div class="sh">
       <div class="si" style="background:var(--pkl);color:var(--pk)">📝</div>
       Monday / Weekly Test
-      <span class="ptag">Up to 80 pts based on %</span>
+      <span class="ptag">Up to 50 pts based on %</span>
     </div>
     <div class="g3">
       <div>
@@ -711,7 +711,7 @@ tr:hover td{background:#FAFBFF}
         <div style="background:var(--gl);border-radius:var(--rads);padding:12px;text-align:center">
           <div style="font-size:11px;font-weight:800;color:var(--gd);margin-bottom:4px">POINTS AWARDED</div>
           <div style="font-size:28px;font-weight:900;color:var(--gd)" id="test-pts-display">0 pts</div>
-          <div style="font-size:10px;color:var(--gd);margin-top:3px">90%+ = 80 · 75–89% = 60 · 60–74% = 40 · &lt;60% = 20</div>
+          <div style="font-size:10px;color:var(--gd);margin-top:3px">90%+ = 50 · 75–89% = 40 · 60–74% = 25 · &lt;60% = 10</div>
         </div>
       </div>
     </div>
@@ -929,8 +929,7 @@ tr:hover td{background:#FAFBFF}
 
 <div class="btn-row">
   <button class="btn btn-o" onclick="clearDay()">🗑️ Clear</button>
-  <button class="btn btn-g" onclick="saveDraftOnly()">💾 Save Draft</button>
-  <button class="btn btn-p" onclick="saveDraftAndGoBrainLab()">🧠 Save &amp; Brain Lab →</button>
+  <button class="btn btn-p" onclick="saveDraftAndGoBrainLab()">💾 Save &amp; Continue to Brain Lab →</button>
 </div>
 
 </div><!-- end main-content -->
@@ -1097,13 +1096,21 @@ tr:hover td{background:#FAFBFF}
   </div>
 </div>
 
-<div class="sec mt10">
-  <div class="sh"><div class="si" style="background:var(--gl);color:var(--g)">✅</div>Brain Lab completed today?</div>
-  <div class="pills" id="brain-done">
-    <div class="pill" onclick="toggleEx(this,'brain-done','pg');calcDayPts()">✅ Yes, all done! (+brain pts)</div>
-    <div class="pill" onclick="toggleEx(this,'brain-done','pa');calcDayPts()">🟡 Partially done</div>
-    <div class="pill" onclick="toggleEx(this,'brain-done','pr');calcDayPts()">❌ Skipped (−15 pts tomorrow!)</div>
+<div class="sec mt10" id="brain-summary-sec">
+  <div class="sh"><div class="si" style="background:var(--gl);color:var(--g)">🧠</div>Brain Lab — Today's Score</div>
+  <div style="text-align:center;padding:10px 0">
+    <div style="font-size:64px;line-height:1;margin-bottom:8px" id="brain-mood-emoji">😴</div>
+    <div style="font-size:36px;font-weight:900;background:linear-gradient(135deg,#10B981,#3B82F6,#8B5CF6);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1" id="brain-pts-big">0</div>
+    <div style="font-size:13px;font-weight:800;color:#065F46;margin-top:6px" id="brain-pts-msg">Complete puzzles above to earn points!</div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap" id="brain-breakdown">
+      <span style="background:#EFF6FF;color:#1D4ED8;border:1.5px solid #93C5FD;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:800">🔢 Sudoku: <span id="bb-sudoku">0</span> pts</span>
+      <span style="background:#FDF4FF;color:#7C3AED;border:1.5px solid #C084FC;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:800">🧩 Logic: <span id="bb-logic">0</span> pts</span>
+      <span style="background:#FDF2F8;color:#9D174D;border:1.5px solid #F9A8D4;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:800">🎭 Riddles: <span id="bb-riddle">0</span> pts</span>
+    </div>
   </div>
+  <!-- hidden pill for JS compat -->
+  <div id="brain-done" style="display:none"></div>
 </div>
 </div>
 
@@ -1322,10 +1329,10 @@ const EARN_GUIDE=[
   ['Timetable followed fully','25 pts','Select "Fully followed"'],
   ['Timetable followed mostly','15 pts','Select "Mostly"'],
   ['School attended','10 pts','Full day attendance'],
-  ['Test — 90%+','80 pts','Enter test marks'],
-  ['Test — 75–89%','60 pts','Enter test marks'],
-  ['Test — 60–74%','40 pts','Enter test marks'],
-  ['Test — attempted','20 pts','Enter any score'],
+  ['Test — 90%+','50 pts','Enter test marks'],
+  ['Test — 75–89%','40 pts','Enter test marks'],
+  ['Test — 60–74%','25 pts','Enter test marks'],
+  ['Test — attempted','10 pts','Enter any score'],
   ['Each homework done','15 pts','7 subjects × 15 = 105 max'],
   ['Odda class attended','15 pts','Daily mandatory'],
   ['Odda assignment done','up to 20 pts','Based on accuracy %'],
@@ -1530,6 +1537,7 @@ function showSyncStatus(state) {
   el.innerHTML = `<span style="color:${s.col};font-size:11px;font-weight:800">${s.icon} ${s.text}</span>`;
 }
 let brainPtsToday = 0;
+let sudokuPts = 0, logicPtsTotal = 0, riddlePtsTotal = 0;
 let aiSkillPts = 0; // set by AI skill evaluator
 let reflPts1=0,reflPts2=0,reflPts3=0; // per-reflection pts
 const GEMINI_KEY = 'AIzaSyALK9x-p1dyq5O0IuL7_I4-iBkHDCED318';
@@ -1749,10 +1757,10 @@ function calcScore(){
     const pct=Math.round(got/tot*100);
     pEl.textContent=pct+'%';
     let gr,gc,earnedPts;
-    if(pct>=90){gr='🌟 Excellent!';gc='#10B981';earnedPts=80;}
-    else if(pct>=75){gr='⭐ Very Good!';gc='#06B6D4';earnedPts=60;}
-    else if(pct>=60){gr='👍 Good!';gc='#3B82F6';earnedPts=40;}
-    else{gr='💪 Keep trying!';gc='#F97316';earnedPts=20;}
+    if(pct>=90){gr='🌟 Excellent!';gc='#10B981';earnedPts=50;}
+    else if(pct>=75){gr='⭐ Very Good!';gc='#06B6D4';earnedPts=40;}
+    else if(pct>=60){gr='👍 Good!';gc='#3B82F6';earnedPts=25;}
+    else{gr='💪 Keep trying!';gc='#F97316';earnedPts=10;}
     gEl.innerHTML=`<span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:${gc}18;color:${gc};border:1.5px solid ${gc}40">${gr}</span>`;
     if(ptEl)ptEl.textContent=earnedPts+' pts';
   }else{
@@ -1846,7 +1854,7 @@ function calcDayPts(){
   const tot=parseFloat(document.getElementById('test-tot')?.value)||0;
   if(!isNaN(got)&&tot>0){
     const pct=got/tot*100;
-    if(pct>=90)testPts=80;else if(pct>=75)testPts=60;else if(pct>=60)testPts=40;else testPts=20;
+    if(pct>=90)testPts=50;else if(pct>=75)testPts=40;else if(pct>=60)testPts=25;else testPts=10;
   }
   pts+=testPts;breakdown.test=testPts;
 
@@ -1955,11 +1963,10 @@ function calcDayPts(){
   else if(cr?.querySelector('.pa'))crPts=10;
   pts+=crPts;breakdown.creative=crPts;
 
-  // Brain lab
-  const br=document.getElementById('brain-done');
-  let brPts=0;
-  if(br?.querySelector('.pg'))brPts=brainPtsToday;
+  // Brain lab — pts added directly from puzzle completions, no gating
+  const brPts=brainPtsToday;
   pts+=brPts;breakdown.brain=brPts;
+  updateBrainDisplay();
 
   // Parent rating (in parent tab)
   const ratingVal=parseInt(document.getElementById('parent-rating')?.value||0);
@@ -2447,7 +2454,7 @@ function renderParentTab(){
   let testPts=0;
   const got=parseFloat(document.getElementById('test-got')?.value);
   const tot=parseFloat(document.getElementById('test-tot')?.value)||0;
-  if(!isNaN(got)&&tot>0){const pct=got/tot*100;if(pct>=90)testPts=80;else if(pct>=75)testPts=60;else if(pct>=60)testPts=40;else testPts=20;}
+  if(!isNaN(got)&&tot>0){const pct=got/tot*100;if(pct>=90)testPts=50;else if(pct>=75)testPts=40;else if(pct>=60)testPts=25;else testPts=10;}
   let hwPts=0;SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwPts+=15;});
   let oddaPts=0;const oAtt=document.getElementById('odda-att');
   if(oAtt?.querySelector('.pg'))oddaPts=10;
@@ -2471,7 +2478,7 @@ function renderParentTab(){
   let crPts=0;const cr=document.getElementById('creative-done');if(cr?.querySelector('.pg'))crPts=20;else if(cr?.querySelector('.pa'))crPts=10;
   const soulPts=shlokaPts+crPts;
 
-  let brPts=0;const br=document.getElementById('brain-done');if(br?.querySelector('.pg'))brPts=brainPtsToday;
+  let brPts=brainPtsToday;
   const parentRating=parseInt(document.getElementById('parent-rating')?.value||0);
   const parentComment=(document.getElementById('parent-comment')?.value||'').trim();
   const parentCommentPts=parentComment.length>5?25:0;
@@ -2695,7 +2702,7 @@ function clearDay(){
   const prApp=document.getElementById('approved-section');if(prApp)prApp.style.display='none';
   const freeMsg=document.getElementById('free-act-msg');if(freeMsg)freeMsg.innerHTML='';
   const prRatRes=document.getElementById('parent-rating-result');if(prRatRes)prRatRes.innerHTML='';
-  creativeChosen=null;brainPtsToday=0;todayApproved=false;
+  creativeChosen=null;brainPtsToday=0;sudokuPts=0;logicPtsTotal=0;riddlePtsTotal=0;todayApproved=false;
   updateHW();calcDayPts();setTodayDate();
 }
 
@@ -2828,16 +2835,18 @@ function checkSudoku(){
   const msg=document.getElementById('sudoku-msg');
   if(allCorrect&&allFilled){
     const bonus={easy:0,medium:5,hard:10}[sudokuDifficulty]||0;
-    brainPtsToday=Math.max(brainPtsToday,30+bonus);
-    document.getElementById('brain-pts-disp').textContent=brainPtsToday;
+    sudokuPts=Math.max(sudokuPts,30+bonus);
+    brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal;
     msg.innerHTML=`<span style="color:#10B981;font-size:16px">🎉 PERFECT! +${30+bonus} pts!</span>`;
     toast('Sudoku solved! +'+(30+bonus)+' brain pts!');
+    updateBrainDisplay();calcDayPts();
   }else if(!allFilled){msg.innerHTML='<span style="color:#F97316">Fill all cells first!</span>';}
   else{msg.innerHTML='<span style="color:#EF4444">Some cells have errors. Keep trying! 💪</span>';}
 }
 function revealSudokuHint(){
-  brainPtsToday=Math.max(0,brainPtsToday-5);
-  document.getElementById('brain-pts-disp').textContent=brainPtsToday;
+  sudokuPts=Math.max(0,sudokuPts-5);
+  brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal;
+  updateBrainDisplay();calcDayPts();
   for(let r=0;r<9;r++)for(let c=0;c<9;c++){
     if(sudokuGrid[r][c]===0){
       sudokuGrid[r][c]=sudokuSolution[r][c];
@@ -2870,9 +2879,9 @@ function answerLogic(qi,chosen,correct,exp,btn){
   const isRight=chosen===correct;
   btn.className='opt-btn '+(isRight?'correct':'wrong');
   if(isRight){
-    logicPts+=15;brainPtsToday+=15;
-    document.getElementById('brain-pts-disp').textContent=brainPtsToday;
+    logicPts+=15;logicPtsTotal+=15;brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal;
     toast('Correct! +15 brain pts! 🧠');
+    updateBrainDisplay();calcDayPts();
   }else{toast('Not quite! Right answer: '+String.fromCharCode(65+correct));}
   const expl=document.getElementById('lexpl-'+qi);
   if(expl){expl.style.display='block';expl.textContent='💡 Explanation: '+exp;}
@@ -2904,10 +2913,10 @@ function checkRiddle(i,correct,hint){
   const isRight=ans===correct.toLowerCase()||correct.toLowerCase().includes(ans)&&ans.length>2;
   riddleAnswered.push(i);
   if(isRight){
-    riddlePts+=10;brainPtsToday+=10;
-    document.getElementById('brain-pts-disp').textContent=brainPtsToday;
+    riddlePts+=10;riddlePtsTotal+=10;brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal;
     document.getElementById('rid-result-'+i).innerHTML='<span style="color:#10B981;font-weight:800">🎉 Correct! +10 pts! Answer: '+correct+'</span>';
     toast('Riddle solved! +10 brain pts!');
+    updateBrainDisplay();calcDayPts();
   }else{
     document.getElementById('rid-result-'+i).innerHTML='<span style="color:#EF4444;font-weight:800">❌ Not quite! Answer: '+correct+'</span>';
   }
@@ -3110,6 +3119,36 @@ function exportBackup() {
   toast('✅ Backup downloaded to your PC!');
 }
 
+
+
+// ════════════════════════════════════════════
+// BRAIN LAB DISPLAY
+// ════════════════════════════════════════════
+function updateBrainDisplay(){
+  const pts = brainPtsToday;
+  // Update big number in header chip
+  const disp = document.getElementById('brain-pts-disp');
+  if(disp) disp.textContent = pts;
+  // Update big score card
+  const big = document.getElementById('brain-pts-big');
+  if(big) big.textContent = pts;
+  // Breakdown chips
+  const bs = document.getElementById('bb-sudoku');if(bs)bs.textContent=sudokuPts;
+  const bl = document.getElementById('bb-logic');if(bl)bl.textContent=logicPtsTotal;
+  const br = document.getElementById('bb-riddle');if(br)br.textContent=riddlePtsTotal;
+  // Mood emoji + message
+  const moodEl = document.getElementById('brain-mood-emoji');
+  const msgEl  = document.getElementById('brain-pts-msg');
+  let emoji, msg;
+  if(pts === 0){emoji='😴';msg='Complete puzzles above to earn points!';}
+  else if(pts < 15){emoji='🙂';msg='Good start! Keep going, more pts await!';}
+  else if(pts < 30){emoji='😊';msg='Nice work! You are warming up!';}
+  else if(pts < 45){emoji='😄';msg='Brilliant brain work, Vaanya! 💪';}
+  else if(pts < 55){emoji='🤩';msg='Outstanding!! Your brain is on fire! 🔥';}
+  else{emoji='🥳';msg='GENIUS MODE!! Maximum brain pts! 🧠👑';}
+  if(moodEl) moodEl.textContent = emoji;
+  if(msgEl)  msgEl.textContent  = msg;
+}
 
 // ════════════════════════════════════════════
 // AURORA LIGHT BEAMS
