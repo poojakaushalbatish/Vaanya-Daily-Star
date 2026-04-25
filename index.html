@@ -631,7 +631,7 @@ tr:hover td{background:#FAFBFF}
   <button class="nb t0 active" onclick="showTab('report',this)">📝 Daily Report</button>
   <button class="nb t3" onclick="showTab('brain',this)">🧠 Brain Lab</button>
   <button class="nb t4" onclick="showTab('soul',this)">🕉️ Geeta & Shloka</button>
-  <button class="nb t4" onclick="showTab('parent',this)">👨‍👩‍👧 Parents Review</button>
+  <button class="nb t4" id="btn-parent-tab" onclick="showParentTabWithPin(this)">👨‍👩‍👧 Parents Review</button>
   <button class="nb t1" onclick="showTab('rewards',this)">🎁 Rewards</button>
   <button class="nb t2" onclick="showTab('spend',this)">🛒 Spend</button>
   <button class="nb t5" onclick="showTab('history',this)">📅 History</button>
@@ -1243,6 +1243,21 @@ tr:hover td{background:#FAFBFF}
 ═══════════════════════════════════════ -->
 <div class="tab" id="tab-parent">
 
+<!-- PARENT LOCKED WALL — shown when not authenticated -->
+<div id="parent-locked-wall" style="text-align:center;padding:60px 20px">
+  <div style="font-size:72px;margin-bottom:16px">🔐</div>
+  <div style="font-size:22px;font-weight:900;color:#1E1B4B;margin-bottom:8px">Parents Only Zone</div>
+  <div style="font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.7">
+    This section is for Mamma &amp; Papa only.<br>Please enter your PIN to review Vaanya's report.
+  </div>
+  <button onclick="openPinModalParent()" style="background:linear-gradient(135deg,#7C3AED,#DB2777);color:#fff;border:none;border-radius:14px;padding:16px 36px;font-size:16px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 18px rgba(124,58,237,.4)">
+    🔐 Enter Parent PIN
+  </button>
+</div>
+
+<!-- PARENT CONTENT — shown after PIN -->
+<div id="parent-content" style="display:none">
+
 <!-- Header banner -->
 <div style="background:linear-gradient(135deg,#1E1B4B,#4F46E5,#7C3AED);border-radius:var(--rad);padding:20px 22px;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
   <div style="font-size:48px">👩‍👧‍👦</div>
@@ -1285,24 +1300,25 @@ tr:hover td{background:#FAFBFF}
 
 <!-- Approve / Reject -->
 <div class="sec" style="border-color:var(--gm)">
-  <div class="sh"><div class="si" style="background:var(--gl);color:var(--gd)">🔐</div>Approve or Reject today's report</div>
-  <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">
-    <b style="color:var(--gd)">✅ APPROVE</b> — saves report in history, awards all points including your rating, and counts toward progress report.<br>
-    <b style="color:var(--rd)">❌ REJECT</b> — resets the entire sheet for this date. Vaanya must refill and resubmit.
+  <div class="sh"><div class="si" style="background:var(--gl);color:var(--gd)">✅</div>Approve or Reject Today's Report</div>
+  <div id="parent-pending-section" style="display:none">
+    <button class="approval-btn" onclick="openPinModalParent()">🔐 Enter Parent PIN</button>
   </div>
-  <div id="parent-pending-section">
-    <div style="background:var(--al);border-radius:var(--rads);padding:12px 14px;margin-bottom:12px;font-size:12px;font-weight:700;color:var(--ad);border:1.5px solid var(--am)">
-      ⚠️ Enter your Parent PIN below to unlock the Approve / Reject buttons.
-    </div>
-    <button class="approval-btn" onclick="openPinModal()">🔐 Enter Parent PIN to Review</button>
-  </div>
-  <div id="parent-action-section" style="display:none;margin-top:4px">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <button onclick="approveReport()" style="background:linear-gradient(135deg,#10B981,#047857);color:#fff;border:none;border-radius:var(--rad);padding:18px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(16,185,129,.4)">
-        ✅ APPROVE<br><span style="font-size:11px;font-weight:700;opacity:.9">Save &amp; award points</span>
+  <div id="parent-action-section" style="margin-top:4px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <button onclick="approveReport()"
+        style="background:linear-gradient(135deg,#10B981,#047857);color:#fff;border:none;
+          border-radius:var(--rad);padding:22px;font-family:'Nunito',sans-serif;
+          font-size:22px;font-weight:900;cursor:pointer;transition:all .2s;
+          box-shadow:0 6px 20px rgba(16,185,129,.45);letter-spacing:.04em">
+        ✅ APPROVE
       </button>
-      <button onclick="rejectReport()" style="background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;border:none;border-radius:var(--rad);padding:18px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(239,68,68,.4)">
-        ❌ REJECT<br><span style="font-size:11px;font-weight:700;opacity:.9">Reset — refill required</span>
+      <button onclick="rejectReport()"
+        style="background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;border:none;
+          border-radius:var(--rad);padding:22px;font-family:'Nunito',sans-serif;
+          font-size:22px;font-weight:900;cursor:pointer;transition:all .2s;
+          box-shadow:0 6px 20px rgba(239,68,68,.45);letter-spacing:.04em">
+        ❌ REJECT
       </button>
     </div>
   </div>
@@ -1318,6 +1334,7 @@ tr:hover td{background:#FAFBFF}
     <div id="ai-comment-box" style="display:none;margin-top:12px"></div>
   </div>
 </div>
+</div><!-- end parent-content -->
 </div><!-- end tab-parent -->
 
 <div class="tab" id="tab-history">
@@ -1352,27 +1369,58 @@ tr:hover td{background:#FAFBFF}
 <div id="perf-card" style="margin-bottom:14px"></div>
 
 <!-- VICTORY CUPS -->
+<!-- NO CUP BANNER -->
+<div id="no-cup-banner" style="display:none;background:linear-gradient(135deg,#7C3AED,#9D4FD4,#DB2777);
+  border-radius:16px;padding:16px 18px;color:#fff;margin-bottom:12px;
+  cursor:pointer;align-items:center;gap:14px"
+  onclick="cupSoundAndOverlay('none')">
+  <div style="font-size:36px;line-height:1">😤</div>
+  <div style="flex:1">
+    <div style="font-size:16px;font-weight:900;margin-bottom:4px">No cup today — but tomorrow can change everything!</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.88);line-height:1.6">
+      You need <b id="no-cup-pts-needed">80</b> more pts to reach 🥉 Bronze. Come on Vaanya — you have got this in you!
+    </div>
+  </div>
+  <div style="text-align:center;min-width:60px">
+    <div style="font-size:26px;font-weight:900;color:#FCD34D;line-height:1" id="no-cup-pts-today">0</div>
+    <div style="font-size:9px;color:rgba(255,255,255,.7);font-weight:800;text-transform:uppercase;margin-top:3px">pts today</div>
+  </div>
+</div>
+
 <div style="font-size:14px;font-weight:900;color:#065F46;margin-bottom:10px;display:flex;align-items:center;gap:8px">
   🏆 Victory Cups — Today's Achievement
-  <span style="font-size:10px;font-weight:700;color:#0F766E;background:#ECFDF5;padding:3px 10px;border-radius:10px;border:1px solid #6EE7B7">Based on today's approved pts out of 515</span>
+  <span style="font-size:10px;font-weight:700;color:#0F766E;background:#ECFDF5;padding:3px 10px;border-radius:10px;border:1px solid #6EE7B7">tap a cup to hear its sound</span>
 </div>
 <div id="cups-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px"></div>
 
 <!-- CUMULATIVE PERFORMANCE CHART -->
 <div class="prog-cumulative-wrap">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-    <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#10B981,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:16px">📊</div>
-    <div>
-      <div style="font-size:14px;font-weight:900;color:#065F46">Overall Performance</div>
-      <div style="font-size:10px;color:#0F766E;font-weight:700">Points earned per day · Approved reports only</div>
-    </div>
-    <div id="prog-avg-badge" style="margin-left:auto;background:linear-gradient(135deg,#10B981,#3B82F6);color:#fff;border-radius:12px;padding:6px 14px;font-size:12px;font-weight:900"></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+    <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#10B981,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:13px">📊</div>
+    <div style="font-size:13px;font-weight:900;color:#065F46">Overall Performance</div>
+    <div id="prog-avg-badge" style="margin-left:auto;background:linear-gradient(135deg,#10B981,#3B82F6);color:#fff;border-radius:10px;padding:4px 12px;font-size:11px;font-weight:900"></div>
   </div>
-  <canvas id="ch-cumulative" height="130"></canvas>
+  <canvas id="ch-cumulative" height="100"></canvas>
+  <!-- Cup threshold legend -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+    <span style="font-size:10px;font-weight:800;color:#D97706;display:flex;align-items:center;gap:4px"><span style="width:14px;height:2px;background:#D97706;display:inline-block;border-radius:1px"></span>Bronze 200</span>
+    <span style="font-size:10px;font-weight:800;color:#9CA3AF;display:flex;align-items:center;gap:4px"><span style="width:14px;height:2px;background:#9CA3AF;display:inline-block;border-radius:1px"></span>Silver 320</span>
+    <span style="font-size:10px;font-weight:800;color:#F59E0B;display:flex;align-items:center;gap:4px"><span style="width:14px;height:2px;background:#F59E0B;display:inline-block;border-radius:1px"></span>Gold 420</span>
+    <span style="font-size:10px;font-weight:800;color:#06B6D4;display:flex;align-items:center;gap:4px"><span style="width:14px;height:2px;background:#06B6D4;display:inline-block;border-radius:1px"></span>Diamond 490</span>
+  </div>
 </div>
 
 <!-- STREAK STAT -->
 <div id="prog-strip" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"></div>
+
+<!-- MAMMA & PAPA COMMENTS -->
+<div id="parent-comments-section" style="margin-bottom:12px">
+  <div style="font-size:14px;font-weight:900;color:#065F46;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+    💬 Mamma &amp; Papa's Comments
+    <span style="font-size:10px;font-weight:700;color:#0F766E;background:#ECFDF5;padding:3px 10px;border-radius:10px;border:1px solid #6EE7B7">From approved reports</span>
+  </div>
+  <div id="parent-comments-list"></div>
+</div>
 
 </div>
 
@@ -1637,6 +1685,7 @@ function showSyncStatus(state) {
 }
 let brainPtsToday = 0;
 let sudokuPts = 0, logicPtsTotal = 0, riddlePtsTotal = 0;
+let parentUnlocked = false; // PIN authenticated this session
 let aiSkillPts = 0; // set by AI skill evaluator
 let reflPts1=0,reflPts2=0,reflPts3=0; // per-reflection pts
 const GEMINI_KEY = 'AIzaSyALK9x-p1dyq5O0IuL7_I4-iBkHDCED318';
@@ -1712,7 +1761,23 @@ function showTab(id,btn){
   if(id==='spend')renderSpend();
   if(id==='history')renderHistory();
   if(id==='graphs')renderGraphs();
-  if(id==='parent')renderParentTab();
+  if(id==='parent'){
+    // Only render parent if unlocked, else show wall
+    const wall=document.getElementById('parent-locked-wall');
+    const content=document.getElementById('parent-content');
+    if(parentUnlocked){
+      if(wall)wall.style.display='none';
+      if(content)content.style.display='block';
+      renderParentTab();
+    } else {
+      if(wall)wall.style.display='block';
+      if(content)content.style.display='none';
+    }
+  }
+  // Re-lock parent when leaving (security)
+  if(id!=='parent' && parentUnlocked){
+    parentUnlocked=false;
+  }
 }
 
 // ── Test: show chapters textarea when subject selected
@@ -2339,7 +2404,12 @@ function updatePinDots(){
 function pinSubmit(){
   if(pinBuf===getPin()){
     closePinModal();
-    unlockParentActions();
+    if(window._pinCallback){
+      window._pinCallback();
+      window._pinCallback = null;
+    } else {
+      unlockParentActions();
+    }
   }else{
     document.getElementById('pin-err').textContent='❌ Wrong PIN — try again!';
     pinBuf='';updatePinDots();
@@ -2413,22 +2483,41 @@ async function approveReport(){
   }
 }
 
-function rejectReport(){
-  if(!confirm('REJECT this report?\n\nThis will clear all of Vaanya\'s entries for today. She will need to fill the form again from scratch.'))return;
-  // Clear everything
-  clearDay();
-  // Reset parent section
-  const pending=document.getElementById('parent-pending-section');
-  const actions=document.getElementById('parent-action-section');
+async function rejectReport(){
+  const date = document.getElementById('rpt-date')?.value;
+  if(!confirm('REJECT this report? This will completely erase all entries for '+(date||'today')+'. Vaanya will need to start fresh.')) return;
+
+  // 1. Delete from Supabase (remove the draft entirely)
+  if(date){
+    try{
+      await _supabase.from('daily_reports').delete().eq('date', date);
+      console.log('Draft deleted from Supabase for', date);
+    }catch(e){ console.error('Delete error:', e); }
+    // Remove from local savedDays array too
+    savedDays = savedDays.filter(d => d.date !== date);
+  }
+
+  // 2. Clear the form completely
+  silentClearDay();
+  setTodayDate();
+
+  // 3. Reset parent auth state — require PIN again next time
+  parentUnlocked = false;
+  const wall = document.getElementById('parent-locked-wall');
+  const content = document.getElementById('parent-content');
+  if(wall) wall.style.display='block';
+  if(content) content.style.display='none';
+
+  // 4. Reset approve/reject buttons
   const appSec=document.getElementById('approved-section');
-  if(pending)pending.style.display='block';
-  if(actions)actions.style.display='none';
   if(appSec)appSec.style.display='none';
   todayApproved=false;
-  showPop('❌','Report Rejected','The report has been reset. Vaanya, please fill in all sections carefully and resubmit! 💪');
-  toast('Report rejected — form cleared. Please refill!');
-  // Go back to daily report tab
-  showTab('report', document.querySelector('.nb.t0'));
+  updateTopBar();
+
+  showPop('❌','Report Rejected!','The report has been completely erased. Vaanya, please fill everything carefully and resubmit for approval! 💪');
+
+  // 5. Go to Daily Report tab
+  setTimeout(()=>showTab('report', document.querySelector('.nb.t0')), 800);
 }
 
 // ════════════════════════════════════════════
@@ -2807,74 +2896,191 @@ function renderGraphs(){
   renderCups(days);
   renderCumulativeChart(days);
   renderStatStrip(days);
+  renderParentComments(days);
 }
 
 function renderCups(days){
-  const grid = document.getElementById('cups-grid');if(!grid)return;
-  // Latest approved day pts for today's cup
-  const latestDay = days[days.length-1];
-  const todayPts = latestDay ? (latestDay.pts||0) : 0;
-  const todayCup = getDayCup(todayPts);
-  const nextCup  = CUPS.find(cu=>cu.threshold > todayPts);
+  const grid=document.getElementById('cups-grid');if(!grid)return;
+  const latestDay=days[days.length-1];
+  const todayPts=latestDay?(latestDay.pts||0):0;
+  const todayCup=getDayCup(todayPts);
+  const nextCup=CUPS.find(cu=>cu.threshold>todayPts);
 
-  grid.innerHTML = CUPS.map(cu=>{
-    const achieved = todayPts >= cu.threshold;
-    const isToday  = todayCup && todayCup.id === cu.id;
-    const isNext   = nextCup && nextCup.id === cu.id;
-    const pctToward = Math.min(100, Math.round(todayPts / cu.threshold * 100));
-    const ptsNeeded = Math.max(0, cu.threshold - todayPts);
+  // Show/hide no-cup banner
+  const noBanner=document.getElementById('no-cup-banner');
+  if(noBanner){
+    if(!todayCup){
+      noBanner.style.display='flex';
+      const ptsNeeded=200-todayPts;
+      const el1=document.getElementById('no-cup-pts-needed');if(el1)el1.textContent=ptsNeeded;
+      const el2=document.getElementById('no-cup-pts-today');if(el2)el2.textContent=todayPts;
+    } else {
+      noBanner.style.display='none';
+    }
+  }
+
+  grid.innerHTML=CUPS.map(cu=>{
+    const achieved=todayPts>=cu.threshold;
+    const isNext=nextCup&&nextCup.id===cu.id;
+    const pct=Math.min(100,Math.round(todayPts/cu.threshold*100));
+    const ptsNeed=Math.max(0,cu.threshold-todayPts);
     return `<div class="cup-card ${achieved?'achieved':''} ${isNext&&!achieved?'next-target':''}"
-      style="background:${cu.bg};border-color:${achieved?cu.border:'#D1D5DB'};
-             ${achieved?'box-shadow:0 8px 32px '+cu.glow:''};"
-      onclick="${isToday?'showRankOverlay()':''}">
+      style="background:${cu.bg};border-color:${achieved?cu.border:'rgba(209,213,219,.4)'};
+      ${achieved?'box-shadow:0 8px 32px '+cu.glow:''};cursor:pointer"
+      onclick="cupSoundAndOverlay('${cu.id}')">
       <span class="cup-icon">${cu.icon}</span>
       <div class="cup-name" style="color:#fff">${cu.name}</div>
       <div class="cup-pts" style="color:rgba(255,255,255,.85)">${cu.threshold}+ pts</div>
-      <div class="cup-desc" style="color:rgba(255,255,255,.75)">${achieved?cu.expert:isNext?'Need '+ptsNeeded+' more pts! You can do it! 💪':cu.desc}</div>
-      ${achieved?`<div class="cup-achieved-tag" style="color:#fff">✅ ACHIEVED TODAY!</div>`:''}
-      ${!achieved?`<div style="background:rgba(0,0,0,.2);border-radius:6px;height:6px;overflow:hidden;margin-top:8px">
-        <div style="width:${pctToward}%;height:100%;background:rgba(255,255,255,.5);border-radius:6px;transition:width .8s"></div>
+      <div class="cup-desc" style="color:rgba(255,255,255,.75)">${achieved?cu.expert:isNext?'Need '+ptsNeed+' more pts!':cu.desc}</div>
+      ${achieved?'<div class="cup-achieved-tag" style="color:#fff">✅ ACHIEVED TODAY!</div>':''}
+      ${!achieved?`<div style="background:rgba(0,0,0,.25);border-radius:5px;height:5px;overflow:hidden;margin-top:7px">
+        <div style="width:${pct}%;height:100%;background:rgba(255,255,255,.55);border-radius:5px;transition:width .8s"></div>
       </div>
-      <div style="font-size:9px;color:rgba(255,255,255,.7);margin-top:3px;font-weight:700">${pctToward}% there</div>`:''}
+      <div style="font-size:9px;color:rgba(255,255,255,.65);margin-top:3px;font-weight:700">${pct}% there</div>`:''}
     </div>`;
   }).join('');
 
-  // Trigger overlay on first load if cup achieved
-  if(todayCup) setTimeout(showRankOverlay, 400);
+  // Auto-trigger: play sound + overlay after render
+  setTimeout(()=>{
+    if(todayCup){
+      cupSoundAndOverlay(todayCup.id);
+    } else {
+      cupSoundAndOverlay('none');
+    }
+  }, 600);
 }
 
-let rankOverlayShown = false;
-function showRankOverlay(){
-  const latestDay = [...savedDays].filter(d=>d.approved).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
-  if(!latestDay) return;
-  const cup = getDayCup(latestDay.pts||0);
-  if(!cup) return;
-  const overlay = document.getElementById('rank-overlay');
-  const box = document.getElementById('rank-overlay-box');
-  if(!overlay||!box) return;
+// ════════════════════════════════════════════
+// AUDIO ENGINE
+// ════════════════════════════════════════════
+let _audioCtx = null;
+function getAudioCtx(){
+  if(!_audioCtx) _audioCtx = new(window.AudioContext||window.webkitAudioContext)();
+  if(_audioCtx.state==='suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+function _osc(ac,type,freq,startT,dur,vol,endVol=0.001){
+  const o=ac.createOscillator(), g=ac.createGain();
+  o.connect(g); g.connect(ac.destination);
+  o.type=type; o.frequency.setValueAtTime(freq,startT);
+  g.gain.setValueAtTime(vol,startT);
+  g.gain.exponentialRampToValueAtTime(endVol,startT+dur);
+  o.start(startT); o.stop(startT+dur+0.05);
+}
+function _glide(ac,type,f1,f2,startT,dur,vol){
+  const o=ac.createOscillator(), g=ac.createGain();
+  o.connect(g); g.connect(ac.destination);
+  o.type=type;
+  o.frequency.setValueAtTime(f1,startT);
+  o.frequency.exponentialRampToValueAtTime(f2,startT+dur);
+  g.gain.setValueAtTime(vol,startT);
+  g.gain.exponentialRampToValueAtTime(0.001,startT+dur);
+  o.start(startT); o.stop(startT+dur+0.05);
+}
+function _noise(ac,startT,dur,vol){
+  const buf=ac.createBuffer(1,Math.ceil(ac.sampleRate*dur),ac.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1);
+  const src=ac.createBufferSource(); src.buffer=buf;
+  const g=ac.createGain(), bpf=ac.createBiquadFilter();
+  bpf.type='bandpass'; bpf.frequency.value=180; bpf.Q.value=0.5;
+  src.connect(bpf); bpf.connect(g); g.connect(ac.destination);
+  g.gain.setValueAtTime(vol,startT);
+  g.gain.exponentialRampToValueAtTime(0.001,startT+dur);
+  src.start(startT); src.stop(startT+dur+0.05);
+}
 
-  box.innerHTML=`
-    <div style="font-size:120px;line-height:1;margin-bottom:16px;animation:cupShake .6s ease .3s">${cup.icon}</div>
-    <div style="font-size:42px;font-weight:900;color:#FCD34D;text-shadow:0 0 40px rgba(252,211,77,.8);
-      letter-spacing:.08em;margin-bottom:10px">${cup.name.toUpperCase()} CUP!</div>
-    <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:8px">${latestDay.pts} pts earned!</div>
-    <div style="font-size:14px;color:rgba(255,255,255,.85);max-width:320px;line-height:1.6;margin-bottom:20px">${cup.expert}</div>
-    <div style="font-size:13px;color:rgba(255,255,255,.6)">Tap anywhere to continue</div>`;
+const CUP_SOUNDS = {
+  bronze(ac,t){
+    for(let i=0;i<8;i++) _noise(ac,t+i*0.04,0.05,0.3-i*0.01);
+    [330,392,440,523,587,659].forEach((f,i)=>_osc(ac,'square',f,t+0.32+i*0.09,0.12,0.22));
+    _osc(ac,'triangle',784,t+0.32+6*0.09,0.4,0.3);
+  },
+  silver(ac,t){
+    [523,659,784,1047].forEach(f=>_osc(ac,'square',f,t,0.15,0.18));
+    [784,880,988,1175,1319,1568].forEach((f,i)=>_osc(ac,'triangle',f,t+0.18+i*0.07,0.1,0.25));
+    [2093,2349,2637,3136].forEach((f,i)=>_osc(ac,'sine',f,t+0.6+i*0.06,0.08,0.12));
+  },
+  gold(ac,t){
+    [523,523,523,415,523,0,659,523].forEach((f,i)=>{
+      if(f===0)return; _osc(ac,'square',f,t+i*0.12,0.1,0.28);
+    });
+    [523,587,659,698,784,880,988,1047].forEach((f,i)=>_osc(ac,'square',f,t+1.0+i*0.08,0.1,0.3));
+    [523,659,784,1047].forEach(f=>_osc(ac,'triangle',f,t+1.7,0.6,0.25,0.001));
+  },
+  diamond(ac,t){
+    for(let i=0;i<4;i++) _noise(ac,t+i*0.15,0.1,0.5);
+    [392,523,659,784].forEach((f,i)=>_osc(ac,'sawtooth',f,t+0.6+i*0.18,0.2,0.35));
+    [523,659,784,1047,1319].forEach(f=>_osc(ac,'square',f,t+1.35,0.4,0.28,0.001));
+    [1047,1175,1319,1480,1568,1760,2093,2349,2637,3136].forEach((f,i)=>
+      _osc(ac,'sine',f,t+1.8+i*0.06,0.1,0.2));
+    [1047,1319,1568].forEach(f=>_osc(ac,'triangle',f,t+2.4,0.8,0.25,0.001));
+  },
+  none(ac,t){
+    _glide(ac,'sawtooth',440,220,t,0.25,0.35);
+    _glide(ac,'sawtooth',330,165,t+0.28,0.25,0.3);
+    _glide(ac,'sawtooth',262,110,t+0.56,0.3,0.3);
+    _glide(ac,'sine',800,200,t+0.9,0.3,0.25);
+    _osc(ac,'sine',523,t+1.3,0.08,0.2);
+    _osc(ac,'sine',587,t+1.4,0.08,0.2);
+    _osc(ac,'sine',494,t+1.5,0.2,0.2);
+  }
+};
 
-  // Blink 3 times then stay
+function playByCupId(id){
+  try{
+    const ac=getAudioCtx();
+    const fn=CUP_SOUNDS[id]||CUP_SOUNDS.none;
+    fn(ac,ac.currentTime);
+  }catch(e){console.warn('Audio error:',e);}
+}
+
+function cupSoundAndOverlay(idOrCup){
+  const id = typeof idOrCup==='string' ? idOrCup : (idOrCup?.id||'none');
+  playByCupId(id);
+  setTimeout(()=>showCupOverlay(id), 300);
+}
+
+function showCupOverlay(id){
+  const latestDay=[...savedDays].filter(d=>d.approved).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+  const pts = latestDay?.pts||0;
+  const cup = CUPS.find(c=>c.id===id);
+  const overlay=document.getElementById('rank-overlay');
+  const box=document.getElementById('rank-overlay-box');
+  if(!overlay||!box)return;
+
+  if(id==='none'||!cup){
+    box.innerHTML=`
+      <div style="font-size:100px;line-height:1;margin-bottom:12px">😤</div>
+      <div style="font-size:32px;font-weight:900;color:#F472B6;letter-spacing:.06em;margin-bottom:10px">NOT YET!</div>
+      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:8px">${pts} pts today</div>
+      <div style="font-size:14px;color:rgba(255,255,255,.85);max-width:300px;line-height:1.6;margin-bottom:20px">
+        Need ${200-pts} more pts for Bronze! Come on Vaanya — every single task counts. Tomorrow is your chance to shine!
+      </div>
+      <div style="font-size:13px;color:rgba(255,255,255,.5)">Tap anywhere to continue</div>`;
+  } else {
+    box.innerHTML=`
+      <div style="font-size:120px;line-height:1;margin-bottom:14px;animation:cupShake .6s ease .3s">${cup.icon}</div>
+      <div style="font-size:38px;font-weight:900;color:#FCD34D;letter-spacing:.08em;margin-bottom:8px">${cup.name.toUpperCase()} CUP!</div>
+      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:8px">${pts} pts earned!</div>
+      <div style="font-size:14px;color:rgba(255,255,255,.85);max-width:320px;line-height:1.6;margin-bottom:20px">${cup.expert}</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.5)">Tap anywhere to continue</div>`;
+  }
+
   let count=0;
   const blink=()=>{
     overlay.classList.add('show');
     setTimeout(()=>{
       count++;
-      if(count<3){ overlay.classList.remove('show'); setTimeout(blink,200); }
-    }, count===0?500:count===1?500:1200);
+      if(count<3){overlay.classList.remove('show');setTimeout(blink,220);}
+    }, count<2?500:1400);
   };
   blink();
 }
 function closeRankOverlay(){
   document.getElementById('rank-overlay').classList.remove('show');
 }
+// legacy alias
+function showRankOverlay(){ cupSoundAndOverlay('none'); }
 
 function renderCumulativeChart(days){
   const labels=days.map(d=>new Date(d.date+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}));
@@ -3002,7 +3208,7 @@ function renderPerfCard(days){
   else{rank='D';emoji='😤';msg='Come on Vaanya — your best days are ahead of you!';col='#B91C1C';}
 
   el.innerHTML=`
-  <div style="background:linear-gradient(135deg,#065F46,#0F766E,#1D4ED8);border-radius:18px;padding:18px 20px;color:#fff;cursor:pointer" onclick="showRankOverlay()">
+  <div style="background:linear-gradient(135deg,#065F46,#0F766E,#1D4ED8);border-radius:18px;padding:18px 20px;color:#fff;cursor:pointer" onclick="cupSoundAndOverlay(getDayCup(([...savedDays].filter(d=>d.approved).sort((a,b)=>new Date(b.date)-new Date(a.date))[0]?.pts||0))?.id||'none')">
     <div style="font-size:10px;font-weight:800;color:#A7F3D0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">⭐ Last 7 days · Tap to replay cup reveal</div>
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
       <div style="font-size:64px;line-height:1;filter:drop-shadow(0 0 16px rgba(252,211,77,.8))">${cup?cup.icon:'📊'}</div>
@@ -3781,6 +3987,100 @@ function loadDraftDay(d){
   const mc=document.querySelector('.main-content');
   if(mc){ const old=mc.querySelector('.draft-info-bar');if(old)old.remove(); draftInfo.className='draft-info-bar'; mc.prepend(draftInfo); }
   updateHW(); calcDayPts();
+}
+
+
+// ════════════════════════════════════════════
+// PARENT TAB — PIN GATE
+// ════════════════════════════════════════════
+function showParentTabWithPin(btn){
+  if(parentUnlocked){
+    // Already authenticated this session — go straight in
+    showTab('parent', btn);
+    renderParentTab();
+    return;
+  }
+  // Show tab but display locked wall
+  showTab('parent', btn);
+  const wall = document.getElementById('parent-locked-wall');
+  const content = document.getElementById('parent-content');
+  if(wall) wall.style.display='block';
+  if(content) content.style.display='none';
+}
+
+function openPinModalParent(){
+  pinBuf=''; updatePinDots();
+  document.getElementById('pin-err').textContent='';
+  // Override pinSubmit temporarily to unlock parent content
+  window._pinCallback = ()=>{
+    parentUnlocked = true;
+    const wall = document.getElementById('parent-locked-wall');
+    const content = document.getElementById('parent-content');
+    if(wall) wall.style.display='none';
+    if(content) content.style.display='block';
+    renderParentTab();
+    toast('Welcome! Review Vaanya report 📋');
+  };
+  document.getElementById('pin-overlay').classList.add('show');
+}
+
+
+// ════════════════════════════════════════════
+// PARENT COMMENTS ON PROGRESS TAB
+// ════════════════════════════════════════════
+function renderParentComments(days){
+  const el = document.getElementById('parent-comments-list');
+  if(!el) return;
+
+  const commented = days
+    .filter(d => d.parentComment && d.parentComment.trim().length > 3)
+    .sort((a,b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 10); // last 10 comments
+
+  if(!commented.length){
+    el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;
+      background:#F0FDF4;border-radius:14px;border:1.5px dashed #6EE7B7">
+      💬 No parent comments yet — approve a report with a comment to see it here!
+    </div>`;
+    return;
+  }
+
+  const ratingEmoji = {'-100':'😟','-50':'😐','0':'🙂','25':'😊','50':'😄','80':'🌟'};
+  const ratingLabel = {'-100':'Below Average','-50':'Average','0':'Satisfactory','25':'Good','50':'Excellent','80':'Extraordinary'};
+
+  el.innerHTML = commented.map((d,i) => {
+    const emoji = ratingEmoji[String(d.parentRating||0)] || '🙂';
+    const label = ratingLabel[String(d.parentRating||0)] || '';
+    const pts   = d.parentRating || 0;
+    const col   = pts > 0 ? '#065F46' : pts < 0 ? '#B91C1C' : '#374151';
+    const bg    = pts > 0 ? 'linear-gradient(135deg,#ECFDF5,#F0FDF4)'
+                : pts < 0 ? 'linear-gradient(135deg,#FEF2F2,#FFF)'
+                : 'linear-gradient(135deg,#F9FAFB,#fff)';
+    const border= pts > 0 ? '#6EE7B7' : pts < 0 ? '#FCA5A5' : '#E5E7EB';
+
+    return `<div style="background:${bg};border:2px solid ${border};border-radius:16px;
+      padding:16px 18px;margin-bottom:10px;position:relative;overflow:hidden">
+      <!-- quote mark decoration -->
+      <div style="position:absolute;top:-8px;right:14px;font-size:60px;color:${border};
+        font-family:Georgia,serif;line-height:1;pointer-events:none;opacity:.4">"</div>
+      <!-- date + rating -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+        <div style="font-size:11px;font-weight:800;color:${col}">📅 ${fmtDate(d.date)}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:18px">${emoji}</span>
+          <span style="font-size:11px;font-weight:900;color:${col};background:rgba(0,0,0,.06);
+            padding:3px 10px;border-radius:10px">${label} · ${pts>0?'+':''}${pts} pts</span>
+        </div>
+      </div>
+      <!-- comment text -->
+      <div style="font-size:14px;font-weight:700;color:#1E1B4B;line-height:1.7;
+        font-style:italic;position:relative">
+        "${d.parentComment}"
+      </div>
+      <div style="font-size:10px;font-weight:800;color:${col};margin-top:10px;
+        text-transform:uppercase;letter-spacing:.06em">— Mamma &amp; Papa 💜</div>
+    </div>`;
+  }).join('');
 }
 
 // ════════════════════════════════════════════
