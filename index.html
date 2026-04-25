@@ -444,6 +444,8 @@ tr:hover td{background:#FAFBFF}
 .form-locked{pointer-events:none;opacity:.6;user-select:none}
 .form-locked input,.form-locked select,.form-locked textarea,.form-locked button{
   pointer-events:none;cursor:not-allowed}
+/* Date input always stays interactive even when form is locked */
+.form-locked #rpt-date{pointer-events:auto!important;opacity:1!important;cursor:pointer!important}
 .locked-banner{display:none;background:linear-gradient(135deg,#ECFDF5,#D1FAE5);
   border:2px solid #6EE7B7;border-radius:12px;padding:12px 16px;
   margin-bottom:12px;align-items:center;gap:12px;font-size:13px;font-weight:800;color:#065F46}
@@ -926,8 +928,9 @@ tr:hover td{background:#FAFBFF}
 
 
 <div class="btn-row">
-  <button class="btn btn-o" onclick="clearDay()">🗑️ Clear today</button>
-  <button class="btn btn-p" onclick="saveDraftAndGoBrainLab()">💾 Save &amp; Go to Brain Lab →</button>
+  <button class="btn btn-o" onclick="clearDay()">🗑️ Clear</button>
+  <button class="btn btn-g" onclick="saveDraftOnly()">💾 Save Draft</button>
+  <button class="btn btn-p" onclick="saveDraftAndGoBrainLab()">🧠 Save &amp; Brain Lab →</button>
 </div>
 
 </div><!-- end main-content -->
@@ -970,16 +973,27 @@ tr:hover td{background:#FAFBFF}
      TAB: REWARDS
 ═══════════════════════════════════════ -->
 <div class="tab" id="tab-rewards">
-<div class="topbar" style="margin-bottom:12px">
-  <div style="font-size:28px">🏆</div>
+<div style="background:linear-gradient(135deg,#065F46,#047857,#0F766E);border-radius:var(--rad);
+  padding:14px 18px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  border:2px solid #6EE7B7">
+  <div style="font-size:36px">🏆</div>
   <div class="tb-info">
-    <div class="tb-title" id="rwd-total-pts">0 points in bank</div>
-    <div class="tb-sub">Earn more every day · Spend wisely · Save for big prizes!</div>
+    <div style="font-size:18px;font-weight:900;color:#fff" id="rwd-total-pts">0 points in bank</div>
+    <div style="font-size:11px;color:#A7F3D0;margin-top:2px">Earn more every day · Spend wisely · Save for big prizes!</div>
   </div>
   <div class="tb-pts">
-    <div class="pts-chip"><div class="pts-chip-num" id="rwd-avail">0</div><div class="pts-chip-lbl">Available</div></div>
-    <div class="pts-chip"><div class="pts-chip-num" id="rwd-days">0</div><div class="pts-chip-lbl">Days saved</div></div>
-    <div class="pts-chip"><div class="pts-chip-num" id="rwd-streak">0🔥</div><div class="pts-chip-lbl">Streak</div></div>
+    <div style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:30px;padding:6px 14px;text-align:center">
+      <div style="font-size:20px;font-weight:900;color:#FCD34D" id="rwd-avail">0</div>
+      <div style="font-size:9px;color:#D1FAE5;text-transform:uppercase;letter-spacing:.06em">Available</div>
+    </div>
+    <div style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:30px;padding:6px 14px;text-align:center">
+      <div style="font-size:20px;font-weight:900;color:#fff" id="rwd-days">0</div>
+      <div style="font-size:9px;color:#D1FAE5;text-transform:uppercase;letter-spacing:.06em">Days saved</div>
+    </div>
+    <div style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:30px;padding:6px 14px;text-align:center">
+      <div style="font-size:20px;font-weight:900;color:#fff" id="rwd-streak">0🔥</div>
+      <div style="font-size:9px;color:#D1FAE5;text-transform:uppercase;letter-spacing:.06em">Streak</div>
+    </div>
   </div>
 </div>
 <div id="reward-grid" class="g3"></div>
@@ -994,15 +1008,23 @@ tr:hover td{background:#FAFBFF}
      TAB: SPEND
 ═══════════════════════════════════════ -->
 <div class="tab" id="tab-spend">
-<div class="topbar" style="margin-bottom:14px">
-  <div style="font-size:32px">🛒</div>
+<div style="background:linear-gradient(135deg,#92400E,#B45309,#D97706);border-radius:var(--rad);
+  padding:14px 18px;margin-bottom:14px;color:#fff;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  border:2px solid #FCD34D">
+  <div style="font-size:36px">🛒</div>
   <div class="tb-info">
-    <div class="tb-title">Spend your points!</div>
-    <div class="tb-sub">Use points for daily treats · Each reward can only be used once per day · Always tell Mamma or Papa!</div>
+    <div style="font-size:18px;font-weight:900;color:#fff">Spend your points!</div>
+    <div style="font-size:11px;color:#FDE68A;margin-top:2px">Daily treats · Once per day · Always tell Mamma or Papa!</div>
   </div>
   <div class="tb-pts">
-    <div class="pts-chip"><div class="pts-chip-num" id="spend-avail">0</div><div class="pts-chip-lbl">Available pts</div></div>
-    <div class="pts-chip"><div class="pts-chip-num" id="streak-spend">0🔥</div><div class="pts-chip-lbl">Streak</div></div>
+    <div style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:30px;padding:6px 14px;text-align:center">
+      <div style="font-size:20px;font-weight:900;color:#FCD34D" id="spend-avail">0</div>
+      <div style="font-size:9px;color:#FDE68A;text-transform:uppercase;letter-spacing:.06em">Available pts</div>
+    </div>
+    <div style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:30px;padding:6px 14px;text-align:center">
+      <div style="font-size:20px;font-weight:900;color:#fff" id="streak-spend">0🔥</div>
+      <div style="font-size:9px;color:#FDE68A;text-transform:uppercase;letter-spacing:.06em">Streak</div>
+    </div>
   </div>
 </div>
 <div style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border-radius:var(--rad);border:2px solid var(--am);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
@@ -2085,31 +2107,66 @@ function evalReflection(n){
 // ════════════════════════════════════════════
 // SAVE DRAFT + GO TO BRAIN LAB
 // ════════════════════════════════════════════
-function saveDraftAndGoBrainLab(){
+function collectFormData(date, pts){
+  // Collect all form fields into a data object for saving
+  const shD  = !!document.getElementById('shloka-done')?.querySelector('.pg');
+  const crD  = !!(document.getElementById('creative-done')?.querySelector('.pg')||document.getElementById('creative-done')?.querySelector('.pa'));
+  const brD  = !!(document.getElementById('brain-done')?.querySelector('.pg')||document.getElementById('brain-done')?.querySelector('.pa'));
+  const odD  = !!document.getElementById('odda-att')?.querySelector('.pg');
+  let hwDone = 0;
+  SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwDone++;});
+  return {
+    date, pts, hwDone,
+    shlokaD:shD, creativeD:crD, brainD:brD, odda:odD,
+    approved:false,
+    r1:document.getElementById('r1')?.value||'',
+    r2:document.getElementById('r2')?.value||'',
+    r3:document.getElementById('r3')?.value||'',
+    parentComment:document.getElementById('parent-comment')?.value||'',
+    parentRating:parseInt(document.getElementById('parent-rating')?.value||0),
+    skillDesc:document.getElementById('skill-desc')?.value||'',
+    testSubj:document.getElementById('test-subj')?.value||'',
+    testGot:document.getElementById('test-got')?.value||'',
+    testTot:document.getElementById('test-tot')?.value||'',
+    oddaSubj:document.getElementById('odda-subj')?.value||'',
+    gymActivity:document.getElementById('gym-today')?.value||'0',
+    screenWhat:document.getElementById('screen-what')?.value||'',
+    savedAt:new Date().toISOString()
+  };
+}
+
+async function saveDraftAndGoBrainLab(){
   const date=document.getElementById('rpt-date')?.value;
   if(!date){toast('Please set today\'s date first!');return;}
   const pts=calcDayPts();
-  // Save to localStorage as draft only (no bank credit, no Supabase)
-  try{
-    localStorage.setItem('vaanya_draft', JSON.stringify({
-      date, pts, savedAt: new Date().toISOString(),
-      r1:document.getElementById('r1')?.value||'',
-      r2:document.getElementById('r2')?.value||'',
-      r3:document.getElementById('r3')?.value||''
-    }));
-  }catch(e){}
-  toast('✏️ Draft saved ('+pts+' pts)! Show to Parents Review to bank your points. Going to Brain Lab now!');
-  // Switch to Brain Lab tab
-  setTimeout(()=>switchTab('brain'),800);
+  const data = collectFormData(date, pts);
+
+  // Save into savedDays array (upsert by date)
+  const idx = savedDays.findIndex(d=>d.date===date);
+  if(idx>=0){ savedDays[idx]={...savedDays[idx],...data}; }
+  else { savedDays.unshift(data); }
+  savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  // Save to Supabase as draft (approved=false — no bank credit)
+  await saveToSupabase(data);
+  updateTopBar();
+  toast('💾 Draft saved! Appears in History as Pending. Going to Brain Lab...');
+  setTimeout(()=>switchTab('brain'),900);
 }
 
-// saveDay is now triggered only via Parent Approval (approveReport function)
-// Quick draft save for Vaanya to record progress before showing to parents
-function saveDay(){
-  const date=document.getElementById('rpt-date').value;
+// Also allow saving draft without navigating away
+async function saveDraftOnly(){
+  const date=document.getElementById('rpt-date')?.value;
   if(!date){toast('Please set today\'s date first!');return;}
   const pts=calcDayPts();
-  toast('Draft saved ✏️ — '+pts+' pts so far. Show to Mamma/Papa to finalise!');
+  const data = collectFormData(date, pts);
+  const idx = savedDays.findIndex(d=>d.date===date);
+  if(idx>=0){ savedDays[idx]={...savedDays[idx],...data}; }
+  else { savedDays.unshift(data); }
+  savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  await saveToSupabase(data);
+  updateTopBar();
+  toast('💾 Draft saved for '+fmtDate(date)+'! ('+pts+' pts · Pending approval)');
 }
 
 function updateTopBar(){
@@ -3195,16 +3252,25 @@ function onDateChange(){
   const date = document.getElementById('rpt-date')?.value;
   if(!date) return;
 
-  // Always clear form first (without confirm)
+  // Always clear form first
   silentClearDay();
 
-  // Check if this date already has an approved entry
   const existing = savedDays.find(d => d.date === date);
+
   if(existing && existing.approved){
-    // Load read-only view of approved data
+    // APPROVED — load read-only
     loadApprovedDay(existing);
     lockForm(date, existing.pts);
+    toast('🔒 '+fmtDate(date)+' — Parent Approved · Read only');
+  } else if(existing && !existing.approved){
+    // DRAFT — load editable so child can continue filling
+    unlockForm();
+    loadDraftDay(existing);
+    toast('✏️ Draft loaded for '+fmtDate(date)+' — you can continue editing!');
+    checkPenalty();
+    calcDayPts();
   } else {
+    // NEW DATE — fresh form
     unlockForm();
     checkPenalty();
     calcDayPts();
@@ -3252,11 +3318,14 @@ function lockForm(date, pts){
   todayApproved=true;
   const mc=document.querySelector('.main-content');
   if(mc) mc.classList.add('form-locked');
+  // Date input MUST stay editable so user can navigate to other dates
+  const dateInput=document.getElementById('rpt-date');
+  if(dateInput){ dateInput.style.pointerEvents='auto'; dateInput.style.opacity='1'; }
   const banner=document.getElementById('locked-banner');
   if(banner){
     banner.classList.add('show');
     const msg=document.getElementById('locked-date-msg');
-    if(msg) msg.textContent='Date: '+fmtDate(date)+' · '+pts+' pts approved ✅';
+    if(msg) msg.textContent='Date: '+fmtDate(date)+' · '+pts+' pts approved ✅ · Change date above to fill another day';
   }
   // Hide save/clear buttons
   const btnRow=document.querySelector('#tab-report .btn-row');
@@ -3270,25 +3339,67 @@ function unlockForm(){
   todayApproved=false;
   const mc=document.querySelector('.main-content');
   if(mc) mc.classList.remove('form-locked');
+  // Restore date input
+  const dateInput=document.getElementById('rpt-date');
+  if(dateInput){ dateInput.style.pointerEvents=''; dateInput.style.opacity=''; }
   const banner=document.getElementById('locked-banner');
   if(banner) banner.classList.remove('show');
   const btnRow=document.querySelector('#tab-report .btn-row');
   if(btnRow) btnRow.style.display='';
+  // Restore parent section
+  const prPend=document.getElementById('parent-pending-section');
+  if(prPend) prPend.style.display='block';
+  const prAct=document.getElementById('parent-action-section');
+  if(prAct) prAct.style.display='none';
+  const prApp=document.getElementById('approved-section');
+  if(prApp) prApp.style.display='none';
 }
 
 function loadApprovedDay(d){
-  // Fill in saved values as read-only display
   if(d.r1){ const e=document.getElementById('r1');if(e)e.value=d.r1; }
   if(d.r2){ const e=document.getElementById('r2');if(e)e.value=d.r2; }
   if(d.r3){ const e=document.getElementById('r3');if(e)e.value=d.r3; }
   if(d.parentComment){ const e=document.getElementById('parent-comment');if(e)e.value=d.parentComment; }
-  // Show approved banner in parent tab
   const appSec=document.getElementById('approved-section');
   if(appSec) appSec.style.display='block';
   const appMsg=document.getElementById('approved-msg');
   if(appMsg) appMsg.textContent='✅ +'+d.pts+' points approved on '+fmtDate(d.date);
   const appTime=document.getElementById('approved-time');
   if(appTime) appTime.textContent='Approved: '+(d.savedAt?new Date(d.savedAt).toLocaleString('en-IN'):'');
+}
+
+function loadDraftDay(d){
+  // Restore all saved text fields
+  if(d.r1){ const e=document.getElementById('r1');if(e)e.value=d.r1; }
+  if(d.r2){ const e=document.getElementById('r2');if(e)e.value=d.r2; }
+  if(d.r3){ const e=document.getElementById('r3');if(e)e.value=d.r3; }
+  if(d.parentComment){ const e=document.getElementById('parent-comment');if(e)e.value=d.parentComment; }
+  if(d.skillDesc){ const e=document.getElementById('skill-desc');if(e)e.value=d.skillDesc; }
+  if(d.testSubj){ const e=document.getElementById('test-subj');if(e)e.value=d.testSubj; }
+  if(d.testGot){ const e=document.getElementById('test-got');if(e)e.value=d.testGot; }
+  if(d.testTot){ const e=document.getElementById('test-tot');if(e)e.value=d.testTot; }
+  if(d.oddaSubj){ const e=document.getElementById('odda-subj');if(e)e.value=d.oddaSubj; }
+  if(d.screenWhat){ const e=document.getElementById('screen-what');if(e)e.value=d.screenWhat; }
+  // Restore HW checkboxes
+  if(d.hwDone && d.hwDone>0){
+    // Restore from full_data if available
+    try{
+      const fd=typeof d.full_data==='string'?JSON.parse(d.full_data):d;
+      SUBJECTS.forEach((_,i)=>{
+        const cb=document.getElementById('hw-'+i);
+        if(cb && fd['hw_'+i]) cb.checked=true;
+      });
+    }catch(e){}
+  }
+  // Restore gym dropdown
+  if(d.gymActivity){ const e=document.getElementById('gym-today');if(e)e.value=d.gymActivity; }
+  // Show draft saved info
+  const draftInfo=document.createElement('div');
+  draftInfo.style.cssText='background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:10px;padding:8px 14px;margin-bottom:10px;font-size:12px;font-weight:700;color:#92400E;display:flex;align-items:center;gap:8px';
+  draftInfo.innerHTML='⏳ Draft from '+fmtDate(d.date)+' loaded — you can continue editing and save again anytime!';
+  const mc=document.querySelector('.main-content');
+  if(mc){ const old=mc.querySelector('.draft-info-bar');if(old)old.remove(); draftInfo.className='draft-info-bar'; mc.prepend(draftInfo); }
+  updateHW(); calcDayPts();
 }
 
 // ════════════════════════════════════════════
