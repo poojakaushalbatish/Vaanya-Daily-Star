@@ -497,6 +497,54 @@ tr:hover td{background:#FAFBFF}
   padding:12px 14px;border:1px solid #93C5FD}
 .hd-parent-lbl{font-size:10px;font-weight:900;color:#1D4ED8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
 .hd-parent-val{font-size:13px;font-weight:700;color:#1E3A8A;line-height:1.6}
+
+/* ── PROGRESS TAB ── */
+@keyframes rankBlast{
+  0%{transform:scale(0) rotate(-20deg);opacity:0}
+  40%{transform:scale(1.3) rotate(5deg);opacity:1}
+  60%{transform:scale(.95) rotate(-2deg)}
+  80%{transform:scale(1.1) rotate(1deg)}
+  100%{transform:scale(1) rotate(0deg);opacity:1}
+}
+@keyframes rankPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.7)}
+  50%{box-shadow:0 0 60px 30px rgba(245,158,11,.3)}
+}
+@keyframes cupGlow{
+  0%,100%{filter:drop-shadow(0 0 8px rgba(245,158,11,.6))}
+  50%{filter:drop-shadow(0 0 20px rgba(245,158,11,1))}
+}
+@keyframes cupShake{
+  0%,100%{transform:rotate(0)}
+  20%{transform:rotate(-8deg) scale(1.1)}
+  40%{transform:rotate(8deg) scale(1.1)}
+  60%{transform:rotate(-5deg)}
+  80%{transform:rotate(5deg)}
+}
+.rank-overlay{
+  position:fixed;inset:0;z-index:99999;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+  pointer-events:none;opacity:0;transition:opacity .3s
+}
+.rank-overlay.show{opacity:1;pointer-events:auto}
+.rank-overlay-box{
+  text-align:center;animation:rankBlast .6s cubic-bezier(.34,1.56,.64,1) both
+}
+.cup-card{border-radius:20px;padding:16px 12px;text-align:center;
+  position:relative;overflow:hidden;transition:all .3s;cursor:default;border:3px solid transparent}
+.cup-card.achieved{animation:rankPulse 2s ease-in-out infinite}
+.cup-card.achieved .cup-icon{animation:cupGlow 2s ease-in-out infinite}
+.cup-card:not(.achieved){opacity:.45;filter:grayscale(.6)}
+.cup-card.next-target{opacity:.75;border-style:dashed!important}
+.cup-icon{font-size:44px;display:block;margin-bottom:8px;line-height:1}
+.cup-name{font-size:13px;font-weight:900;letter-spacing:.04em;margin-bottom:4px}
+.cup-pts{font-size:11px;font-weight:800;margin-bottom:6px}
+.cup-desc{font-size:10px;line-height:1.5;font-weight:700}
+.cup-achieved-tag{display:inline-block;font-size:10px;font-weight:900;
+  padding:3px 10px;border-radius:10px;margin-top:6px;
+  background:rgba(255,255,255,.25);letter-spacing:.04em}
+.prog-cumulative-wrap{background:#fff;border-radius:18px;border:2px solid #A7F3D0;padding:16px;margin-bottom:14px}
 </style>
 </head>
 <body>
@@ -1283,14 +1331,49 @@ tr:hover td{background:#FAFBFF}
 <!-- ═══════════════════════════════════════
      TAB: PROGRESS / GRAPHS
 ═══════════════════════════════════════ -->
+<!-- RANK OVERLAY (full screen blast) -->
+<div class="rank-overlay" id="rank-overlay" onclick="closeRankOverlay()">
+  <div class="rank-overlay-box" id="rank-overlay-box"></div>
+</div>
+
 <div class="tab" id="tab-graphs">
-<div style="font-size:20px;font-weight:900;margin-bottom:5px">📈 My Progress</div>
-<div style="font-size:12px;color:var(--muted);margin-bottom:12px">Save at least 3 days to see your charts grow!</div>
-<div id="perf-card" class="sec" style="margin-bottom:12px"></div>
-<div class="chart-wrap"><div class="ct">⭐ Daily points earned</div><canvas id="ch-pts" height="85"></canvas></div>
-<div class="chart-wrap"><div class="ct">📚 Homework completion %</div><canvas id="ch-hw" height="85"></canvas></div>
-<div class="chart-wrap"><div class="ct">💻 Odda class attendance</div><canvas id="ch-odda" height="85"></canvas></div>
-<div class="chart-wrap"><div class="ct">🧠 Brain Lab + 🎨 Creative + 🕉️ Shloka done?</div><canvas id="ch-mandatory" height="85"></canvas></div>
+<!-- HEADER -->
+<div style="background:linear-gradient(135deg,#065F46,#0F766E,#1D4ED8);border-radius:18px;
+  padding:18px 20px;margin-bottom:14px;color:#fff;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+  <div style="font-size:40px">📈</div>
+  <div style="flex:1">
+    <div style="font-size:20px;font-weight:900">Vaanya's Progress Dashboard</div>
+    <div style="font-size:12px;color:#A7F3D0;margin-top:2px">Last 30 approved days · Keep the streak alive! 🔥</div>
+  </div>
+  <div style="font-size:11px;color:#A7F3D0;font-weight:700;background:rgba(255,255,255,.12);padding:6px 12px;border-radius:10px">Tap rank to replay 🎬</div>
+</div>
+
+<!-- RANK CARD (stays here after overlay closes) -->
+<div id="perf-card" style="margin-bottom:14px"></div>
+
+<!-- VICTORY CUPS -->
+<div style="font-size:14px;font-weight:900;color:#065F46;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+  🏆 Victory Cups — Today's Achievement
+  <span style="font-size:10px;font-weight:700;color:#0F766E;background:#ECFDF5;padding:3px 10px;border-radius:10px;border:1px solid #6EE7B7">Based on today's approved pts out of 515</span>
+</div>
+<div id="cups-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px"></div>
+
+<!-- CUMULATIVE PERFORMANCE CHART -->
+<div class="prog-cumulative-wrap">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#10B981,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:16px">📊</div>
+    <div>
+      <div style="font-size:14px;font-weight:900;color:#065F46">Overall Performance</div>
+      <div style="font-size:10px;color:#0F766E;font-weight:700">Points earned per day · Approved reports only</div>
+    </div>
+    <div id="prog-avg-badge" style="margin-left:auto;background:linear-gradient(135deg,#10B981,#3B82F6);color:#fff;border-radius:12px;padding:6px 14px;font-size:12px;font-weight:900"></div>
+  </div>
+  <canvas id="ch-cumulative" height="130"></canvas>
+</div>
+
+<!-- STREAK STAT -->
+<div id="prog-strip" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"></div>
+
 </div>
 
 </div><!-- .page -->
@@ -1560,14 +1643,32 @@ function totalEarned(){
 }
 function availablePts(){ return Math.max(0,totalEarned()-totalSpent); }
 function getStreak(){
-  if(!savedDays.length)return 0;
-  const sorted=[...savedDays].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  let streak=0,prev=null;
-  for(const d of sorted){
-    const cur=new Date(d.date+'T12:00:00');
-    if(!prev){streak=1;prev=cur;continue;}
-    const diff=Math.round((prev-cur)/(86400000));
-    if(diff===1){streak++;prev=cur;}else break;
+  // Only count APPROVED days in consecutive streak
+  const approved = savedDays
+    .filter(d => d.approved === true)
+    .map(d => d.date)
+    .sort()
+    .reverse(); // newest first
+  if(!approved.length) return 0;
+
+  // Streak must include today or yesterday — otherwise it is broken
+  const today = new Date();
+  today.setHours(12,0,0,0);
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate()-1);
+  const todayStr = today.toISOString().split('T')[0];
+  const yestStr  = yesterday.toISOString().split('T')[0];
+
+  // Most recent approved day must be today or yesterday
+  if(approved[0] !== todayStr && approved[0] !== yestStr) return 0;
+
+  // Count consecutive days backwards from most recent
+  let streak = 1;
+  for(let i = 1; i < approved.length; i++){
+    const prev = new Date(approved[i-1]+'T12:00:00');
+    const curr = new Date(approved[i]+'T12:00:00');
+    const diff = Math.round((prev - curr) / 86400000);
+    if(diff === 1){ streak++; }
+    else break;
   }
   return streak;
 }
@@ -2158,7 +2259,7 @@ async function saveDraftAndGoBrainLab(){
   await saveToSupabase(data);
   updateTopBar();
   toast('💾 Draft saved! Appears in History as Pending. Going to Brain Lab...');
-  setTimeout(()=>switchTab('brain'),900);
+  setTimeout(()=>showTab('brain', document.querySelector('.nb.t3')),900);
 }
 
 // Also allow saving draft without navigating away
@@ -2631,53 +2732,280 @@ function viewHistDay(i, e){
 // ════════════════════════════════════════════
 // GRAPHS / PROGRESS TAB — fix #1 + #2
 // ════════════════════════════════════════════
-function renderGraphs(){
-  const days=[...savedDays].reverse().slice(-30);
-  if(days.length<1){
-    const pc=document.getElementById('perf-card');
-    if(pc)pc.innerHTML='<p style="color:var(--muted)">Save at least 3 days to see your progress charts!</p>';
-    return;
-  }
-  const labels=days.map(d=>new Date(d.date+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}));
-  mkChart('ch-pts','Points',labels,days.map(d=>d.pts),'#8B5CF6','#EDE9FE80','bar');
-  mkChart('ch-hw','HW %',labels,days.map(d=>Math.round((d.hwDone||0)/7*100)),'#10B981','#ECFDF580','line');
-  mkChart('ch-odda','Odda',labels,days.map(d=>d.odda?1:0),'#06B6D4','#ECFEFF80','bar');
-  mkChart('ch-mandatory','Mandatory',labels,days.map(d=>(d.shlokaD?1:0)+(d.creativeD?1:0)+(d.brainD?1:0)),'#EC4899','#FDF2F880','bar');
-  renderPerfCard(days);
+// ════════════════════════════════════════════
+// VICTORY CUPS — thresholds out of 515 pts
+// ════════════════════════════════════════════
+const CUPS = [
+  {
+    id:'bronze', name:'Bronze', icon:'🥉', threshold:200,
+    bg:'linear-gradient(135deg,#92400E,#B45309,#D97706)',
+    border:'#D97706', glow:'rgba(217,119,6,.6)',
+    desc:'Good start! Earn 200+ pts in a day.',
+    expert:'You showed up and did your part — that is the first step to greatness!'
+  },
+  {
+    id:'silver', name:'Silver', icon:'🥈', threshold:320,
+    bg:'linear-gradient(135deg,#374151,#6B7280,#9CA3AF)',
+    border:'#9CA3AF', glow:'rgba(156,163,175,.7)',
+    desc:'Solid effort! Earn 320+ pts in a day.',
+    expert:'You completed most tasks with focus. Now push past your comfort zone!'
+  },
+  {
+    id:'gold', name:'Gold', icon:'🥇', threshold:420,
+    bg:'linear-gradient(135deg,#78350F,#B45309,#F59E0B)',
+    border:'#F59E0B', glow:'rgba(245,158,11,.8)',
+    desc:'Excellent! Earn 420+ pts in a day.',
+    expert:'Outstanding discipline today! This is what champions are made of!'
+  },
+  {
+    id:'diamond', name:'Diamond', icon:'💎', threshold:490,
+    bg:'linear-gradient(135deg,#1E3A8A,#2563EB,#06B6D4)',
+    border:'#06B6D4', glow:'rgba(6,182,212,.9)',
+    desc:'Elite! Earn 490+ pts — near perfect day!',
+    expert:'PHENOMENAL! You have achieved near-perfection. Vaanya, you are extraordinary!'
+  },
+];
+
+function getDayCup(pts){
+  let cup = null;
+  for(const cu of CUPS){ if(pts >= cu.threshold) cup = cu; }
+  return cup;
 }
 
-function mkChart(id,label,labels,data,color,bg,type){
-  const el=document.getElementById(id);if(!el)return;
-  if(charts[id])charts[id].destroy();
-  charts[id]=new Chart(el,{
-    type,
-    data:{labels,datasets:[{label,data,backgroundColor:bg,borderColor:color,borderWidth:2,
-      fill:type==='line',tension:.3,pointBackgroundColor:color,pointRadius:4,borderRadius:4}]},
-    options:{responsive:true,plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true,grid:{color:'#F0F4FF'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+function renderGraphs(){
+  const days=[...savedDays]
+    .filter(d=>d.approved===true)
+    .sort((a,b)=>new Date(a.date)-new Date(b.date))
+    .slice(-30);
+
+  const pc=document.getElementById('perf-card');
+  if(days.length<1){
+    if(pc)pc.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted)">
+      <div style="font-size:48px;margin-bottom:10px">🏆</div>
+      <div style="font-size:16px;font-weight:800">No approved days yet!</div>
+      <div style="font-size:12px;margin-top:6px">Get your first report approved by Parents Review to see your progress!</div>
+    </div>`;
+    document.getElementById('cups-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:12px;padding:20px">Earn your first approved report to unlock Victory Cups! 🏆</div>';
+    return;
+  }
+
+  renderPerfCard(days);
+  renderCups(days);
+  renderCumulativeChart(days);
+  renderStatStrip(days);
+}
+
+function renderCups(days){
+  const grid = document.getElementById('cups-grid');if(!grid)return;
+  // Latest approved day pts for today's cup
+  const latestDay = days[days.length-1];
+  const todayPts = latestDay ? (latestDay.pts||0) : 0;
+  const todayCup = getDayCup(todayPts);
+  const nextCup  = CUPS.find(cu=>cu.threshold > todayPts);
+
+  grid.innerHTML = CUPS.map(cu=>{
+    const achieved = todayPts >= cu.threshold;
+    const isToday  = todayCup && todayCup.id === cu.id;
+    const isNext   = nextCup && nextCup.id === cu.id;
+    const pctToward = Math.min(100, Math.round(todayPts / cu.threshold * 100));
+    const ptsNeeded = Math.max(0, cu.threshold - todayPts);
+    return `<div class="cup-card ${achieved?'achieved':''} ${isNext&&!achieved?'next-target':''}"
+      style="background:${cu.bg};border-color:${achieved?cu.border:'#D1D5DB'};
+             ${achieved?'box-shadow:0 8px 32px '+cu.glow:''};"
+      onclick="${isToday?'showRankOverlay()':''}">
+      <span class="cup-icon">${cu.icon}</span>
+      <div class="cup-name" style="color:#fff">${cu.name}</div>
+      <div class="cup-pts" style="color:rgba(255,255,255,.85)">${cu.threshold}+ pts</div>
+      <div class="cup-desc" style="color:rgba(255,255,255,.75)">${achieved?cu.expert:isNext?'Need '+ptsNeeded+' more pts! You can do it! 💪':cu.desc}</div>
+      ${achieved?`<div class="cup-achieved-tag" style="color:#fff">✅ ACHIEVED TODAY!</div>`:''}
+      ${!achieved?`<div style="background:rgba(0,0,0,.2);border-radius:6px;height:6px;overflow:hidden;margin-top:8px">
+        <div style="width:${pctToward}%;height:100%;background:rgba(255,255,255,.5);border-radius:6px;transition:width .8s"></div>
+      </div>
+      <div style="font-size:9px;color:rgba(255,255,255,.7);margin-top:3px;font-weight:700">${pctToward}% there</div>`:''}
+    </div>`;
+  }).join('');
+
+  // Trigger overlay on first load if cup achieved
+  if(todayCup) setTimeout(showRankOverlay, 400);
+}
+
+let rankOverlayShown = false;
+function showRankOverlay(){
+  const latestDay = [...savedDays].filter(d=>d.approved).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+  if(!latestDay) return;
+  const cup = getDayCup(latestDay.pts||0);
+  if(!cup) return;
+  const overlay = document.getElementById('rank-overlay');
+  const box = document.getElementById('rank-overlay-box');
+  if(!overlay||!box) return;
+
+  box.innerHTML=`
+    <div style="font-size:120px;line-height:1;margin-bottom:16px;animation:cupShake .6s ease .3s">${cup.icon}</div>
+    <div style="font-size:42px;font-weight:900;color:#FCD34D;text-shadow:0 0 40px rgba(252,211,77,.8);
+      letter-spacing:.08em;margin-bottom:10px">${cup.name.toUpperCase()} CUP!</div>
+    <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:8px">${latestDay.pts} pts earned!</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.85);max-width:320px;line-height:1.6;margin-bottom:20px">${cup.expert}</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.6)">Tap anywhere to continue</div>`;
+
+  // Blink 3 times then stay
+  let count=0;
+  const blink=()=>{
+    overlay.classList.add('show');
+    setTimeout(()=>{
+      count++;
+      if(count<3){ overlay.classList.remove('show'); setTimeout(blink,200); }
+    }, count===0?500:count===1?500:1200);
+  };
+  blink();
+}
+function closeRankOverlay(){
+  document.getElementById('rank-overlay').classList.remove('show');
+}
+
+function renderCumulativeChart(days){
+  const labels=days.map(d=>new Date(d.date+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}));
+  const pts=days.map(d=>d.pts||0);
+  const avg=pts.length?Math.round(pts.reduce((a,b)=>a+b,0)/pts.length):0;
+
+  const avgBadge=document.getElementById('prog-avg-badge');
+  if(avgBadge)avgBadge.textContent='Avg: '+avg+' pts/day';
+
+  // Colour each bar based on cup level
+  const barColors=pts.map(p=>{
+    if(p>=490)return'#06B6D4'; // diamond
+    if(p>=420)return'#F59E0B'; // gold
+    if(p>=320)return'#9CA3AF'; // silver
+    if(p>=200)return'#D97706'; // bronze
+    return'#EF4444';
   });
+
+  const el=document.getElementById('ch-cumulative');if(!el)return;
+  if(charts['cumulative'])charts['cumulative'].destroy();
+
+  // Add cup threshold lines
+  const plugins=[{
+    id:'cupLines',
+    afterDraw(chart){
+      const{ctx,chartArea,scales}=chart;
+      const thresholds=[
+        {val:200,col:'#D97706',label:'Bronze'},
+        {val:320,col:'#9CA3AF',label:'Silver'},
+        {val:420,col:'#F59E0B',label:'Gold'},
+        {val:490,col:'#06B6D4',label:'Diamond'},
+      ];
+      thresholds.forEach(t=>{
+        if(t.val>scales.y.max)return;
+        const y=scales.y.getPixelForValue(t.val);
+        ctx.save();
+        ctx.strokeStyle=t.col;
+        ctx.lineWidth=1.5;
+        ctx.setLineDash([6,4]);
+        ctx.beginPath();ctx.moveTo(chartArea.left,y);ctx.lineTo(chartArea.right,y);ctx.stroke();
+        ctx.fillStyle=t.col;ctx.font='bold 9px Nunito,sans-serif';ctx.textAlign='right';
+        ctx.fillText(t.label,chartArea.right-4,y-4);
+        ctx.restore();
+      });
+    }
+  }];
+
+  charts['cumulative']=new Chart(el,{
+    type:'bar',
+    data:{labels,datasets:[{
+      label:'Points',data:pts,
+      backgroundColor:barColors,
+      borderColor:barColors.map(c=>c+'CC'),
+      borderWidth:2,borderRadius:10,borderSkipped:false
+    },{
+      type:'line',label:'Trend',data:pts,
+      borderColor:'#10B981',borderWidth:2.5,
+      backgroundColor:'rgba(16,185,129,.08)',
+      fill:true,tension:.4,
+      pointBackgroundColor:'#10B981',pointRadius:4,pointHoverRadius:7,
+      pointBorderColor:'#fff',pointBorderWidth:2
+    }]},
+    options:{
+      responsive:true,
+      animation:{duration:1000,easing:'easeOutQuart'},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'rgba(6,95,70,.92)',
+          titleFont:{size:12,weight:'bold'},
+          bodyFont:{size:13,weight:'bold'},
+          padding:12,cornerRadius:12,
+          callbacks:{
+            label:ctx=>' '+ctx.parsed.y+' pts'+
+              (ctx.parsed.y>=490?' 💎'
+              :ctx.parsed.y>=420?' 🥇'
+              :ctx.parsed.y>=320?' 🥈'
+              :ctx.parsed.y>=200?' 🥉':'')
+          }
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,max:520,
+          grid:{color:'rgba(16,185,129,.08)'},
+          ticks:{font:{size:10},color:'#065F46',
+            callback:v=>v===0?'0':v+'pts'}},
+        x:{grid:{display:false},
+          ticks:{font:{size:10},color:'#065F46',maxRotation:0}}
+      }
+    },
+    plugins
+  });
+}
+
+function renderStatStrip(days){
+  const strip=document.getElementById('prog-strip');if(!strip)return;
+  const streak=getStreak();
+  const bestDay=days.reduce((best,d)=>(d.pts||0)>(best.pts||0)?d:best,days[0]);
+  const stats=[
+    {icon:'🔥',label:'Current Streak',val:streak+' days',col:'#EA580C',bg:'#FFF7ED',border:'#FDBA74'},
+    {icon:'🏆',label:'Best Day Ever',val:(bestDay?.pts||0)+' pts',col:'#F59E0B',bg:'#FFFBEB',border:'#FCD34D'},
+  ];
+  strip.innerHTML=stats.map(s=>`
+    <div style="background:${s.bg};border:2px solid ${s.border};border-radius:16px;padding:16px;text-align:center">
+      <div style="font-size:28px;margin-bottom:4px">${s.icon}</div>
+      <div style="font-size:24px;font-weight:900;color:${s.col};line-height:1">${s.val}</div>
+      <div style="font-size:10px;font-weight:800;color:${s.col};text-transform:uppercase;letter-spacing:.06em;margin-top:5px">${s.label}</div>
+    </div>`).join('');
 }
 
 function renderPerfCard(days){
   const el=document.getElementById('perf-card');if(!el)return;
   const recent=days.slice(-7);
-  const avgPts=Math.round(recent.reduce((a,d)=>a+d.pts,0)/recent.length);
-  const mandPct=Math.round(recent.reduce((a,d)=>a+(d.shlokaD&&d.creativeD&&d.brainD?1:0),0)/recent.length*100);
-  const hwPct=Math.round(recent.reduce((a,d)=>a+((d.hwDone||0)/7),0)/recent.length*100);
-  let stars,msg,col;
-  if(avgPts>=220){stars=5;msg='OUTSTANDING! Vaanya is a total champion! 🏆';col='#10B981';}
-  else if(avgPts>=170){stars=4;msg='Excellent! Keep this amazing effort up!';col='#06B6D4';}
-  else if(avgPts>=120){stars=3;msg='Good work! Push a little harder for the big rewards!';col='#3B82F6';}
-  else if(avgPts>=70){stars=2;msg='Getting there! More consistency will unlock big prizes!';col='#F59E0B';}
-  else{stars=1;msg="Let's try harder — the rewards are waiting!";col='#EF4444';}
-  el.innerHTML=`<div class="sh"><div class="si" style="background:var(--al);color:var(--a)">🏅</div>Vaanya's performance rating (last 7 days)</div>
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px">
-      <div style="font-size:36px">${'⭐'.repeat(stars)}${'☆'.repeat(5-stars)}</div>
-      <div>
-        <div style="font-size:15px;font-weight:900;color:${col};margin-bottom:3px">${msg}</div>
-        <div style="font-size:12px;color:var(--muted)">Avg pts: <b style="color:${col}">${avgPts}</b> · Mandatory tasks: <b style="color:${mandPct>=80?'#10B981':'#EF4444'}">${mandPct}%</b> · HW rate: <b style="color:var(--g)">${hwPct}%</b></div>
+  const avgPts=recent.length?Math.round(recent.reduce((a,d)=>a+d.pts,0)/recent.length):0;
+  const mandPct=recent.length?Math.round(recent.reduce((a,d)=>a+(d.shlokaD&&d.creativeD&&d.brainD?1:0),0)/recent.length*100):0;
+  const hwPct=recent.length?Math.round(recent.reduce((a,d)=>a+((d.hwDone||0)/7),0)/recent.length*100):0;
+  const streak=getStreak();
+  const cup=getDayCup(avgPts);
+
+  let rank,emoji,msg,col;
+  if(avgPts>=420){rank='S';emoji='👑';msg='LEGENDARY! Vaanya is absolutely unstoppable!';col='#047857';}
+  else if(avgPts>=300){rank='A';emoji='🌟';msg='Outstanding performance! You are a true star!';col='#1D4ED8';}
+  else if(avgPts>=180){rank='B';emoji='💪';msg='Great effort! One more push and you hit S-rank!';col='#D97706';}
+  else if(avgPts>=100){rank='C';emoji='🙂';msg='You are building momentum — keep going!';col='#EA580C';}
+  else{rank='D';emoji='😤';msg='Come on Vaanya — your best days are ahead of you!';col='#B91C1C';}
+
+  el.innerHTML=`
+  <div style="background:linear-gradient(135deg,#065F46,#0F766E,#1D4ED8);border-radius:18px;padding:18px 20px;color:#fff;cursor:pointer" onclick="showRankOverlay()">
+    <div style="font-size:10px;font-weight:800;color:#A7F3D0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">⭐ Last 7 days · Tap to replay cup reveal</div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="font-size:64px;line-height:1;filter:drop-shadow(0 0 16px rgba(252,211,77,.8))">${cup?cup.icon:'📊'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:17px;font-weight:900;margin-bottom:8px">${msg}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="background:rgba(255,255,255,.18);border-radius:10px;padding:4px 12px;font-size:12px;font-weight:800">⭐ Avg: ${avgPts} pts</span>
+          <span style="background:rgba(255,255,255,.18);border-radius:10px;padding:4px 12px;font-size:12px;font-weight:800">✅ Tasks: ${mandPct}%</span>
+          <span style="background:rgba(255,255,255,.18);border-radius:10px;padding:4px 12px;font-size:12px;font-weight:800">🔥 Streak: ${streak}</span>
+        </div>
       </div>
-    </div>`;
+      <div style="text-align:center;flex-shrink:0">
+        <div style="font-size:52px;font-weight:900;line-height:1;color:#FCD34D;text-shadow:0 0 20px rgba(252,211,77,.6)">${rank}</div>
+        <div style="font-size:10px;color:#A7F3D0;font-weight:800;text-transform:uppercase;letter-spacing:.06em">RANK</div>
+      </div>
+    </div>
+  </div>`;
 }
 
 // ════════════════════════════════════════════
