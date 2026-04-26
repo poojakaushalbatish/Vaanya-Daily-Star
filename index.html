@@ -555,27 +555,47 @@ tr:hover td{background:#FAFBFF}
   <div class="pin-box">
     <div style="font-size:48px;margin-bottom:6px">🔐</div>
     <div style="font-size:20px;font-weight:900;color:var(--ink);margin-bottom:4px">Parent Approval</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Mamma or Papa — enter your 4-digit PIN to review Vaanya's report and award points!</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Mamma or Papa — type your 4-digit PIN using your keyboard</div>
+
+    <!-- Dot indicators -->
     <div class="pin-dots" id="pin-dots">
-      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
     </div>
-    <div class="pin-err" id="pin-err"></div>
-    <div class="pin-pad">
-      <button class="pin-key" onclick="pinPress('1')">1</button>
-      <button class="pin-key" onclick="pinPress('2')">2</button>
-      <button class="pin-key" onclick="pinPress('3')">3</button>
-      <button class="pin-key" onclick="pinPress('4')">4</button>
-      <button class="pin-key" onclick="pinPress('5')">5</button>
-      <button class="pin-key" onclick="pinPress('6')">6</button>
-      <button class="pin-key" onclick="pinPress('7')">7</button>
-      <button class="pin-key" onclick="pinPress('8')">8</button>
-      <button class="pin-key" onclick="pinPress('9')">9</button>
-      <button class="pin-key clr" onclick="pinClear()">⌫</button>
-      <button class="pin-key" onclick="pinPress('0')">0</button>
-      <button class="pin-key ok" onclick="pinSubmit()">✓</button>
+
+    <!-- Hidden password input — keyboard entry, visually hidden -->
+    <input
+      type="password"
+      id="pin-keyboard-input"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      maxlength="4"
+      autocomplete="off"
+      style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none"
+      oninput="onPinKeyboardInput(this.value)"
+      onkeydown="if(event.key==='Enter')pinSubmit()">
+
+    <div class="pin-err" id="pin-err" style="min-height:18px;margin-bottom:8px"></div>
+
+    <!-- Tap-to-focus hint -->
+    <div style="background:rgba(16,185,129,.08);border:1.5px solid rgba(16,185,129,.2);
+      border-radius:12px;padding:12px 16px;margin-bottom:14px;text-align:center;cursor:pointer"
+      onclick="focusPinInput()" id="pin-tap-area">
+      <div style="font-size:13px;font-weight:800;color:#065F46">⌨️ Tap here then type your PIN</div>
+      <div style="font-size:11px;color:#0F766E;margin-top:4px;font-weight:600">
+        Your keystrokes are hidden — nobody can see what you type
+      </div>
     </div>
-    <button class="btn btn-o" style="width:100%" onclick="closePinModal()">Cancel</button>
+
+    <!-- Submit + Cancel -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="btn btn-o" onclick="closePinModal()">Cancel</button>
+      <button class="btn btn-g" onclick="pinSubmit()" style="background:linear-gradient(135deg,#10B981,#047857);color:#fff;border:none">
+        ✓ Confirm
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1219,13 +1239,13 @@ tr:hover td{background:#FAFBFF}
 
     <!-- Stacked image viewer — height matches content on right naturally -->
     <div id="gimg-wrap" style="position:relative;overflow:hidden;
-      background:linear-gradient(135deg,#ECFDF5,#D1FAE5)">
+      background:linear-gradient(135deg,#ECFDF5,#D1FAE5);min-height:180px">
 
       <img id="gimg-1"
         src="https://poojakaushalbatish.github.io/Vaanya-Daily-Star/Krishna_1.PNG"
         style="display:block;width:100%;height:auto;object-fit:cover;
           position:relative;z-index:2;transition:opacity 1.5s ease;opacity:1"
-        onerror="this.style.display='none'">
+        onerror="this.style.opacity=0;document.getElementById('gimg-aurora-fallback').style.display='flex'">
       <img id="gimg-2"
         src="https://poojakaushalbatish.github.io/Vaanya-Daily-Star/Krishna_2.PNG"
         style="display:block;width:100%;height:auto;object-fit:cover;
@@ -1241,6 +1261,17 @@ tr:hover td{background:#FAFBFF}
         style="display:block;width:100%;height:auto;object-fit:cover;
           position:absolute;inset:0;z-index:1;transition:opacity 1.5s ease;opacity:0"
         onerror="this.style.display='none'">
+
+      <!-- Aurora fallback when images cant load (local file:// only) -->
+      <div id="gimg-aurora-fallback" style="display:none;position:absolute;inset:0;
+        background:linear-gradient(135deg,#ECFDF5,#EFF6FF,#F0FDF4);
+        align-items:center;justify-content:center;flex-direction:column;gap:10px;
+        min-height:180px;z-index:5">
+        <div style="font-size:48px;animation:qFloat 3s ease-in-out infinite">🕉️</div>
+        <div style="font-size:12px;font-weight:800;color:#065F46;text-align:center;padding:0 16px">
+          Images load on<br>GitHub Pages 🌐
+        </div>
+      </div>
 
     </div>
 
@@ -1574,10 +1605,9 @@ tr:hover td{background:#FAFBFF}
 <!-- Approve / Reject -->
 <div class="sec" style="border-color:var(--gm)">
   <div class="sh"><div class="si" style="background:var(--gl);color:var(--gd)">✅</div>Approve or Reject Today's Report</div>
-  <div id="parent-pending-section" style="display:none">
-    <button class="approval-btn" onclick="openPinModalParent()">🔐 Enter Parent PIN</button>
-  </div>
-  <div id="parent-action-section" style="margin-top:4px">
+  <!-- parent-pending-section hidden permanently — tab is PIN-gated at entry -->
+  <div id="parent-pending-section" style="display:none!important"></div>
+  <div id="parent-action-section">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <button onclick="approveReport()"
         style="background:linear-gradient(135deg,#10B981,#047857);color:#fff;border:none;
@@ -1607,6 +1637,193 @@ tr:hover td{background:#FAFBFF}
     <div id="ai-comment-box" style="display:none;margin-top:12px"></div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════
+     MANAGE APPROVED REPORTS — Reset Section
+══════════════════════════════════════════════ -->
+<div class="sec" style="border-color:#FCA5A5;background:linear-gradient(135deg,#FEF2F2,#fff);margin-top:8px">
+  <div class="sh">
+    <div class="si" style="background:#FEF2F2;color:#B91C1C">⚙️</div>
+    Manage Approved Reports
+    <span style="margin-left:auto;font-size:10px;font-weight:800;color:#B91C1C;
+      background:#FEF2F2;padding:3px 10px;border-radius:10px;border:1px solid #FCA5A5">
+      Requires PIN verification
+    </span>
+  </div>
+
+  <!-- PIN lock wall for this section -->
+  <div id="manage-locked-wall" style="text-align:center;padding:20px 14px;
+    background:#FFF1F2;border:1.5px dashed #FCA5A5;border-radius:14px;margin-bottom:0">
+    <div style="font-size:36px;margin-bottom:10px">🔒</div>
+    <div style="font-size:14px;font-weight:900;color:#B91C1C;margin-bottom:6px">PIN Required to Manage Reports</div>
+    <div style="font-size:12px;color:#EF4444;font-weight:700;margin-bottom:14px;line-height:1.6">
+      Deleting or editing approved reports affects Vaanya's points bank.<br>Enter your PIN to proceed.
+    </div>
+    <button onclick="openManagePinModal()"
+      style="background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;border:none;
+        border-radius:12px;padding:12px 28px;font-size:14px;font-weight:900;cursor:pointer;
+        font-family:'Nunito',sans-serif;box-shadow:0 4px 14px rgba(239,68,68,.35)">
+      🔐 Enter PIN to Continue
+    </button>
+  </div>
+
+  <!-- Manage content — shown after PIN -->
+  <div id="manage-content" style="display:none">
+
+  <!-- Warning banner -->
+  <div style="background:#FFF7ED;border:1.5px solid #FCD34D;border-radius:12px;
+    padding:11px 14px;display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;margin-top:14px">
+    <div style="font-size:18px;flex-shrink:0">⚠️</div>
+    <div style="font-size:12px;color:#92400E;line-height:1.65;font-weight:700">
+      <b>These actions affect Vaanya's points bank.</b><br>
+      Deleting a report permanently removes those points and clears the entry from history.
+      Reopening moves the report to "Under Review" and pauses the points until re-approved.
+    </div>
+  </div>
+
+  <!-- Date selector — only approved dates -->
+  <div style="margin-bottom:14px">
+    <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;
+      color:#B91C1C;margin-bottom:7px">Select an approved date to manage</div>
+    <select id="reset-date-sel" onchange="loadResetReport(this.value)"
+      style="width:100%;padding:11px 14px;font-size:13px;font-weight:700;
+        border:1.5px solid #FCA5A5;border-radius:12px;background:#fff;color:#374151;
+        font-family:'Nunito',sans-serif;cursor:pointer">
+      <option value="">— Choose a date —</option>
+    </select>
+  </div>
+
+  <!-- No report selected placeholder -->
+  <div id="reset-no-report" style="text-align:center;padding:24px 16px;
+    color:#9CA3AF;font-size:13px;font-weight:700;
+    background:#F9FAFB;border-radius:12px;border:1.5px dashed #E5E7EB">
+    📅 Select a date above to view the approved report
+  </div>
+
+  <!-- Report card view -->
+  <div id="reset-report-view" style="display:none">
+
+    <!-- Summary card -->
+    <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:16px;
+      padding:16px 18px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-size:15px;font-weight:900;color:#1F2937" id="rrv-date">—</div>
+          <div id="rrv-status-badge" style="margin-top:5px">
+            <span style="background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7;
+              border-radius:10px;padding:3px 10px;font-size:11px;font-weight:800">✅ Approved</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:38px;font-weight:900;color:#10B981;line-height:1" id="rrv-pts">0</div>
+          <div style="font-size:10px;color:#6B7280;font-weight:700;margin-top:2px">pts earned</div>
+        </div>
+      </div>
+
+      <!-- Task summary row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px" id="rrv-tasks"></div>
+
+      <!-- Parent comment -->
+      <div id="rrv-comment-wrap" style="display:none">
+        <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;
+          color:#6B7280;margin-bottom:5px">Mamma & Papa's comment</div>
+        <div id="rrv-comment" style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;
+          padding:10px 14px;font-size:12px;color:#374151;font-style:italic;line-height:1.65"></div>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+
+      <!-- Delete -->
+      <button onclick="showResetConfirm('delete')"
+        style="background:#FEF2F2;border:2px solid #FCA5A5;border-radius:14px;
+          padding:14px 12px;cursor:pointer;font-family:'Nunito',sans-serif;
+          text-align:center;transition:all .2s"
+        onmouseover="this.style.background='#FEE2E2'" onmouseout="this.style.background='#FEF2F2'">
+        <div style="font-size:22px;margin-bottom:5px">🗑️</div>
+        <div style="font-size:13px;font-weight:900;color:#B91C1C">Delete Permanently</div>
+        <div style="font-size:10px;color:#EF4444;margin-top:4px;line-height:1.5">
+          Removes from history · Points deducted · Day unlocks for fresh entry
+        </div>
+      </button>
+
+      <!-- Reopen -->
+      <button onclick="showResetConfirm('edit')"
+        style="background:#FFF7ED;border:2px solid #FCD34D;border-radius:14px;
+          padding:14px 12px;cursor:pointer;font-family:'Nunito',sans-serif;
+          text-align:center;transition:all .2s"
+        onmouseover="this.style.background='#FEF3C7'" onmouseout="this.style.background='#FFF7ED'">
+        <div style="font-size:22px;margin-bottom:5px">✏️</div>
+        <div style="font-size:13px;font-weight:900;color:#92400E">Reopen for Editing</div>
+        <div style="font-size:10px;color:#D97706;margin-top:4px;line-height:1.5">
+          Moves to Under Review · Vaanya can edit · Points paused until re-approved
+        </div>
+      </button>
+    </div>
+
+    <!-- Confirm: Delete -->
+    <div id="reset-confirm-delete" style="display:none;background:#FEF2F2;border:2px solid #FCA5A5;
+      border-radius:14px;padding:14px 16px;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:800;color:#B91C1C;margin-bottom:4px">⚠️ Confirm permanent deletion</div>
+      <div style="font-size:12px;color:#EF4444;line-height:1.65;margin-bottom:12px">
+        This will permanently remove this report and deduct
+        <b id="confirm-delete-pts">0</b> pts from Vaanya's bank.
+        The date will be unlocked so she can fill a fresh report. <b>This cannot be undone.</b>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="doResetDelete()"
+          style="flex:1;background:#EF4444;border:none;border-radius:10px;color:#fff;
+            padding:10px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif">
+          Yes, delete permanently
+        </button>
+        <button onclick="closeResetConfirm()"
+          style="flex:1;background:#fff;border:1.5px solid #FCA5A5;border-radius:10px;color:#B91C1C;
+            padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- Confirm: Reopen -->
+    <div id="reset-confirm-edit" style="display:none;background:#FFF7ED;border:2px solid #FCD34D;
+      border-radius:14px;padding:14px 16px;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:800;color:#92400E;margin-bottom:4px">✏️ Confirm reopen for editing</div>
+      <div style="font-size:12px;color:#D97706;line-height:1.65;margin-bottom:12px">
+        This will move the report to "Under Review". Vaanya will be able to edit her entry.
+        The <b id="confirm-edit-pts">0</b> pts will be paused until you re-approve the updated report.
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="doResetEdit()"
+          style="flex:1;background:#D97706;border:none;border-radius:10px;color:#fff;
+            padding:10px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif">
+          Yes, reopen for editing
+        </button>
+        <button onclick="closeResetConfirm()"
+          style="flex:1;background:#fff;border:1.5px solid #FCD34D;border-radius:10px;color:#92400E;
+            padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- Result messages -->
+    <div id="reset-msg-deleted" style="display:none;background:#ECFDF5;border:1.5px solid #6EE7B7;
+      border-radius:12px;padding:13px 16px;font-size:13px;font-weight:800;color:#065F46;
+      display:none;align-items:center;gap:10px">
+      <span style="font-size:20px">✅</span>
+      <span id="reset-msg-deleted-txt"></span>
+    </div>
+    <div id="reset-msg-edited" style="display:none;background:#FFFBEB;border:1.5px solid #FCD34D;
+      border-radius:12px;padding:13px 16px;font-size:13px;font-weight:800;color:#92400E;
+      display:none;align-items:center;gap:10px">
+      <span style="font-size:20px">✏️</span>
+      <span id="reset-msg-edited-txt"></span>
+    </div>
+  </div>
+  </div><!-- end manage-content -->
+</div><!-- end manage sec -->
+
 </div><!-- end parent-content -->
 </div><!-- end tab-parent -->
 
@@ -1876,7 +2093,10 @@ async function loadFromSupabase() {
     showSyncStatus('ok');
     updateTopBar();
     // Force recalc after brief delay to ensure all data parsed
-    setTimeout(updateTopBar, 500);
+    setTimeout(()=>{
+      updateTopBar();
+      populateResetDatePicker(); // populate after data is loaded
+    }, 500);
     return true;
   } catch(err) {
     showSyncStatus('error');
@@ -2049,6 +2269,11 @@ function showTab(id,btn){
   // Re-lock parent when leaving
   if(id!=='parent' && parentUnlocked){
     parentUnlocked=false;
+    // Also re-lock the manage section
+    const mWall    = document.getElementById('manage-locked-wall');
+    const mContent = document.getElementById('manage-content');
+    if(mWall)    mWall.style.display    = 'block';
+    if(mContent) mContent.style.display = 'none';
   }
   // Geeta image slider — start/stop auto-play
   if(id==='geeta'){
@@ -2609,6 +2834,9 @@ function collectFormData(date, pts){
 async function saveDraftAndGoBrainLab(){
   const date=document.getElementById('rpt-date')?.value;
   if(!date){toast('Please set today\'s date first!');return;}
+  // Populate reset date picker with approved days
+  populateResetDatePicker();
+
   // Restore parent dropdown values if previously saved
   const date0 = document.getElementById('rpt-date')?.value;
   if(date0){
@@ -2674,13 +2902,31 @@ function updateTopBar(){
 function getPin(){return localStorage.getItem('vaanya_admin_pin')||'1234';} // PIN stays local for security
 
 function openPinModal(){
-  pinBuf='';updatePinDots();
+  pinBuf=''; updatePinDots();
   document.getElementById('pin-err').textContent='';
   document.getElementById('pin-overlay').classList.add('show');
+  setTimeout(focusPinInput, 200);
+}
+
+function focusPinInput(){
+  const inp = document.getElementById('pin-keyboard-input');
+  if(inp){ inp.value=''; inp.focus(); }
+}
+
+function onPinKeyboardInput(val){
+  const digits = val.replace(/[^0-9]/g,'').substring(0,4);
+  const inp = document.getElementById('pin-keyboard-input');
+  if(inp) inp.value = digits;
+  pinBuf = digits;
+  updatePinDots();
+  document.getElementById('pin-err').textContent='';
+  if(pinBuf.length===4) setTimeout(pinSubmit, 300);
 }
 function closePinModal(){
-  pinBuf='';updatePinDots();
+  pinBuf=''; updatePinDots();
   document.getElementById('pin-overlay').classList.remove('show');
+  const inp = document.getElementById('pin-keyboard-input');
+  if(inp){ inp.value=''; inp.blur(); }
 }
 function pinPress(d){
   if(pinBuf.length>=4)return;
@@ -2713,7 +2959,7 @@ function unlockParentActions(){
   // Show the Approve/Reject buttons, hide the PIN button
   const pending=document.getElementById('parent-pending-section');
   const actions=document.getElementById('parent-action-section');
-  if(pending)pending.style.display='none';
+  if(pending)pending.style.display='none'; /* always hidden */
   if(actions)actions.style.display='block';
   toast('PIN accepted! Now choose Approve or Reject.');
 }
@@ -2759,6 +3005,7 @@ async function approveReport(){
 
   updateTopBar();
   lockForm(date, pts);
+  populateResetDatePicker();
   showPop('✅','Report Approved! 🎉','Vaanya your report has been approved! You earned '+pts+' points today! ⭐ Keep it up!');
   toast('Report approved! +'+pts+' points saved! Report is now locked.');
 
@@ -3581,8 +3828,8 @@ function clearDay(){
   document.querySelectorAll('#odda-time .pill, #gym-time .pill').forEach(p=>{p.classList.remove('pg','pr','pa','pb','pt');});
   const tcBox=document.getElementById('test-chapters-box');if(tcBox)tcBox.style.display='none';
   const bkBox=document.getElementById('book-knowledge-box');if(bkBox)bkBox.style.display='none';
-  const prPend=document.getElementById('parent-pending-section');if(prPend)prPend.style.display='block';
-  const prAct=document.getElementById('parent-action-section');if(prAct)prAct.style.display='none';
+  const prPend=document.getElementById('parent-pending-section');if(prPend)prPend.style.display='none'; /* always hidden */
+  const prAct=document.getElementById('parent-action-section');if(prAct)prAct.style.display='block';
   const prApp=document.getElementById('approved-section');if(prApp)prApp.style.display='none';
   const freeMsg=document.getElementById('free-act-msg');if(freeMsg)freeMsg.innerHTML='';
   const prRatRes=document.getElementById('parent-rating-result');if(prRatRes)prRatRes.innerHTML='';
@@ -4083,7 +4330,6 @@ let geetaAutoInterval = null;
 let geetaAutoOn = true;
 
 function geetaImgGo(n){
-  // Move img-1 back to relative flow, others to absolute
   for(let i=1;i<=GEETA_IMG_TOTAL;i++){
     const img = document.getElementById('gimg-'+i);
     const dot = document.getElementById('gdot-'+i);
@@ -4102,6 +4348,12 @@ function geetaImgGo(n){
   const cur = document.getElementById('gimg-'+geetaImgCurrent);
   const curDot = document.getElementById('gdot-'+geetaImgCurrent);
   if(cur){
+    // If image failed to load (SSL/local), skip to next
+    if(cur.naturalWidth===0 && cur.complete){
+      // Image broken — try next one
+      setTimeout(()=>geetaImgGo(geetaImgCurrent+1), 100);
+      return;
+    }
     cur.style.opacity='1';
     cur.style.position='relative';
     cur.style.zIndex='2';
@@ -4157,6 +4409,211 @@ async function saveCreativeDraft(){
   toast('💾 Creative work saved!');
 }
 
+
+// ════════════════════════════════════════════
+// PARENT RESET SECTION
+// ════════════════════════════════════════════
+let resetCurrentDate = null;
+
+function openManagePinModal(){
+  // Use main PIN modal but with manage-specific callback
+  pinBuf=''; updatePinDots();
+  document.getElementById('pin-err').textContent='';
+  window._pinCallback = ()=>{
+    // Unlock the manage section
+    const wall    = document.getElementById('manage-locked-wall');
+    const content = document.getElementById('manage-content');
+    if(wall)    wall.style.display    = 'none';
+    if(content) content.style.display = 'block';
+    populateResetDatePicker();
+    toast('Manage section unlocked 🔓');
+  };
+  document.getElementById('pin-overlay').classList.add('show');
+  setTimeout(focusPinInput, 200);
+}
+
+function populateResetDatePicker(){
+  const sel = document.getElementById('reset-date-sel');
+  if(!sel) return;
+  // Clear and repopulate with approved days only
+  sel.innerHTML = '<option value="">— Choose a date —</option>';
+  const approved = [...savedDays]
+    .filter(d => d.approved === true)
+    .sort((a,b) => new Date(b.date) - new Date(a.date));
+  approved.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.date;
+    opt.textContent = fmtDate(d.date) + '  (' + (d.pts||0) + ' pts)';
+    sel.appendChild(opt);
+  });
+}
+
+function loadResetReport(date){
+  resetCurrentDate = date;
+  closeResetConfirm();
+  // Hide result messages
+  const dm = document.getElementById('reset-msg-deleted');
+  const em = document.getElementById('reset-msg-edited');
+  if(dm){ dm.style.display='none'; }
+  if(em){ em.style.display='none'; }
+
+  const noRpt = document.getElementById('reset-no-report');
+  const rptView = document.getElementById('reset-report-view');
+  if(!date){
+    if(noRpt) noRpt.style.display='block';
+    if(rptView) rptView.style.display='none';
+    return;
+  }
+
+  const d = savedDays.find(x => x.date === date);
+  if(!d){
+    if(noRpt) noRpt.style.display='block';
+    if(rptView) rptView.style.display='none';
+    return;
+  }
+
+  if(noRpt) noRpt.style.display='none';
+  if(rptView) rptView.style.display='block';
+
+  // Fill date + pts
+  const dateEl = document.getElementById('rrv-date');
+  if(dateEl) dateEl.textContent = fmtDate(d.date);
+  const ptsEl = document.getElementById('rrv-pts');
+  if(ptsEl) ptsEl.textContent = d.pts || 0;
+
+  // Status badge
+  const badge = document.getElementById('rrv-status-badge');
+  if(badge){
+    if(d.approved){
+      badge.innerHTML = '<span style="background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7;border-radius:10px;padding:3px 10px;font-size:11px;font-weight:800">✅ Approved</span>';
+    } else {
+      badge.innerHTML = '<span style="background:#FFFBEB;color:#92400E;border:1px solid #FCD34D;border-radius:10px;padding:3px 10px;font-size:11px;font-weight:800">⏳ Under Review</span>';
+    }
+  }
+
+  // Tasks
+  const tasks = document.getElementById('rrv-tasks');
+  if(tasks){
+    const items = [
+      {icon:'📚', label:'Homework', done: (d.hwDone||0) >= 1, sub: (d.hwDone||0)+'/7'},
+      {icon:'🧠', label:'Brain Lab', done: !!d.brainD, sub: !!d.brainD?'done':'missed'},
+      {icon:'🕉️', label:'Shloka',    done: !!d.shlokaD, sub: !!d.shlokaD?'done':'missed'},
+      {icon:'🎨', label:'Creative',  done: !!d.creativeD, sub: !!d.creativeD?'done':'missed'},
+    ];
+    tasks.innerHTML = items.map(t=>`
+      <div style="background:${t.done?'#ECFDF5':'#F9FAFB'};
+        border:1px solid ${t.done?'#6EE7B7':'#E5E7EB'};
+        border-radius:12px;padding:10px 8px;text-align:center">
+        <div style="font-size:18px;margin-bottom:4px">${t.icon}</div>
+        <div style="font-size:10px;font-weight:800;color:${t.done?'#065F46':'#6B7280'}">${t.label}</div>
+        <div style="font-size:9px;color:${t.done?'#10B981':'#9CA3AF'};margin-top:2px">${t.sub}</div>
+      </div>`).join('');
+  }
+
+  // Comment
+  const cWrap = document.getElementById('rrv-comment-wrap');
+  const cEl   = document.getElementById('rrv-comment');
+  if(d.parentComment && d.parentComment.trim().length > 0){
+    if(cWrap) cWrap.style.display = 'block';
+    if(cEl)   cEl.textContent = '"' + d.parentComment + '"';
+  } else {
+    if(cWrap) cWrap.style.display = 'none';
+  }
+
+  // Pre-fill confirm pts
+  const dp = document.getElementById('confirm-delete-pts');
+  if(dp) dp.textContent = (d.pts||0) + ' pts';
+  const ep = document.getElementById('confirm-edit-pts');
+  if(ep) ep.textContent = (d.pts||0);
+}
+
+function showResetConfirm(type){
+  const del = document.getElementById('reset-confirm-delete');
+  const edt = document.getElementById('reset-confirm-edit');
+  if(del) del.style.display = type==='delete' ? 'block' : 'none';
+  if(edt) edt.style.display = type==='edit'   ? 'block' : 'none';
+}
+
+function closeResetConfirm(){
+  const del = document.getElementById('reset-confirm-delete');
+  const edt = document.getElementById('reset-confirm-edit');
+  if(del) del.style.display='none';
+  if(edt) edt.style.display='none';
+}
+
+async function doResetDelete(){
+  if(!resetCurrentDate) return;
+  const d = savedDays.find(x => x.date === resetCurrentDate);
+  const pts = d ? (d.pts||0) : 0;
+  const dateLabel = d ? fmtDate(d.date) : resetCurrentDate;
+
+  // 1. Delete from Supabase
+  try{
+    await _supabase.from('daily_reports').delete().eq('date', resetCurrentDate);
+  }catch(e){ console.error('Delete error:', e); }
+
+  // 2. Remove from savedDays
+  savedDays = savedDays.filter(x => x.date !== resetCurrentDate);
+  updateTopBar();
+
+  // 3. Repopulate picker
+  populateResetDatePicker();
+  document.getElementById('reset-date-sel').value = '';
+
+  // 4. Hide view, show success
+  closeResetConfirm();
+  document.getElementById('reset-report-view').style.display = 'none';
+  document.getElementById('reset-no-report').style.display = 'block';
+  document.getElementById('reset-no-report').innerHTML = '✅ Entry for ' + dateLabel + ' deleted. ' + pts + ' pts removed from bank. Day is now unlocked for a fresh report.';
+  document.getElementById('reset-no-report').style.color = '#065F46';
+  document.getElementById('reset-no-report').style.background = '#ECFDF5';
+  document.getElementById('reset-no-report').style.borderColor = '#6EE7B7';
+
+  toast('🗑️ Report deleted — ' + pts + ' pts removed from bank.');
+  resetCurrentDate = null;
+
+  // Refresh history tab if open
+  renderHistory();
+}
+
+async function doResetEdit(){
+  if(!resetCurrentDate) return;
+  const idx = savedDays.findIndex(x => x.date === resetCurrentDate);
+  if(idx < 0) return;
+  const d = savedDays[idx];
+  const dateLabel = fmtDate(d.date);
+  const pts = d.pts || 0;
+
+  // 1. Change approved → false in savedDays
+  savedDays[idx] = {...d, approved: false};
+  updateTopBar();
+
+  // 2. Update Supabase
+  try{
+    await _supabase.from('daily_reports')
+      .update({approved: false})
+      .eq('date', resetCurrentDate);
+  }catch(e){ console.error('Update error:', e); }
+
+  // 3. Update UI — refresh date picker, reload the card view with new status
+  populateResetDatePicker();
+  document.getElementById('reset-date-sel').value = '';
+
+  closeResetConfirm();
+  document.getElementById('reset-report-view').style.display = 'none';
+  document.getElementById('reset-no-report').style.display = 'block';
+  document.getElementById('reset-no-report').innerHTML = '✏️ ' + dateLabel + ' moved to Under Review. Vaanya can now edit this entry. ' + pts + ' pts paused until re-approved.';
+  document.getElementById('reset-no-report').style.color = '#92400E';
+  document.getElementById('reset-no-report').style.background = '#FFF7ED';
+  document.getElementById('reset-no-report').style.borderColor = '#FCD34D';
+
+  // Also unlock on the Daily Report page for that date
+  toast('✏️ Report reopened for editing — ' + pts + ' pts paused until re-approved.');
+  resetCurrentDate = null;
+
+  renderHistory();
+}
+
 // ════════════════════════════════════════════
 // AURORA LIGHT BEAMS
 // ════════════════════════════════════════════
@@ -4201,19 +4658,25 @@ async function saveCreativeDraft(){
 // MOTIVATIONAL QUOTES
 // ════════════════════════════════════════════
 const QUOTES_L = [
-  {icon:'🌱', text:'Believe you can and you are halfway there.', author:'Theodore Roosevelt', tag:'Todays mantra'},
-  {icon:'💪', text:'Little by little, a little becomes a lot.', author:'Tanzanian proverb', tag:'Keep growing!'},
-  {icon:'🌟', text:'You are braver than you believe and stronger than you seem.', author:'A.A. Milne', tag:'You got this!'},
+  {icon:'🔥', text:'Arise, awake and do not stop until the goal is reached.', author:'Swami Vivekananda', tag:'Rise up!'},
+  {icon:'💪', text:'All the power is within you. You can do anything and everything.', author:'Swami Vivekananda', tag:'You are powerful!'},
+  {icon:'🧠', text:'The greatest sin is to think yourself weak.', author:'Swami Vivekananda', tag:'Be strong!'},
+  {icon:'⚡', text:'Take up one idea. Make that one idea your life.', author:'Swami Vivekananda', tag:'Focus!'},
+  {icon:'🌟', text:'In a day, when you do not come across any problems, you can be sure that you are travelling in the wrong path.', author:'Swami Vivekananda', tag:'Embrace challenges!'},
   {icon:'🚀', text:'The secret of getting ahead is getting started.', author:'Mark Twain', tag:'Start now!'},
+  {icon:'🌱', text:'Believe you can and you are halfway there.', author:'Theodore Roosevelt', tag:'Todays mantra'},
   {icon:'🎯', text:'Every expert was once a beginner.', author:'Helen Hayes', tag:'Keep learning!'},
   {icon:'🌈', text:'Do something today that your future self will thank you for.', author:'Sean Patrick Flanery', tag:'Future you!'},
   {icon:'⭐', text:'Work hard in silence. Let your success make the noise.', author:'Frank Ocean', tag:'Stay focused!'},
 ];
 const QUOTES_R = [
+  {icon:'🌸', text:'When you have a dream, you have got to grab it and never let go.', author:'Sudha Murthy', tag:'Chase your dream!'},
+  {icon:'📖', text:'Read as many books as you can. Reading opens new worlds and new possibilities.', author:'Sudha Murthy', tag:'Read every day!'},
+  {icon:'🙏', text:'Be humble, be kind and always be ready to learn.', author:'Sudha Murthy', tag:'Stay humble!'},
+  {icon:'💛', text:'Money comes and goes. Character stays forever.', author:'Sudha Murthy', tag:'Build character!'},
   {icon:'✨', text:'She believed she could, so she did.', author:'R.S. Grey', tag:'Girl power!'},
   {icon:'🦋', text:'Dream big. Work hard. Stay focused.', author:'Unknown', tag:'Keep going!'},
   {icon:'📚', text:'Education is the most powerful weapon to change the world.', author:'Nelson Mandela', tag:'Study strong!'},
-  {icon:'🌸', text:'A little progress each day adds up to big results.', author:'Satya Nani', tag:'Day by day!'},
   {icon:'🏆', text:'Success is the sum of small efforts repeated every day.', author:'Robert Collier', tag:'Consistency wins!'},
   {icon:'🌙', text:'Shoot for the moon. Even if you miss, you will land among the stars.', author:'Norman Vincent Peale', tag:'Aim high!'},
   {icon:'💡', text:'The more that you read, the more things you will know.', author:'Dr. Seuss', tag:'Read every day!'},
@@ -4342,8 +4805,8 @@ function silentClearDay(){
   document.querySelectorAll('#odda-time .pill, #gym-time .pill').forEach(p=>{p.classList.remove('pg','pr','pa','pb','pt');});
   const tcBox=document.getElementById('test-chapters-box');if(tcBox)tcBox.style.display='none';
   const bkBox=document.getElementById('book-knowledge-box');if(bkBox)bkBox.style.display='none';
-  const prPend=document.getElementById('parent-pending-section');if(prPend)prPend.style.display='block';
-  const prAct=document.getElementById('parent-action-section');if(prAct)prAct.style.display='none';
+  const prPend=document.getElementById('parent-pending-section');if(prPend)prPend.style.display='none'; /* always hidden */
+  const prAct=document.getElementById('parent-action-section');if(prAct)prAct.style.display='block';
   const prApp=document.getElementById('approved-section');if(prApp)prApp.style.display='none';
   const freeMsg=document.getElementById('free-act-msg');if(freeMsg)freeMsg.innerHTML='';
   const prRatRes=document.getElementById('parent-rating-result');if(prRatRes)prRatRes.innerHTML='';
@@ -4376,9 +4839,8 @@ function lockForm(date, pts){
   // Hide save/clear buttons
   const btnRow=document.querySelector('#tab-report .btn-row');
   if(btnRow) btnRow.style.display='none';
-  // Lock parent section too
+  // parent-action-section always stays visible (tab is already PIN-gated)
   const prPend=document.getElementById('parent-pending-section');if(prPend)prPend.style.display='none';
-  const prAct=document.getElementById('parent-action-section');if(prAct)prAct.style.display='none';
 }
 
 function unlockForm(){
@@ -4392,11 +4854,9 @@ function unlockForm(){
   if(banner) banner.classList.remove('show');
   const btnRow=document.querySelector('#tab-report .btn-row');
   if(btnRow) btnRow.style.display='';
-  // Restore parent section
+  // parent-action-section always stays visible
   const prPend=document.getElementById('parent-pending-section');
-  if(prPend) prPend.style.display='block';
-  const prAct=document.getElementById('parent-action-section');
-  if(prAct) prAct.style.display='none';
+  if(prPend) prPend.style.display='none';
   const prApp=document.getElementById('approved-section');
   if(prApp) prApp.style.display='none';
 }
@@ -4481,6 +4941,7 @@ function openPinModalParent(){
     toast('Welcome! Review Vaanya report 📋');
   };
   document.getElementById('pin-overlay').classList.add('show');
+  setTimeout(focusPinInput, 200);
 }
 
 
