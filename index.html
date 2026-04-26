@@ -1171,81 +1171,197 @@ tr:hover td{background:#FAFBFF}
 ═══════════════════════════════════════ -->
 <div class="tab" id="tab-geeta">
 
-
-<!-- Header with images -->
-<div style="border-radius:18px;overflow:hidden;margin-bottom:14px;border:2px solid #6EE7B7;
-  box-shadow:0 4px 24px rgba(16,185,129,.12);position:relative">
-  <div style="display:flex;height:130px;overflow:hidden">
-    <div style="flex:1;overflow:hidden"><img src="https://poojakaushalbatish.github.io/Vaanya-Daily-Star/img1.jpg" onerror="this.parentElement.style.background='linear-gradient(135deg,#065F46,#0F766E)'" style="width:100%;height:100%;object-fit:cover;object-position:center top"></div>
-    <div style="flex:1;overflow:hidden"><img src="https://poojakaushalbatish.github.io/Vaanya-Daily-Star/img2.jpg" onerror="this.parentElement.style.background='linear-gradient(135deg,#1D4ED8,#3B82F6)'" style="width:100%;height:100%;object-fit:cover;object-position:center top"></div>
-    <div style="flex:1;overflow:hidden"><img src="https://poojakaushalbatish.github.io/Vaanya-Daily-Star/img3.jpg" onerror="this.parentElement.style.background='linear-gradient(135deg,#7C3AED,#8B5CF6)'" style="width:100%;height:100%;object-fit:cover;object-position:center top"></div>
-  </div>
-  <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.25) 0%,rgba(6,95,70,.7) 80%);display:flex;align-items:flex-end;padding:14px 18px">
-    <div>
-      <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:.04em">🕉️ Geeta — Soul Work</div>
-      <div style="font-size:11px;color:rgba(167,243,208,.9);font-weight:700;margin-top:3px">
-        Learn · Reflect · Recite to Mamma &amp; Papa · Earn 25 pts
-      </div>
+<!-- AURORA HEADER BANNER -->
+<div style="background:linear-gradient(135deg,#ECFDF5,#EFF6FF,#F0FDF4,#ECFEFF);
+  background-size:300% 300%;animation:auroraShift 8s ease infinite;
+  border-radius:18px;border:2px solid #6EE7B7;padding:16px 20px;
+  margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  box-shadow:0 4px 24px rgba(16,185,129,.1);position:relative;overflow:hidden">
+  <!-- Aurora beam -->
+  <canvas id="geeta-beam-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0"></canvas>
+  <div style="position:relative;z-index:1;width:52px;height:52px;border-radius:50%;
+    background:linear-gradient(135deg,#10B981,#3B82F6,#8B5CF6);
+    display:flex;align-items:center;justify-content:center;font-size:26px;
+    box-shadow:0 4px 16px rgba(16,185,129,.4);animation:avSpin 6s linear infinite;flex-shrink:0">🕉️</div>
+  <div style="position:relative;z-index:1;flex:1">
+    <div style="font-size:18px;font-weight:900;color:#064E3B;letter-spacing:.02em">🪷 Geeta — Soul Work</div>
+    <div style="font-size:11px;color:#0F766E;font-weight:700;margin-top:2px">Learn · Reflect · Recite to Mamma &amp; Papa · Earn 25 pts</div>
+    <div style="margin-top:6px;background:rgba(16,185,129,.12);border-radius:8px;height:6px;overflow:hidden;border:1px solid rgba(16,185,129,.25)">
+      <div style="height:100%;width:60%;background:linear-gradient(90deg,#10B981,#3B82F6,#8B5CF6);border-radius:8px;animation:xpGlowA 2s ease-in-out infinite"></div>
     </div>
+  </div>
+  <div style="position:relative;z-index:1;background:linear-gradient(135deg,#10B981,#3B82F6);
+    color:#fff;border-radius:14px;padding:8px 16px;text-align:center;box-shadow:0 3px 12px rgba(16,185,129,.4)">
+    <div style="font-size:22px;font-weight:900;line-height:1">25</div>
+    <div style="font-size:8px;font-weight:800;opacity:.9;letter-spacing:.05em">PTS</div>
   </div>
 </div>
 
-<!-- Shloka display -->
-<div style="background:#fff;border-radius:18px;border:2px solid #6EE7B7;margin-bottom:14px;overflow:hidden;
-  box-shadow:0 4px 20px rgba(16,185,129,.1)">
-  <div style="background:linear-gradient(135deg,#065F46,#047857);padding:13px 18px;
-    display:flex;align-items:center;gap:10px">
-    <div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);
-      border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:18px">🕉️</div>
-    <div style="flex:1">
-      <div style="font-size:14px;font-weight:900;color:#fff">Today's Geeta Shloka</div>
-      <div style="font-size:10px;color:rgba(167,243,208,.85);font-weight:700;margin-top:1px">Learn the shloka · understand its meaning · recite it to Mamma &amp; Papa</div>
+<!-- MAIN LAYOUT: Image Slider LEFT + Shloka RIGHT -->
+<div id="geeta-layout" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">
+
+  <!-- ═══ LEFT: IMAGE SLIDER ═══ -->
+  <div style="background:#fff;border-radius:18px;border:2px solid #6EE7B7;
+    overflow:hidden;box-shadow:0 4px 20px rgba(16,185,129,.1);position:sticky;top:12px">
+
+    <!-- Image viewer -->
+    <div style="position:relative;height:320px;overflow:hidden;background:linear-gradient(135deg,#ECFDF5,#EFF6FF)">
+      <!-- Images — cycle one at a time -->
+      <img id="gimg-1" src="https://poojakaushalbatish.github.io/Vaanya-Daily-Star/Krishna_1.PNG"
+        style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;
+          transition:opacity .8s ease;opacity:1"
+        onerror="this.style.display='none';document.getElementById('gimg-fallback-1').style.display='flex'">
+      <img id="gimg-2" src="https://poojakaushalbatish.github.io/Vaanya-Daily-Star/Krishna_2.PNG"
+        style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;
+          transition:opacity .8s ease;opacity:0"
+        onerror="this.style.display='none';document.getElementById('gimg-fallback-2').style.display='flex'">
+      <img id="gimg-3" src="https://poojakaushalbatish.github.io/Vaanya-Daily-Star/Krishna_3.PNG"
+        style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;
+          transition:opacity .8s ease;opacity:0"
+        onerror="this.style.display='none';document.getElementById('gimg-fallback-3').style.display='flex'">
+      <img id="gimg-4" src="https://poojakaushalbatish.github.io/Vaanya-Daily-Star/Krishna_4.PNG"
+        style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;
+          transition:opacity .8s ease;opacity:0"
+        onerror="this.style.display='none';document.getElementById('gimg-fallback-4').style.display='flex'">
+      <!-- Fallbacks -->
+      <div id="gimg-fallback-1" style="display:none;position:absolute;inset:0;
+        background:linear-gradient(135deg,#065F46,#0F766E);align-items:center;justify-content:center;font-size:64px">🕉️</div>
+      <div id="gimg-fallback-2" style="display:none;position:absolute;inset:0;
+        background:linear-gradient(135deg,#1D4ED8,#3B82F6);align-items:center;justify-content:center;font-size:64px">🪷</div>
+      <div id="gimg-fallback-3" style="display:none;position:absolute;inset:0;
+        background:linear-gradient(135deg,#7C3AED,#8B5CF6);align-items:center;justify-content:center;font-size:64px">🙏</div>
+      <div id="gimg-fallback-4" style="display:none;position:absolute;inset:0;
+        background:linear-gradient(135deg,#0F766E,#10B981);align-items:center;justify-content:center;font-size:64px">✨</div>
+      <!-- Gradient overlay at bottom -->
+      <div style="position:absolute;bottom:0;left:0;right:0;height:80px;
+        background:linear-gradient(to bottom,transparent,rgba(6,95,70,.7));pointer-events:none"></div>
+      <!-- Image counter badge -->
+      <div id="gimg-counter" style="position:absolute;top:10px;right:10px;
+        background:rgba(6,95,70,.85);color:#fff;border-radius:20px;
+        padding:4px 12px;font-size:11px;font-weight:800;border:1.5px solid rgba(110,231,183,.4)">1 / 4</div>
     </div>
-    <button onclick="nextShloka()" style="background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.3);
-      border-radius:10px;color:#fff;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;
-      font-family:'Nunito',sans-serif">🔄 Next</button>
+
+    <!-- Prev / Next controls -->
+    <div style="display:flex;gap:0;border-top:2px solid #A7F3D0">
+      <button onclick="geetaImgPrev()"
+        style="flex:1;padding:12px;background:#F0FDF4;border:none;border-right:1px solid #A7F3D0;
+          cursor:pointer;font-size:18px;font-weight:900;color:#065F46;
+          font-family:'Nunito',sans-serif;transition:all .2s"
+        onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">
+        ‹ Prev
+      </button>
+      <button onclick="geetaImgNext()"
+        style="flex:1;padding:12px;background:#F0FDF4;border:none;
+          cursor:pointer;font-size:18px;font-weight:900;color:#065F46;
+          font-family:'Nunito',sans-serif;transition:all .2s"
+        onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">
+        Next ›
+      </button>
+    </div>
+
+    <!-- Dot indicators -->
+    <div style="display:flex;justify-content:center;gap:8px;padding:10px 0 12px;background:#F0FDF4">
+      <div id="gdot-1" style="width:10px;height:10px;border-radius:50%;
+        background:linear-gradient(135deg,#10B981,#3B82F6);transition:all .3s;cursor:pointer"
+        onclick="geetaImgGo(1)"></div>
+      <div id="gdot-2" style="width:10px;height:10px;border-radius:50%;
+        background:#D1FAE5;transition:all .3s;cursor:pointer"
+        onclick="geetaImgGo(2)"></div>
+      <div id="gdot-3" style="width:10px;height:10px;border-radius:50%;
+        background:#D1FAE5;transition:all .3s;cursor:pointer"
+        onclick="geetaImgGo(3)"></div>
+      <div id="gdot-4" style="width:10px;height:10px;border-radius:50%;
+        background:#D1FAE5;transition:all .3s;cursor:pointer"
+        onclick="geetaImgGo(4)"></div>
+    </div>
+
+    <!-- Auto-play toggle -->
+    <div style="text-align:center;padding:0 0 12px;background:#F0FDF4">
+      <button id="geeta-autoplay-btn" onclick="geetaToggleAuto()"
+        style="background:rgba(16,185,129,.12);border:1.5px solid #6EE7B7;border-radius:10px;
+          padding:5px 16px;font-size:11px;font-weight:800;color:#065F46;cursor:pointer;
+          font-family:'Nunito',sans-serif">⏸ Auto-play ON</button>
+    </div>
   </div>
 
-  <!-- Shloka verse -->
-  <div id="shloka-display" style="padding:18px 20px 14px"></div>
+  <!-- ═══ RIGHT: SHLOKA SECTION ═══ -->
+  <div>
+    <!-- Shloka card -->
+    <div style="background:#fff;border-radius:18px;border:2px solid #6EE7B7;
+      overflow:hidden;box-shadow:0 4px 20px rgba(16,185,129,.1);margin-bottom:12px">
 
-  <!-- Reflection box -->
-  <div style="padding:0 20px 18px">
-    <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;
-      color:#065F46;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-      💭 How will I use this shloka in my daily life?
-      <span style="flex:1;height:1px;background:linear-gradient(90deg,#6EE7B7,transparent)"></span>
+      <!-- Card header -->
+      <div style="background:linear-gradient(135deg,#065F46,#047857,#059669);
+        padding:13px 16px;display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.18);
+          border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🕉️</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:900;color:#fff">Today's Geeta Shloka</div>
+          <div style="font-size:10px;color:rgba(167,243,208,.85);font-weight:700;margin-top:1px">Learn it · Know it · Recite it!</div>
+        </div>
+        <button onclick="nextShloka()"
+          style="background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.3);
+            border-radius:10px;color:#fff;padding:5px 11px;font-size:11px;font-weight:800;
+            cursor:pointer;font-family:'Nunito',sans-serif">🔄 Next</button>
+      </div>
+
+      <!-- Shloka verse display -->
+      <div id="shloka-display" style="padding:16px 16px 12px"></div>
+
     </div>
-    <textarea id="shloka-reflect"
-      style="width:100%;background:#F0FDF4;border:1.5px solid #A7F3D0;border-radius:12px;
-        padding:12px 14px;color:#064E3B;font-size:13px;font-family:'Nunito',sans-serif;
-        resize:none;min-height:90px;line-height:1.7"
-      placeholder="Write how you understand this shloka and how you will apply it in your daily life..."></textarea>
 
-    <!-- Points note -->
-    <div style="margin-top:10px;background:linear-gradient(135deg,#ECFDF5,#EFF6FF);
-      border:1.5px solid #6EE7B7;border-radius:12px;padding:11px 16px;
-      display:flex;align-items:center;gap:12px">
-      <div style="font-size:24px">🙏</div>
-      <div>
-        <div style="font-size:12px;font-weight:900;color:#065F46">Recite this shloka to Mamma &amp; Papa!</div>
-        <div style="font-size:11px;color:#0F766E;font-weight:700;margin-top:2px">
-          +25 pts will be awarded by Parents after they hear you recite it 🌟
+    <!-- Reflection card -->
+    <div style="background:#fff;border-radius:18px;border:2px solid #A7F3D0;
+      overflow:hidden;box-shadow:0 4px 16px rgba(16,185,129,.08);margin-bottom:12px">
+      <div style="background:linear-gradient(135deg,#ECFDF5,#EFF6FF);
+        padding:11px 16px;border-bottom:1.5px solid #A7F3D0">
+        <div style="font-size:12px;font-weight:900;color:#065F46">💭 My Reflection</div>
+        <div style="font-size:10px;color:#0F766E;font-weight:700;margin-top:2px">How will I use this shloka in my daily life?</div>
+      </div>
+      <div style="padding:14px 16px">
+        <textarea id="shloka-reflect"
+          style="width:100%;background:#F0FDF4;border:1.5px solid #A7F3D0;border-radius:12px;
+            padding:11px 14px;color:#064E3B;font-size:13px;font-family:'Nunito',sans-serif;
+            resize:none;min-height:100px;line-height:1.7"
+          placeholder="Write how you understand this shloka and how you will use it in your daily life..."></textarea>
+      </div>
+    </div>
+
+    <!-- Recite notice -->
+    <div style="background:linear-gradient(135deg,#ECFDF5,#EFF6FF);
+      border:2px solid #6EE7B7;border-radius:16px;padding:14px 16px;
+      display:flex;align-items:center;gap:12px;
+      box-shadow:0 4px 14px rgba(16,185,129,.12)">
+      <div style="font-size:28px;animation:qFloat 2.5s ease-in-out infinite">🙏</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:900;color:#064E3B">Recite this shloka to Mamma &amp; Papa!</div>
+        <div style="font-size:11px;color:#0F766E;font-weight:700;margin-top:3px;line-height:1.6">
+          +25 pts will be awarded by Parents after they hear you recite it beautifully 🌟
         </div>
       </div>
-      <div style="margin-left:auto;background:linear-gradient(135deg,#10B981,#3B82F6);
-        color:#fff;border-radius:12px;padding:8px 14px;text-align:center">
-        <div style="font-size:20px;font-weight:900;line-height:1">25</div>
-        <div style="font-size:8px;font-weight:800;opacity:.9">PTS</div>
+      <div style="background:linear-gradient(135deg,#10B981,#3B82F6);
+        color:#fff;border-radius:12px;padding:10px 14px;text-align:center;
+        box-shadow:0 4px 12px rgba(16,185,129,.4);flex-shrink:0">
+        <div style="font-size:22px;font-weight:900;line-height:1">25</div>
+        <div style="font-size:8px;font-weight:800;opacity:.9;letter-spacing:.04em">PTS</div>
       </div>
     </div>
-  </div>
 
-  <!-- hidden compat IDs -->
-  <div id="shloka-done" style="display:none"></div>
-  <div id="shloka-understood" style="display:none"></div>
-  <textarea id="shloka-write" style="display:none"></textarea>
-</div>
+  </div><!-- end right -->
+</div><!-- end geeta-layout grid -->
+
+<!-- Mobile: stack layout -->
+<style>
+@media(max-width:700px){
+  #geeta-layout{grid-template-columns:1fr !important}
+  #geeta-layout > div:first-child{position:static !important}
+}
+</style>
+
+<!-- hidden compat IDs -->
+<div id="shloka-done" style="display:none"></div>
+<div id="shloka-understood" style="display:none"></div>
+<textarea id="shloka-write" style="display:none"></textarea>
 
 </div><!-- end tab-geeta -->
 
@@ -3917,6 +4033,87 @@ function clearCreativeImg(){
   if(img) img.src='';
   if(preview) preview.style.display='none';
   if(input) input.value='';
+}
+
+
+// ════════════════════════════════════════════
+// GEETA IMAGE SLIDER
+// ════════════════════════════════════════════
+let geetaImgCurrent = 1;
+const GEETA_IMG_TOTAL = 4;
+let geetaAutoInterval = null;
+let geetaAutoOn = true;
+
+function geetaImgGo(n){
+  // Hide all
+  for(let i=1;i<=GEETA_IMG_TOTAL;i++){
+    const img=document.getElementById('gimg-'+i);
+    const fb=document.getElementById('gimg-fallback-'+i);
+    const dot=document.getElementById('gdot-'+i);
+    if(img) img.style.opacity='0';
+    if(fb) fb.style.opacity='0';
+    if(dot){ dot.style.background='#D1FAE5'; dot.style.transform='scale(1)'; }
+  }
+  // Show current
+  geetaImgCurrent = ((n-1+GEETA_IMG_TOTAL)%GEETA_IMG_TOTAL)+1;
+  const cur = document.getElementById('gimg-'+geetaImgCurrent);
+  const curFb = document.getElementById('gimg-fallback-'+geetaImgCurrent);
+  const curDot = document.getElementById('gdot-'+geetaImgCurrent);
+  if(cur) cur.style.opacity='1';
+  if(curFb) curFb.style.opacity='1';
+  if(curDot){
+    curDot.style.background='linear-gradient(135deg,#10B981,#3B82F6)';
+    curDot.style.transform='scale(1.3)';
+  }
+  const counter=document.getElementById('gimg-counter');
+  if(counter) counter.textContent=geetaImgCurrent+' / '+GEETA_IMG_TOTAL;
+}
+
+function geetaImgNext(){ geetaImgGo(geetaImgCurrent+1); }
+function geetaImgPrev(){ geetaImgGo(geetaImgCurrent-1); }
+
+function geetaStartAuto(){
+  if(geetaAutoInterval) clearInterval(geetaAutoInterval);
+  geetaAutoInterval = setInterval(geetaImgNext, 4000);
+}
+function geetaStopAuto(){
+  if(geetaAutoInterval){ clearInterval(geetaAutoInterval); geetaAutoInterval=null; }
+}
+function geetaToggleAuto(){
+  geetaAutoOn = !geetaAutoOn;
+  const btn = document.getElementById('geeta-autoplay-btn');
+  if(geetaAutoOn){
+    geetaStartAuto();
+    if(btn) btn.textContent='⏸ Auto-play ON';
+  } else {
+    geetaStopAuto();
+    if(btn) btn.textContent='▶ Auto-play OFF';
+  }
+}
+
+// Start auto-play when geeta tab is opened
+const _origShowTab = showTab;
+function showTab(id,btn){
+  _origShowTab(id,btn);
+  if(id==='geeta'){
+    geetaImgGo(1);
+    if(geetaAutoOn) geetaStartAuto();
+  } else {
+    geetaStopAuto();
+  }
+}
+
+// Also start on page load if geeta is active
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(document.getElementById('tab-geeta')?.classList.contains('active')){
+    geetaStartAuto();
+  }
+});
+
+// Init fallback opacity
+for(let i=1;i<=4;i++){
+  const fb=document.getElementById('gimg-fallback-'+i);
+  if(fb) fb.style.opacity=i===1?'1':'0';
 }
 
 // ════════════════════════════════════════════
