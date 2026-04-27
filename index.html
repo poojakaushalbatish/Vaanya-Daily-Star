@@ -173,6 +173,7 @@ tr:hover td{background:#FAFBFF}
 .sc-cell{background:var(--white);display:flex;align-items:center;justify-content:center;
   aspect-ratio:1;font-size:14px;font-weight:800;color:var(--ink);cursor:pointer;transition:background .1s;min-width:0}
 .sc-cell.given{background:#EEF2FF;color:#3730A3;cursor:default}
+.sc-cell.entered{background:#FDFAF0;color:#92400E;}
 .sc-cell.selected{background:#FEF9C3!important;color:#92400E}
 .sc-cell.correct{background:#ECFDF5;color:#065F46}
 .sc-cell.wrong{background:#FEF2F2;color:#B91C1C}
@@ -1127,7 +1128,7 @@ tr:hover td{background:#FAFBFF}
   <div style="display:flex;gap:8px;flex-wrap:wrap" id="puzzle-tabs">
     <button class="btn btn-p" style="font-size:12px;padding:7px 14px" onclick="showPuzzle('sudoku',this)">🔢 Sudoku</button>
     <button class="btn btn-o" style="font-size:12px;padding:7px 14px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff" onclick="showPuzzle('logic',this)">🧩 Logic</button>
-    <button class="btn btn-o" style="font-size:12px;padding:7px 14px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.35);cursor:not-allowed;text-decoration:line-through" disabled title="Coming soon!">🎭 Riddles</button>
+    <button class="btn btn-o" style="font-size:12px;padding:7px 14px;background:rgba(128,128,128,.15);border-color:rgba(128,128,128,.25);color:rgba(255,255,255,.38);cursor:not-allowed;text-decoration:line-through;pointer-events:none;opacity:0.45" onclick="return false;" onmousedown="return false;" title="Coming soon!">🎭 Riddles</button>
   </div>
 </div>
 
@@ -2326,6 +2327,7 @@ function calcParentRating(){
 }
 
 function showPuzzle(type,btn){
+  if(type==='riddle'){toast('🎭 Riddles coming soon! Stay tuned.');return;}
   ['sudoku','logic','riddle'].forEach(t=>{
     const el=document.getElementById('puzzle-'+t);
     if(el)el.style.display=t===type?'block':'none';
@@ -3967,8 +3969,10 @@ function enterSudokuNum(n){
   sudokuGrid[r][c]=n;
   const cell=cells[r*9+c];
   cell.textContent=n||'';
+  // No live highlighting — only show neutral entered style
   cell.classList.remove('correct','wrong');
-  if(n>0){if(sudokuSolution[r][c]===n)cell.classList.add('correct');else cell.classList.add('wrong');}
+  if(n>0) cell.classList.add('entered');
+  else cell.classList.remove('entered');
 }
 function checkSudoku(){
   let allCorrect=true,allFilled=true;
@@ -3976,8 +3980,8 @@ function checkSudoku(){
   for(let r=0;r<9;r++)for(let c=0;c<9;c++){
     const cell=cells[r*9+c];
     if(sudokuGrid[r][c]===0){allFilled=false;allCorrect=false;}
-    else if(sudokuGrid[r][c]!==sudokuSolution[r][c]){allCorrect=false;cell.classList.add('wrong');}
-    else cell.classList.add('correct');
+    else if(sudokuGrid[r][c]!==sudokuSolution[r][c]){allCorrect=false;cell.classList.remove('entered');cell.classList.add('wrong');}
+    else {cell.classList.remove('entered');cell.classList.add('correct');}
   }
   const msg=document.getElementById('sudoku-msg');
   if(allCorrect&&allFilled){
@@ -4000,6 +4004,7 @@ function revealSudokuHint(){
       sudokuGrid[r][c]=sudokuSolution[r][c];
       const cells=document.querySelectorAll('.sc-cell');
       cells[r*9+c].textContent=sudokuSolution[r][c];
+      cells[r*9+c].classList.remove('entered');
       cells[r*9+c].classList.add('correct');
       toast('Hint revealed! −5 pts');return;
     }
