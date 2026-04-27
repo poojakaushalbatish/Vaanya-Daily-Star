@@ -1376,9 +1376,12 @@ tr:hover td{background:#FAFBFF}
         padding:12px 14px;color:#3B0764;font-size:13px;font-family:'Nunito',sans-serif;
         resize:vertical;min-height:130px;line-height:1.8"
       placeholder="e.g.&#10;कर्मण्येवाधिकारस्ते मा फलेषु कदाचन — Do your duty without worrying about the result. (Chapter 2, Verse 47)&#10;&#10;योगः कर्मसु कौशलम् — Excellence in action is yoga. (Chapter 2, Verse 50)&#10;&#10;Write as many as you remember! 🌸"
-      oninput="calcDayPts()"></textarea>
+      oninput="calcDayPts();checkGeetaSaveReady()"></textarea>
     <div style="margin-top:6px;font-size:11px;font-weight:700;color:#6D28D9;opacity:.7">
       💡 Tip: Write the shloka, then its meaning in simple words. One shloka per line is easiest to read!
+    </div>
+    <div id="past-shlokas-required" style="margin-top:6px;font-size:12px;font-weight:800;color:#B91C1C;display:flex;align-items:center;gap:5px">
+      ⚠️ This field is mandatory — write at least one past shloka to unlock Save!
     </div>
   </div>
 </div>
@@ -1398,11 +1401,11 @@ tr:hover td{background:#FAFBFF}
 
 <!-- SAVE BUTTON -->
 <div style="margin-top:14px;text-align:center">
-  <button onclick="saveGeetaDraft()"
-    style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;
-      border-radius:14px;padding:14px 40px;font-size:15px;font-weight:900;cursor:pointer;
-      font-family:'Nunito',sans-serif;box-shadow:0 4px 16px rgba(16,185,129,.35);
-      letter-spacing:.03em;transition:all .2s">
+  <button id="geeta-save-btn" onclick="saveGeetaDraft()" disabled
+    style="background:linear-gradient(135deg,#9CA3AF,#6B7280);color:#fff;border:none;
+      border-radius:14px;padding:14px 40px;font-size:15px;font-weight:900;cursor:not-allowed;
+      font-family:'Nunito',sans-serif;box-shadow:none;
+      letter-spacing:.03em;transition:all .3s;opacity:.5">
     💾 Save My Shloka Work
   </button>
   <div id="geeta-save-msg" style="margin-top:8px;font-size:12px;font-weight:700;
@@ -4645,9 +4648,37 @@ function geetaStopAuto(){
 // ════════════════════════════════════════════
 // GEETA & CREATIVE DRAFT SAVES
 // ════════════════════════════════════════════
+function checkGeetaSaveReady(){
+  const val = (document.getElementById('past-shlokas')?.value||'').trim();
+  const btn = document.getElementById('geeta-save-btn');
+  const req = document.getElementById('past-shlokas-required');
+  if(val.length > 0){
+    if(btn){
+      btn.disabled = false;
+      btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+      btn.style.cursor = 'pointer';
+      btn.style.opacity = '1';
+      btn.style.boxShadow = '0 4px 16px rgba(16,185,129,.35)';
+    }
+    if(req) req.style.display = 'none';
+  } else {
+    if(btn){
+      btn.disabled = true;
+      btn.style.background = 'linear-gradient(135deg,#9CA3AF,#6B7280)';
+      btn.style.cursor = 'not-allowed';
+      btn.style.opacity = '.5';
+      btn.style.boxShadow = 'none';
+    }
+    if(req) req.style.display = 'flex';
+  }
+}
+
 async function saveGeetaDraft(){
   const date = document.getElementById('rpt-date')?.value;
   if(!date){ toast('Please set a date on the Daily Report tab first!'); return; }
+  // Guard: past-shlokas is mandatory
+  const pastVal = (document.getElementById('past-shlokas')?.value||'').trim();
+  if(!pastVal){ toast('✍️ Please write at least one past shloka first!'); return; }
   const pts = calcDayPts();
   const data = collectFormData(date, pts);
   const idx = savedDays.findIndex(d=>d.date===date);
@@ -5082,6 +5113,7 @@ function silentClearDay(){
   // Clear Geeta tab fields (outside #tab-report)
   const sr=document.getElementById('shloka-reflect');if(sr)sr.value='';
   const ps=document.getElementById('past-shlokas');if(ps)ps.value='';
+  checkGeetaSaveReady();
   const r1v=document.getElementById('r1-verdict');if(r1v)r1v.style.display='none';
   const r2v=document.getElementById('r2-verdict');if(r2v)r2v.style.display='none';
   const r3v=document.getElementById('r3-verdict');if(r3v)r3v.style.display='none';
@@ -5165,6 +5197,7 @@ function loadDraftDay(d){
   if(d.screenWhat){ const e=document.getElementById('screen-what');if(e)e.value=d.screenWhat; }
   if(d.shlokaReflect){ const e=document.getElementById('shloka-reflect');if(e)e.value=d.shlokaReflect; }
   if(d.pastShlokas){ const e=document.getElementById('past-shlokas');if(e)e.value=d.pastShlokas; }
+  checkGeetaSaveReady();
   // Restore HW checkboxes
   if(d.hwDone && d.hwDone>0){
     // Restore from full_data if available
