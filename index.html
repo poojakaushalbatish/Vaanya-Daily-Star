@@ -1127,7 +1127,7 @@ tr:hover td{background:#FAFBFF}
   <div style="display:flex;gap:8px;flex-wrap:wrap" id="puzzle-tabs">
     <button class="btn btn-p" style="font-size:12px;padding:7px 14px" onclick="showPuzzle('sudoku',this)">🔢 Sudoku</button>
     <button class="btn btn-o" style="font-size:12px;padding:7px 14px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff" onclick="showPuzzle('logic',this)">🧩 Logic</button>
-    <button class="btn btn-o" style="font-size:12px;padding:7px 14px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff" onclick="showPuzzle('riddle',this)">🎭 Riddles</button>
+    <button class="btn btn-o" style="font-size:12px;padding:7px 14px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.35);cursor:not-allowed;text-decoration:line-through" disabled title="Coming soon!">🎭 Riddles</button>
   </div>
 </div>
 
@@ -1180,6 +1180,13 @@ tr:hover td{background:#FAFBFF}
   </div>
   <!-- hidden pill for JS compat -->
   <div id="brain-done" style="display:none"></div>
+  <!-- SAVE BUTTON -->
+  <div class="btn-row" style="margin-top:16px">
+    <button class="btn btn-g" onclick="saveBrainDraft()" id="brain-save-btn" style="font-size:14px;padding:12px 28px;background:linear-gradient(135deg,#10B981,#047857);box-shadow:0 4px 14px rgba(16,185,129,.35)">
+      💾 Save Brain Lab Progress to Report
+    </button>
+  </div>
+  <div id="brain-save-msg" style="text-align:center;margin-top:8px;font-size:12px;font-weight:800;color:#047857;min-height:18px"></div>
 </div>
 </div>
 
@@ -2178,6 +2185,8 @@ function showSyncStatus(state) {
 }
 let brainPtsToday = 0;
 let sudokuPts = 0, logicPtsTotal = 0, riddlePtsTotal = 0;
+let sudokuFrozen = false; // once completed today, freeze
+let logicFrozen  = false; // once completed today, freeze
 let parentUnlocked = false; // PIN authenticated this session
 let aiSkillPts = 0; // set by AI skill evaluator
 let reflPts1=0,reflPts2=0,reflPts3=0; // per-reflection pts
@@ -3834,6 +3843,7 @@ function clearDay(){
   const freeMsg=document.getElementById('free-act-msg');if(freeMsg)freeMsg.innerHTML='';
   const prRatRes=document.getElementById('parent-rating-result');if(prRatRes)prRatRes.innerHTML='';
   creativeChosen=null;brainPtsToday=0;sudokuPts=0;logicPtsTotal=0;riddlePtsTotal=0;todayApproved=false;
+  sudokuFrozen=false;logicFrozen=false;
   const sAwd=document.getElementById('shloka-pts-award');if(sAwd)sAwd.value='0';
   const cAwd=document.getElementById('creative-pts-award');if(cAwd)cAwd.value='0';
   const sRes2=document.getElementById('shloka-pts-result');if(sRes2)sRes2.textContent='';
@@ -3977,6 +3987,7 @@ function checkSudoku(){
     msg.innerHTML=`<span style="color:#10B981;font-size:16px">🎉 PERFECT! +${30+bonus} pts!</span>`;
     toast('Sudoku solved! +'+(30+bonus)+' brain pts!');
     updateBrainDisplay();calcDayPts();
+    freezeSudoku();
   }else if(!allFilled){msg.innerHTML='<span style="color:#F97316">Fill all cells first!</span>';}
   else{msg.innerHTML='<span style="color:#EF4444">Some cells have errors. Keep trying! 💪</span>';}
 }
@@ -4022,6 +4033,9 @@ function answerLogic(qi,chosen,correct,exp,btn){
   }else{toast('Not quite! Right answer: '+String.fromCharCode(65+correct));}
   const expl=document.getElementById('lexpl-'+qi);
   if(expl){expl.style.display='block';expl.textContent='💡 Explanation: '+exp;}
+  // Freeze logic if all 3 puzzles answered
+  const totalPuzzles=document.querySelectorAll('#logic-puzzles .logic-card').length;
+  if(logicAnswered.length>=totalPuzzles && totalPuzzles>0) freezeLogic();
 }
 
 // ════════════════════════════════════════════
@@ -4285,6 +4299,59 @@ function updateBrainDisplay(){
   else{emoji='🥳';msg='GENIUS MODE!! Maximum brain pts! 🧠👑';}
   if(moodEl) moodEl.textContent = emoji;
   if(msgEl)  msgEl.textContent  = msg;
+}
+
+// ════════════════════════════════════════════
+// ONCE-A-DAY FREEZE — SUDOKU & LOGIC
+// ════════════════════════════════════════════
+function freezeSudoku(){
+  if(sudokuFrozen) return;
+  sudokuFrozen = true;
+  // Disable all numpad buttons and cells
+  document.querySelectorAll('.npbtn').forEach(b=>{b.disabled=true;b.style.opacity='.4';b.style.cursor='not-allowed';});
+  document.querySelectorAll('.sc-cell:not(.given)').forEach(c=>{c.onclick=null;c.style.cursor='default';});
+  // Disable difficulty + action buttons inside puzzle-sudoku
+  document.querySelectorAll('#puzzle-sudoku .btn').forEach(b=>{b.disabled=true;b.style.opacity='.4';b.style.cursor='not-allowed';});
+  // Show frozen badge
+  const msg=document.getElementById('sudoku-msg');
+  if(msg) msg.innerHTML='<span style="background:#ECFDF5;color:#065F46;border:1.5px solid #6EE7B7;border-radius:10px;padding:6px 14px;font-size:13px;font-weight:800">✅ Sudoku done for today! Points locked in. Come back tomorrow! 🔒</span>';
+}
+
+function freezeLogic(){
+  if(logicFrozen) return;
+  logicFrozen = true;
+  // Disable all option buttons and the New Puzzles button
+  document.querySelectorAll('#logic-puzzles .opt-btn').forEach(b=>{b.disabled=true;b.style.cursor='default';});
+  document.querySelectorAll('#puzzle-logic .btn').forEach(b=>{b.disabled=true;b.style.opacity='.4';b.style.cursor='not-allowed';});
+  // Add frozen notice
+  const c=document.getElementById('logic-puzzles');
+  if(c){
+    const notice=document.createElement('div');
+    notice.style.cssText='background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:13px;font-weight:800;color:#065F46;text-align:center';
+    notice.textContent='✅ Logic puzzles done for today! Points locked in. Come back tomorrow! 🔒';
+    c.appendChild(notice);
+  }
+}
+
+// ════════════════════════════════════════════
+// SAVE BRAIN LAB DRAFT
+// ════════════════════════════════════════════
+async function saveBrainDraft(){
+  const date=document.getElementById('rpt-date')?.value;
+  if(!date){toast('Please set today\'s date first in Daily Report!');return;}
+  const pts=calcDayPts();
+  const data = collectFormData(date, pts);
+  // Upsert into savedDays
+  const idx = savedDays.findIndex(d=>d.date===date);
+  if(idx>=0){ savedDays[idx]={...savedDays[idx],...data}; }
+  else { savedDays.unshift(data); }
+  savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  await saveToSupabase(data);
+  updateTopBar();
+  const msgEl=document.getElementById('brain-save-msg');
+  if(msgEl){msgEl.textContent='✅ Brain Lab progress saved to today\'s report! ('+brainPtsToday+' brain pts)';
+    setTimeout(()=>{if(msgEl)msgEl.textContent='';},4000);}
+  toast('💾 Brain Lab saved! '+brainPtsToday+' brain pts recorded.');
 }
 
 
@@ -4818,6 +4885,7 @@ function silentClearDay(){
   const skYes=document.getElementById('skill-yes-box');if(skYes)skYes.style.display='none';
   const skNo=document.getElementById('skill-no-msg');if(skNo)skNo.style.display='none';
   creativeChosen=null; brainPtsToday=0; todayApproved=false; aiSkillPts=0;
+  sudokuFrozen=false; logicFrozen=false;
   reflPts1=0; reflPts2=0; reflPts3=0;
   if(dateVal) document.getElementById('rpt-date').value=dateVal;
   updateHW(); calcDayPts();
