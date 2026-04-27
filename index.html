@@ -1326,10 +1326,10 @@ tr:hover td{background:#FAFBFF}
             Learn it · Know it · Recite to Mamma &amp; Papa for 25 pts!
           </div>
         </div>
-        <button onclick="nextShloka()"
+        <div id="shloka-day-badge"
           style="background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.3);
             border-radius:10px;color:#fff;padding:5px 12px;font-size:11px;font-weight:800;
-            cursor:pointer;font-family:'Nunito',sans-serif">🔄 Next</button>
+            font-family:'Nunito',sans-serif;text-align:center;min-width:60px"></div>
       </div>
       <div id="shloka-display" style="padding:18px 20px 14px"></div>
     </div>
@@ -1355,6 +1355,33 @@ tr:hover td{background:#FAFBFF}
 
   </div><!-- end right -->
 </div><!-- end grid -->
+
+<!-- PAST SHLOKAS SECTION -->
+<div style="background:#fff;border-radius:18px;border:2px solid #C4B5FD;
+  overflow:hidden;box-shadow:0 4px 16px rgba(139,92,246,.08);margin-top:14px">
+  <div style="background:linear-gradient(135deg,#EDE9FE,#F0FDF4);
+    padding:12px 18px;border-bottom:1.5px solid #C4B5FD;display:flex;align-items:center;gap:10px">
+    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#6D28D9);
+      display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">📖</div>
+    <div>
+      <div style="font-size:13px;font-weight:900;color:#4C1D95">📚 Shlokas I Have Learnt Before</div>
+      <div style="font-size:11px;color:#6D28D9;font-weight:700;margin-top:1px">
+        Write any past shloka you remember — with its meaning in your own words
+      </div>
+    </div>
+  </div>
+  <div style="padding:14px 18px">
+    <textarea id="past-shlokas"
+      style="width:100%;background:#F5F3FF;border:1.5px solid #C4B5FD;border-radius:12px;
+        padding:12px 14px;color:#3B0764;font-size:13px;font-family:'Nunito',sans-serif;
+        resize:vertical;min-height:130px;line-height:1.8"
+      placeholder="e.g.&#10;कर्मण्येवाधिकारस्ते मा फलेषु कदाचन — Do your duty without worrying about the result. (Chapter 2, Verse 47)&#10;&#10;योगः कर्मसु कौशलम् — Excellence in action is yoga. (Chapter 2, Verse 50)&#10;&#10;Write as many as you remember! 🌸"
+      oninput="calcDayPts()"></textarea>
+    <div style="margin-top:6px;font-size:11px;font-weight:700;color:#6D28D9;opacity:.7">
+      💡 Tip: Write the shloka, then its meaning in simple words. One shloka per line is easiest to read!
+    </div>
+  </div>
+</div>
 
 <!-- Mobile responsive -->
 <style>
@@ -2452,7 +2479,22 @@ function buildCreativeOptions(){
 }
 
 function buildShlokaDisplay(){
-  const s=SHLOKAS[currentShloka];
+  // Pick shloka based on day-of-year so it changes automatically each day
+  const today = new Date();
+  const startOfYear = new Date(today.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((today - startOfYear) / 86400000);
+  currentShloka = dayOfYear % SHLOKAS.length;
+
+  // Also respect the selected report date if available
+  const rptDate = document.getElementById('rpt-date')?.value;
+  if(rptDate){
+    const d = new Date(rptDate + 'T12:00:00');
+    const sy = new Date(d.getFullYear(), 0, 0);
+    const doy = Math.floor((d - sy) / 86400000);
+    currentShloka = doy % SHLOKAS.length;
+  }
+
+  const s = SHLOKAS[currentShloka];
   document.getElementById('shloka-display').innerHTML=`
     <div class="shloka-card">
       <div class="shloka-text">${s.text.replace(/\n/g,'<br>')}</div>
@@ -2460,17 +2502,10 @@ function buildShlokaDisplay(){
       <div class="shloka-meaning"><b>Meaning:</b> ${s.meaning}</div>
       <div class="shloka-src">${s.chapter}</div>
     </div>`;
-}
 
-function nextShloka(){
-  currentShloka=(currentShloka+1)%SHLOKAS.length;
-  buildShlokaDisplay();
-  document.getElementById('shloka-write').value='';
-  document.getElementById('shloka-reflect').value='';
-  PCLS.forEach(c=>{
-    document.getElementById('shloka-done')?.querySelectorAll('.pill').forEach(p=>p.classList.remove(c));
-    document.getElementById('shloka-understood')?.querySelectorAll('.pill').forEach(p=>p.classList.remove(c));
-  });
+  // Update the day badge
+  const badge = document.getElementById('shloka-day-badge');
+  if(badge) badge.innerHTML = `🕉️ Shloka ${currentShloka+1}<br><span style="font-size:9px;opacity:.8">of ${SHLOKAS.length}</span>`;
 }
 
 function buildEarnGuide(){
@@ -2871,6 +2906,7 @@ function collectFormData(date, pts){
     parentRating:parseInt(document.getElementById('parent-rating')?.value||0),
     skillDesc:document.getElementById('skill-desc')?.value||'',
     shlokaReflect:(document.getElementById('shloka-reflect')?.value||'').substring(0,1000),
+    pastShlokas:(document.getElementById('past-shlokas')?.value||'').substring(0,3000),
     shlokaPtsAwarded: parseInt(document.getElementById('shloka-pts-award')?.value||0)||0,
     creativePtsAwarded: parseInt(document.getElementById('creative-pts-award')?.value||0)||0,
     creativeImgData: creativeImgData ? creativeImgData.substring(0,50000) : null,
@@ -4994,6 +5030,9 @@ function onDateChange(){
   // Always clear form first
   silentClearDay();
 
+  // Update shloka for the selected date
+  buildShlokaDisplay();
+
   const existing = savedDays.find(d => d.date === date);
 
   if(existing && existing.approved){
@@ -5040,6 +5079,9 @@ function silentClearDay(){
   const prApp=document.getElementById('approved-section');if(prApp)prApp.style.display='none';
   const freeMsg=document.getElementById('free-act-msg');if(freeMsg)freeMsg.innerHTML='';
   const prRatRes=document.getElementById('parent-rating-result');if(prRatRes)prRatRes.innerHTML='';
+  // Clear Geeta tab fields (outside #tab-report)
+  const sr=document.getElementById('shloka-reflect');if(sr)sr.value='';
+  const ps=document.getElementById('past-shlokas');if(ps)ps.value='';
   const r1v=document.getElementById('r1-verdict');if(r1v)r1v.style.display='none';
   const r2v=document.getElementById('r2-verdict');if(r2v)r2v.style.display='none';
   const r3v=document.getElementById('r3-verdict');if(r3v)r3v.style.display='none';
@@ -5121,6 +5163,8 @@ function loadDraftDay(d){
   if(d.testTot){ const e=document.getElementById('test-tot');if(e)e.value=d.testTot; }
   if(d.oddaSubj){ const e=document.getElementById('odda-subj');if(e)e.value=d.oddaSubj; }
   if(d.screenWhat){ const e=document.getElementById('screen-what');if(e)e.value=d.screenWhat; }
+  if(d.shlokaReflect){ const e=document.getElementById('shloka-reflect');if(e)e.value=d.shlokaReflect; }
+  if(d.pastShlokas){ const e=document.getElementById('past-shlokas');if(e)e.value=d.pastShlokas; }
   // Restore HW checkboxes
   if(d.hwDone && d.hwDone>0){
     // Restore from full_data if available
