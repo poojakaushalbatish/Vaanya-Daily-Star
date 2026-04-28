@@ -723,15 +723,7 @@ tr:hover td{background:#FAFBFF}
         <option value="0">❌ Not followed (+0)</option>
       </select>
     </div>
-    <div>
-      <div class="fl">School attended? <span style="color:var(--a)">(+5 pts)</span></div>
-      <select id="rpt-school" onchange="calcDayPts()">
-        <option value="0">Select...</option>
-        <option value="5">Yes, full day (+5)</option>
-        <option value="2">Partial day (+2)</option>
-        <option value="0">Holiday / absent</option>
-      </select>
-    </div>
+
   </div>
   <!-- Live points from overview -->
   <div class="sec-pts-row" id="overview-pts-row">
@@ -878,10 +870,7 @@ tr:hover td{background:#FAFBFF}
       <div class="pill" onclick="toggleEx(this,'screen-check','pg');calcDayPts()">✅ 30 mins or less (+10)</div>
       <div class="pill" onclick="toggleEx(this,'screen-check','pr');calcDayPts()">❌ More than 30 mins (−10)</div>
     </div>
-    <div style="margin-top:8px">
-      <div class="fl">What I watched / played</div>
-      <input type="text" id="screen-what" placeholder="Show / YouTube / game name">
-    </div>
+
   </div>
 
   <!-- Skill builder: self-assessed -->
@@ -906,21 +895,34 @@ tr:hover td{background:#FAFBFF}
     <div id="skill-no-msg" style="display:none;margin-top:6px;font-size:12px;font-weight:800;color:var(--rd)">😔 No skill activity today. Try something creative tomorrow!</div>
   </div>
 
-  <!-- Reading: 10 pts with book type dropdown -->
+  <!-- Reading: Yes/No + 3 new words with meanings (+10 pts when all filled) -->
   <div style="background:#ECFDF5;border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--gm)">
-    <div class="fl" style="color:var(--gd);margin-bottom:6px">📚 Reading today <span style="font-size:10px;color:var(--gd)">(up to +10 pts)</span></div>
-    <select id="book-type" onchange="showBookKnowledge();calcDayPts()">
+    <div class="fl" style="color:var(--gd);margin-bottom:6px">📚 Reading today <span style="font-size:10px;color:var(--gd)">(+10 pts when all 3 words filled)</span></div>
+    <select id="book-type" onchange="showWordBoxes();calcDayPts()" style="margin-bottom:8px">
       <option value="0">Did I read today?</option>
-      <option value="5">📖 Story book / fiction (+5 pts)</option>
-      <option value="10">🧠 Knowledge-enhancing book (+10 pts)</option>
-      <option value="0">❌ No reading today</option>
+      <option value="yes">✅ Yes, I did!</option>
+      <option value="no">❌ No, not today</option>
     </select>
-    <div style="margin-top:8px">
-      <input type="text" id="book-read" placeholder="Book name + pages e.g. Wimpy Kid p.40–55">
-    </div>
-    <div id="book-knowledge-box" style="display:none;margin-top:8px">
-      <div class="fl" style="color:var(--gd)">💡 What new knowledge did I gain?</div>
-      <textarea id="book-knowledge" placeholder="Write what interesting/new things you learned from this book..." style="min-height:52px"></textarea>
+    <div id="word-boxes" style="display:none;margin-top:6px">
+      <div class="fl" style="color:var(--gd);margin-bottom:6px;font-size:11px;font-weight:800">📝 Write 3 new words you learned today with their meanings:</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="word1" placeholder="Word 1" style="flex:1;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
+          <span style="color:var(--gd);font-weight:900;font-size:13px">→</span>
+          <input type="text" id="mean1" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="word2" placeholder="Word 2" style="flex:1;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
+          <span style="color:var(--gd);font-weight:900;font-size:13px">→</span>
+          <input type="text" id="mean2" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="word3" placeholder="Word 3" style="flex:1;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
+          <span style="color:var(--gd);font-weight:900;font-size:13px">→</span>
+          <input type="text" id="mean3" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
+        </div>
+      </div>
+      <div id="word-pts-msg" style="margin-top:8px;font-size:12px;font-weight:800;color:var(--gd)"></div>
     </div>
   </div>
 
@@ -932,7 +934,6 @@ tr:hover td{background:#FAFBFF}
       <option value="-10">😴 Timepass / wasted time (−10 pts)</option>
       <option value="10">👧 Played with Kinnu (+10 pts)</option>
       <option value="10">🧹 Cleaned room / almirah (+10 pts)</option>
-      <option value="5">🎨 Other fun activity (+5 pts)</option>
     </select>
     <div id="free-act-msg" style="margin-top:6px;font-size:11px;font-weight:800"></div>
   </div>
@@ -2006,7 +2007,6 @@ const SPEND_ITEMS=[
 const EARN_GUIDE=[
   ['Timetable followed fully','25 pts','Select "Fully followed"'],
   ['Timetable followed mostly','15 pts','Select "Mostly"'],
-  ['School attended','10 pts','Full day attendance'],
   ['Test — 90%+','50 pts','Enter test marks'],
   ['Test — 75–89%','40 pts','Enter test marks'],
   ['Test — 60–74%','25 pts','Enter test marks'],
@@ -2381,11 +2381,41 @@ function showTestChapters(){
   if(box)box.style.display=val?'block':'none';
 }
 
-// ── Book knowledge box
-function showBookKnowledge(){
-  const val=document.getElementById('book-type')?.value;
-  const box=document.getElementById('book-knowledge-box');
-  if(box)box.style.display=val==='10'?'block':'none';
+// ── Reading: show/hide word boxes
+function showWordBoxes(){
+  const val = document.getElementById('book-type')?.value;
+  const box = document.getElementById('word-boxes');
+  if(box) box.style.display = val === 'yes' ? 'block' : 'none';
+  if(val !== 'yes'){
+    // Clear word boxes when switching to No
+    ['word1','mean1','word2','mean2','word3','mean3'].forEach(id=>{
+      const e=document.getElementById(id); if(e) e.value='';
+    });
+    const msg=document.getElementById('word-pts-msg'); if(msg) msg.textContent='';
+  }
+  calcWordPts();
+}
+
+function calcWordPts(){
+  const w1=(document.getElementById('word1')?.value||'').trim();
+  const m1=(document.getElementById('mean1')?.value||'').trim();
+  const w2=(document.getElementById('word2')?.value||'').trim();
+  const m2=(document.getElementById('mean2')?.value||'').trim();
+  const w3=(document.getElementById('word3')?.value||'').trim();
+  const m3=(document.getElementById('mean3')?.value||'').trim();
+  const allFilled = w1&&m1&&w2&&m2&&w3&&m3;
+  const msg=document.getElementById('word-pts-msg');
+  if(msg){
+    if(allFilled){
+      msg.innerHTML='🌟 <span style="color:var(--gd)">+10 pts! All 3 words with meanings filled!</span>';
+    } else {
+      const filled=[w1&&m1,w2&&m2,w3&&m3].filter(Boolean).length;
+      msg.innerHTML = filled>0
+        ? `<span style="color:var(--ad)">✏️ ${filled}/3 words filled — fill all 3 to earn +10 pts</span>`
+        : '';
+    }
+  }
+  calcDayPts();
 }
 
 // ── Parent rating calc
@@ -2598,11 +2628,10 @@ function calcDayPts(){
 
   // Timetable + school
   const ttVal=parseInt(document.getElementById('rpt-tt')?.value||0);
-  const schVal=parseInt(document.getElementById('rpt-school')?.value||0);
-  pts+=ttVal+schVal;
-  breakdown.overview=ttVal+schVal;
+  pts+=ttVal;
+  breakdown.overview=ttVal;
   const ovEl=document.getElementById('overview-pts');
-  if(ovEl)ovEl.textContent=(ttVal+schVal)+' pts';
+  if(ovEl)ovEl.textContent=ttVal+' pts';
 
   // Test
   let testPts=0;
@@ -2672,8 +2701,16 @@ function calcDayPts(){
   aiSkillPts = skillDidVal === 'yes' ? (parseInt(document.getElementById('skill-pts-select')?.value||0)||0) : 0;
   screenPts += aiSkillPts;
   // book type
-  const bookType=parseInt(document.getElementById('book-type')?.value||0);
-  screenPts+=bookType;
+  // Reading — +10 pts only when all 3 words + meanings filled
+  const bookYes = document.getElementById('book-type')?.value === 'yes';
+  const w1=(document.getElementById('word1')?.value||'').trim();
+  const m1=(document.getElementById('mean1')?.value||'').trim();
+  const w2=(document.getElementById('word2')?.value||'').trim();
+  const m2=(document.getElementById('mean2')?.value||'').trim();
+  const w3=(document.getElementById('word3')?.value||'').trim();
+  const m3=(document.getElementById('mean3')?.value||'').trim();
+  const bookPts = (bookYes && w1&&m1&&w2&&m2&&w3&&m3) ? 10 : 0;
+  screenPts += bookPts;
   // free time activity
   const freeActVal=parseInt(document.getElementById('free-act')?.value||0);
   screenPts+=freeActVal;
@@ -2854,7 +2891,10 @@ function collectFormData(date, pts){
 
     parentComment:document.getElementById('parent-comment')?.value||'',
     parentRating:parseInt(document.getElementById('parent-rating')?.value||0),
-    skillDesc:document.getElementById('skill-desc')?.value||'',
+    bookType:document.getElementById('book-type')?.value||'0',
+    word1:document.getElementById('word1')?.value||'',mean1:document.getElementById('mean1')?.value||'',
+    word2:document.getElementById('word2')?.value||'',mean2:document.getElementById('mean2')?.value||'',
+    word3:document.getElementById('word3')?.value||'',mean3:document.getElementById('mean3')?.value||'',
     skillPtsAwarded: parseInt(document.getElementById('skill-pts-select')?.value||0)||0,
     shlokaReflect:(document.getElementById('shloka-reflect')?.value||'').substring(0,1000),
     pastShlokas:(document.getElementById('past-shlokas')?.value||'').substring(0,3000),
@@ -2866,7 +2906,6 @@ function collectFormData(date, pts){
     testTot:document.getElementById('test-tot')?.value||'',
     oddaSubj:document.getElementById('odda-subj')?.value||'',
     gymActivity:document.getElementById('gym-today')?.value||'0',
-    screenWhat:document.getElementById('screen-what')?.value||'',
     savedAt:new Date().toISOString()
   };
 }
@@ -3278,7 +3317,7 @@ function renderParentTab(){
   const pts=calcDayPts();
   // Compute section sub-totals for the parent view
   const ttVal=parseInt(document.getElementById('rpt-tt')?.value||0);
-  const schVal=parseInt(document.getElementById('rpt-school')?.value||0);
+
   let testPts=0;
   const got=parseFloat(document.getElementById('test-got')?.value);
   const tot=parseFloat(document.getElementById('test-tot')?.value)||0;
@@ -3295,9 +3334,13 @@ function renderParentTab(){
   let screenPts=0;
   const sc=document.getElementById('screen-check');if(sc?.querySelector('.pg'))screenPts+=10;else if(sc?.querySelector('.pa'))screenPts+=5;
   const skillChk=document.getElementById('skill-check');if(skillChk?.querySelector('.pb'))screenPts+=10;
-  screenPts+=parseInt(document.getElementById('book-type')?.value||0);
+  const bookYesP = document.getElementById('book-type')?.value === 'yes';
+  const _w1=(document.getElementById('word1')?.value||'').trim(), _m1=(document.getElementById('mean1')?.value||'').trim();
+  const _w2=(document.getElementById('word2')?.value||'').trim(), _m2=(document.getElementById('mean2')?.value||'').trim();
+  const _w3=(document.getElementById('word3')?.value||'').trim(), _m3=(document.getElementById('mean3')?.value||'').trim();
+  screenPts+=(bookYesP&&_w1&&_m1&&_w2&&_m2&&_w3&&_m3)?10:0;
   screenPts+=parseInt(document.getElementById('free-act')?.value||0);
-  const dailyPts=ttVal+schVal+testPts+oddaPts+gymPts+screenPts;
+  const dailyPts=ttVal+testPts+oddaPts+gymPts+screenPts;
 
   let shlokaPts=0;const sh=document.getElementById('shloka-done');if(sh?.querySelector('.pg'))shlokaPts=25;
   let crPts=0;const cr=document.getElementById('creative-done');if(cr?.querySelector('.pg'))crPts=20;else if(cr?.querySelector('.pa'))crPts=10;
@@ -3317,7 +3360,7 @@ function renderParentTab(){
   // Render section bars
   const bars=document.getElementById('parent-breakdown-bars');if(!bars)return;
   const sections=[
-    {label:'📝 Daily Report',pts:dailyPts,max:430,col:'#8B5CF6',detail:`TT/School: ${ttVal+schVal} · Test: ${testPts} · Odda: ${oddaPts} · Gym: ${gymPts} · Screen: ${screenPts}`},
+    {label:'📝 Daily Report',pts:dailyPts,max:430,col:'#8B5CF6',detail:`Timetable: ${ttVal} · Test: ${testPts} · Odda: ${oddaPts} · Gym: ${gymPts} · Screen: ${screenPts}`},
     {label:'🧠 Brain Lab',pts:brPts,max:55,col:'#3B82F6',detail:'Puzzles, Sudoku, Riddles completed today'},
     {label:'🕉️ Geeta & Creative',pts:soulPts,max:45,col:'#7C3AED',detail:`Shloka: ${shlokaPts} · Creative: ${crPts}`},
     {label:'⭐ Parent Rating',pts:parentRating,max:80,col:parentRating>=0?'#10B981':'#EF4444',detail:parentRating>=0?`+${parentRating} pts bonus from Parents Review`:`${parentRating} pts deducted by Parents Review`},
@@ -3873,7 +3916,10 @@ function clearDay(){
   const oaRes=document.getElementById('odda-assign-result');if(oaRes)oaRes.innerHTML='';
   document.querySelectorAll('#odda-time .pill, #gym-time .pill').forEach(p=>{p.classList.remove('pg','pr','pa','pb','pt');});
   const tcBox=document.getElementById('test-chapters-box');if(tcBox)tcBox.style.display='none';
-  const bkBox=document.getElementById('book-knowledge-box');if(bkBox)bkBox.style.display='none';
+  const wBox=document.getElementById('word-boxes');if(wBox)wBox.style.display='none';
+  ['word1','mean1','word2','mean2','word3','mean3'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const wpMsg=document.getElementById('word-pts-msg');if(wpMsg)wpMsg.textContent='';
+  const btEl=document.getElementById('book-type');if(btEl)btEl.value='0';
   const prPend=document.getElementById('parent-pending-section');if(prPend)prPend.style.display='none'; /* always hidden */
   const prAct=document.getElementById('parent-action-section');if(prAct)prAct.style.display='block';
   const prApp=document.getElementById('approved-section');if(prApp)prApp.style.display='none';
@@ -5100,7 +5146,6 @@ function silentClearDay(){
   const oaRes=document.getElementById('odda-assign-result');if(oaRes)oaRes.innerHTML='';
   document.querySelectorAll('#odda-time .pill, #gym-time .pill').forEach(p=>{p.classList.remove('pg','pr','pa','pb','pt');});
   const tcBox=document.getElementById('test-chapters-box');if(tcBox)tcBox.style.display='none';
-  const bkBox=document.getElementById('book-knowledge-box');if(bkBox)bkBox.style.display='none';
   const prPend=document.getElementById('parent-pending-section');if(prPend)prPend.style.display='none'; /* always hidden */
   const prAct=document.getElementById('parent-action-section');if(prAct)prAct.style.display='block';
   const prApp=document.getElementById('approved-section');if(prApp)prApp.style.display='none';
@@ -5191,12 +5236,15 @@ function loadDraftDay(d){
   if(d.testGot){ const e=document.getElementById('test-got');if(e)e.value=d.testGot; }
   if(d.testTot){ const e=document.getElementById('test-tot');if(e)e.value=d.testTot; }
   if(d.oddaSubj){ const e=document.getElementById('odda-subj');if(e)e.value=d.oddaSubj; }
-  if(d.screenWhat){ const e=document.getElementById('screen-what');if(e)e.value=d.screenWhat; }
   if(d.shlokaReflect){ const e=document.getElementById('shloka-reflect');if(e)e.value=d.shlokaReflect; }
   if(d.pastShlokas){ const e=document.getElementById('past-shlokas');if(e)e.value=d.pastShlokas; }
   checkGeetaSaveReady();
 
   // Restore gym dropdown
+  if(d.bookType){ const e=document.getElementById('book-type');if(e)e.value=d.bookType; showWordBoxes(); }
+  ['word1','mean1','word2','mean2','word3','mean3'].forEach(id=>{
+    if(d[id]){ const e=document.getElementById(id);if(e)e.value=d[id]; }
+  });
   if(d.gymActivity){ const e=document.getElementById('gym-today');if(e)e.value=d.gymActivity; }
   // Show draft saved info
   const draftInfo=document.createElement('div');
