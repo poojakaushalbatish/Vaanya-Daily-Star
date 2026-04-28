@@ -966,46 +966,9 @@ tr:hover td{background:#FAFBFF}
 </div>
 
 <!-- REFLECTION -->
-<div class="divlbl">My reflection for today</div>
-<div class="sec">
-  <div class="sh">
-    <div class="si" style="background:var(--pl);color:var(--p)">💭</div>
-    Vaanya's daily reflection
-    <span class="must-badge">Mandatory — fill all 3!</span>
-    <span class="ptag">Up to 7 pts each</span>
-  </div>
-
-  <!-- R1: Best thing today -->
-  <div class="rbox" style="background:var(--pl);border-left:4px solid var(--p)">
-    <div class="rlbl" style="color:var(--pd)">⭐ Best thing I did today...</div>
-    <textarea id="r1" placeholder="One win — big or small!" style="background:transparent;border:none;padding:0" oninput="calcDayPts()" onblur="evalReflection(1)"></textarea>
-    <div id="r1-verdict" style="display:none;margin-top:8px;font-size:11px;border-radius:8px;padding:8px 10px"></div>
-  </div>
-
-  <!-- R2: One thing to improve -->
-  <div class="rbox" style="background:var(--al);border-left:4px solid var(--a)">
-    <div class="rlbl" style="color:var(--ad)">🔧 One thing I want to improve...</div>
-    <textarea id="r2" placeholder="Honest self-reflection." style="background:transparent;border:none;padding:0" oninput="calcDayPts()" onblur="evalReflection(2)"></textarea>
-    <div id="r2-verdict" style="display:none;margin-top:8px;font-size:11px;border-radius:8px;padding:8px 10px"></div>
-  </div>
-
-  <!-- R3: Tomorrow plan -->
-  <div class="rbox" style="background:var(--gl);border-left:4px solid var(--g)">
-    <div class="rlbl" style="color:var(--gd)">🎯 Tomorrow I will...</div>
-    <textarea id="r3" placeholder="One clear plan for tomorrow." style="background:transparent;border:none;padding:0" oninput="calcDayPts()" onblur="evalReflection(3)"></textarea>
-    <div id="r3-verdict" style="display:none;margin-top:8px;font-size:11px;border-radius:8px;padding:8px 10px"></div>
-  </div>
-
-  <div class="sec-pts-row" id="refl-pts-row">
-    <span class="sec-pts-label">💭 Reflection points earned</span>
-    <span class="sec-pts-val" id="refl-pts-display">0 pts</span>
-  </div>
-</div>
-
-
 <div class="btn-row">
   <button class="btn btn-o" onclick="clearDay()">🗑️ Clear</button>
-  <button class="btn btn-p" onclick="saveDraftAndGoBrainLab()">💾 Save &amp; Continue to Brain Lab →</button>
+  <button class="btn btn-p" onclick="saveDraftOnly()">💾 Save Report</button>
 </div>
 
 </div><!-- end main-content -->
@@ -2077,7 +2040,7 @@ const EARN_GUIDE=[
   ['Gymnastics session','20 pts','Per gym class'],
   ['Exercise / Outdoor','10 pts','Per activity day'],
   ['Screen time within limits','20 pts','Daily reward'],
-  ['Daily reflection (all 3)','20 pts','Mandatory'],
+  
   ['Parent comment filled','25 pts','After PIN approval'],
   ['Geeta Shloka — written','25 pts','MANDATORY −20 if skipped'],
   ['Creative activity done','20 pts','MANDATORY −20 if skipped'],
@@ -2785,14 +2748,7 @@ function calcDayPts(){
   const scPtEl=document.getElementById('screen-pts-display');
   if(scPtEl)scPtEl.textContent=screenPts+' pts';
 
-  // Reflection — individual smart pts stored in globals
-  const r1=(document.getElementById('r1')?.value||'').trim();
-  const r2=(document.getElementById('r2')?.value||'').trim();
-  const r3=(document.getElementById('r3')?.value||'').trim();
-  const reflPts = (r1?reflPts1:0) + (r2?reflPts2:0) + (r3?reflPts3:0);
-  pts+=reflPts; breakdown.refl=reflPts;
-  const reflDisp=document.getElementById('refl-pts-display');
-  if(reflDisp) reflDisp.textContent=reflPts+' / 21 pts';
+  // Reflection removed from daily report
 
   // Parent comment
   const pc=(document.getElementById('parent-comment')?.value||'').trim();
@@ -2848,7 +2804,7 @@ function renderBreakdown(bd,total){
     {label:'💻 Odda class',pts:bd.odda||0,col:'var(--p)'},
     {label:'🤸 Physical activity',pts:bd.gym||0,col:'var(--a)'},
     {label:'📺 Screen & free time',pts:bd.screen||0,col:'var(--pk)'},
-    {label:'💭 Reflection',pts:bd.refl||0,col:'var(--t)'},
+    {label:'💭 Reflection',pts:0,col:'var(--t)'},
     {label:'✍️ Parent comment',pts:bd.parent||0,col:'var(--b)'},
     {label:'🕉️ Shloka',pts:bd.shloka||0,col:'var(--o)'},
     {label:'🎨 Creative',pts:bd.creative||0,col:'var(--pk)'},
@@ -2956,12 +2912,7 @@ function collectFormData(date, pts){
     date, pts, hwDone,
     shlokaD:shD, creativeD:crD, brainD:brD, odda:odD,
     approved:false,
-    r1:document.getElementById('r1')?.value||'',
-    r2:document.getElementById('r2')?.value||'',
-    r3:document.getElementById('r3')?.value||'',
-    reflPts1: reflPts1||0,
-    reflPts2: reflPts2||0,
-    reflPts3: reflPts3||0,
+
     parentComment:document.getElementById('parent-comment')?.value||'',
     parentRating:parseInt(document.getElementById('parent-rating')?.value||0),
     skillDesc:document.getElementById('skill-desc')?.value||'',
@@ -3137,9 +3088,7 @@ async function approveReport(){
 
   const data={date,pts,hwDone,shlokaD:shD,creativeD:crD,brainD:brD,odda:odD,
     ttPts:parseInt(document.getElementById('rpt-tt')?.value||0)||0,
-    r1:(document.getElementById('r1')?.value||'').substring(0,500),
-    r2:(document.getElementById('r2')?.value||'').substring(0,500),
-    r3:(document.getElementById('r3')?.value||'').substring(0,500),
+
     parentComment:(document.getElementById('parent-comment')?.value||'').substring(0,2000),
     parentRating:parseInt(document.getElementById('parent-rating')?.value||0),
     approved:true,
@@ -3412,9 +3361,7 @@ function renderParentTab(){
   const skillChk=document.getElementById('skill-check');if(skillChk?.querySelector('.pb'))screenPts+=10;
   screenPts+=parseInt(document.getElementById('book-type')?.value||0);
   screenPts+=parseInt(document.getElementById('free-act')?.value||0);
-  let reflPts=0;
-  if((document.getElementById('r1')?.value||'').trim()&&(document.getElementById('r2')?.value||'').trim()&&(document.getElementById('r3')?.value||'').trim())reflPts=20;
-  const dailyPts=ttVal+schVal+testPts+hwPts+oddaPts+gymPts+screenPts+reflPts;
+  const dailyPts=ttVal+schVal+testPts+hwPts+oddaPts+gymPts+screenPts;
 
   let shlokaPts=0;const sh=document.getElementById('shloka-done');if(sh?.querySelector('.pg'))shlokaPts=25;
   let crPts=0;const cr=document.getElementById('creative-done');if(cr?.querySelector('.pg'))crPts=20;else if(cr?.querySelector('.pa'))crPts=10;
@@ -3434,7 +3381,7 @@ function renderParentTab(){
   // Render section bars
   const bars=document.getElementById('parent-breakdown-bars');if(!bars)return;
   const sections=[
-    {label:'📝 Daily Report',pts:dailyPts,max:430,col:'#8B5CF6',detail:`TT/School: ${ttVal+schVal} · Test: ${testPts} · HW: ${hwPts} · Odda: ${oddaPts} · Gym: ${gymPts} · Screen: ${screenPts} · Reflection: ${reflPts}`},
+    {label:'📝 Daily Report',pts:dailyPts,max:430,col:'#8B5CF6',detail:`TT/School: ${ttVal+schVal} · Test: ${testPts} · HW: ${hwPts} · Odda: ${oddaPts} · Gym: ${gymPts} · Screen: ${screenPts}`},
     {label:'🧠 Brain Lab',pts:brPts,max:55,col:'#3B82F6',detail:'Puzzles, Sudoku, Riddles completed today'},
     {label:'🕉️ Geeta & Creative',pts:soulPts,max:45,col:'#7C3AED',detail:`Shloka: ${shlokaPts} · Creative: ${crPts}`},
     {label:'⭐ Parent Rating',pts:parentRating,max:80,col:parentRating>=0?'#10B981':'#EF4444',detail:parentRating>=0?`+${parentRating} pts bonus from Parents Review`:`${parentRating} pts deducted by Parents Review`},
@@ -3489,9 +3436,29 @@ function renderHistory(){
         <div class="hist-pts-lbl">pts</div>
       </div>
       <button class="btn btn-o" style="padding:7px 14px;font-size:12px;flex-shrink:0"
-        onclick="viewHistDay(${i},event)">View</button>`;
+        onclick="viewHistDay(${i},event)">👁 View</button>
+      ${!isApproved ? `<button class="btn" style="padding:7px 14px;font-size:12px;flex-shrink:0;background:#FEF2F2;color:#B91C1C;border:2px solid #FECACA;border-radius:10px;font-weight:800;cursor:pointer"
+        onclick="deleteDraft('${d.date}',event)">🗑 Delete</button>` : ''}`;
     dl.appendChild(card);
   });
+}
+
+async function deleteDraft(date, e){
+  if(e) e.stopPropagation();
+  if(!confirm('Delete draft for '+fmtDate(date)+'? This cannot be undone.')) return;
+  // Remove from local array
+  savedDays = savedDays.filter(d => d.date !== date);
+  // Delete from Supabase
+  try {
+    await _supabase.from('daily_reports').delete().eq('date', date);
+    toast('🗑️ Draft deleted for '+fmtDate(date));
+  } catch(err) {
+    toast('⚠️ Deleted locally but cloud delete failed — try again.');
+    console.error('Delete error:', err);
+  }
+  updateTopBar();
+  renderHistory();
+  document.getElementById('hist-detail-box').innerHTML = '';
 }
 
 function viewHistDay(i, e){
@@ -3549,14 +3516,6 @@ function viewHistDay(i, e){
         <div class="hd-task-name">💻 Odda</div>
       </div>
     </div>
-
-    <!-- REFLECTIONS -->
-    ${(d.r1||d.r2||d.r3)?`
-    <div style="font-size:11px;font-weight:900;color:#065F46;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Vaanya's Reflections</div>
-    ${d.r1?`<div class="hd-section"><div class="hd-section-lbl" style="color:#10B981">⭐ Best thing today</div><div class="hd-section-val">${d.r1}</div></div>`:''}
-    ${d.r2?`<div class="hd-section"><div class="hd-section-lbl" style="color:#F97316">🔧 One thing to improve</div><div class="hd-section-val">${d.r2}</div></div>`:''}
-    ${d.r3?`<div class="hd-section"><div class="hd-section-lbl" style="color:#3B82F6">🎯 Tomorrow I will</div><div class="hd-section-val">${d.r3}</div></div>`:''}
-    `:''}
 
     <!-- PARENT COMMENT + RATING -->
     ${(d.parentComment||d.parentRating)?`
@@ -5220,9 +5179,7 @@ function silentClearDay(){
   const sr=document.getElementById('shloka-reflect');if(sr)sr.value='';
   const ps=document.getElementById('past-shlokas');if(ps)ps.value='';
   checkGeetaSaveReady();
-  const r1v=document.getElementById('r1-verdict');if(r1v)r1v.style.display='none';
-  const r2v=document.getElementById('r2-verdict');if(r2v)r2v.style.display='none';
-  const r3v=document.getElementById('r3-verdict');if(r3v)r3v.style.display='none';
+
   const skDid=document.getElementById('skill-did');if(skDid)skDid.value='';
   const skPtsSel=document.getElementById('skill-pts-select');if(skPtsSel)skPtsSel.value='';
   const skF=document.getElementById('skill-pts-final');if(skF)skF.style.display='none';
@@ -5278,9 +5235,7 @@ function unlockForm(){
 }
 
 function loadApprovedDay(d){
-  if(d.r1){ const e=document.getElementById('r1');if(e)e.value=d.r1; }
-  if(d.r2){ const e=document.getElementById('r2');if(e)e.value=d.r2; }
-  if(d.r3){ const e=document.getElementById('r3');if(e)e.value=d.r3; }
+
   if(d.parentComment){ const e=document.getElementById('parent-comment');if(e)e.value=d.parentComment; }
   const appSec=document.getElementById('approved-section');
   if(appSec) appSec.style.display='block';
@@ -5292,14 +5247,7 @@ function loadApprovedDay(d){
 
 function loadDraftDay(d){
   // Restore all saved text fields
-  if(d.r1){ const e=document.getElementById('r1');if(e)e.value=d.r1; }
-  if(d.r2){ const e=document.getElementById('r2');if(e)e.value=d.r2; }
-  if(d.r3){ const e=document.getElementById('r3');if(e)e.value=d.r3; }
-  // Restore reflection pts and re-evaluate to show verdicts
-  reflPts1 = d.reflPts1||0; reflPts2 = d.reflPts2||0; reflPts3 = d.reflPts3||0;
-  if(d.r1) setTimeout(()=>evalReflection(1), 50);
-  if(d.r2) setTimeout(()=>evalReflection(2), 50);
-  if(d.r3) setTimeout(()=>evalReflection(3), 50);
+
   if(d.parentComment){ const e=document.getElementById('parent-comment');if(e)e.value=d.parentComment; }
   if(d.skillDesc){ const e=document.getElementById('skill-desc');if(e)e.value=d.skillDesc; }
   if(d.skillDesc && d.skillPtsAwarded){
