@@ -2216,7 +2216,7 @@ async function saveToSupabase(data) {
 
     // Helper: strict type casting to prevent Supabase column type errors
     const _int  = v => { const n = parseInt(v); return isNaN(n) ? 0 : n; };
-    const _bool = v => v === true || v === 'true' || v === 1;
+    const _bool = v => v === true || v === 'true' || (typeof v === 'number' && v !== 0) || v === 1 || v === '1';
 
     // Build safe JSON blob — only text/number/boolean fields, no undefined
     const safeData = {};
@@ -2233,7 +2233,7 @@ async function saveToSupabase(data) {
     const row = {
       date: data.date,
       pts: _int(data.pts),
-      hw_done: _int(data.hwDone),
+      hw_done: _bool(data.hwDone),  // boolean column: any homework done = true
       shloka_done: _bool(data.shlokaD),
       creative_done: _bool(data.creativeD),
       brain_done: _bool(data.brainD),
@@ -2907,9 +2907,14 @@ function collectFormData(date, pts){
   const brD  = !!(document.getElementById('brain-done')?.querySelector('.pg')||document.getElementById('brain-done')?.querySelector('.pa'));
   const odD  = !!document.getElementById('odda-att')?.querySelector('.pg');
   let hwDone = 0;
-  SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwDone++;});
+  const hwChecks = {};
+  SUBJECTS.forEach((_,i)=>{
+    const checked = !!document.getElementById('hw-'+i)?.checked;
+    if(checked){ hwDone++; hwChecks['hw_'+i]=true; }
+  });
   return {
     date, pts, hwDone,
+    ...hwChecks,
     shlokaD:shD, creativeD:crD, brainD:brD, odda:odD,
     approved:false,
 
