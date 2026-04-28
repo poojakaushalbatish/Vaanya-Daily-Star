@@ -732,6 +732,29 @@ tr:hover td{background:#FAFBFF}
   </div>
 </div>
 
+<!-- HOMEWORK & SELF STUDY -->
+<div class="divlbl">Homework &amp; self study</div>
+<div class="sec" style="border-color:var(--gm)">
+  <div class="sh">
+    <div class="si" style="background:var(--gl);color:var(--g)">📚</div>
+    Homework &amp; self study today
+    <span class="ptag">10 pts per subject ✓</span>
+  </div>
+  <div id="ss-list"></div>
+  <!-- Progress bar -->
+  <div style="margin-top:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:11px;font-weight:800;color:var(--gd)">Progress</span>
+      <span id="ss-pct" style="font-size:11px;font-weight:800;color:var(--gd)">0 / 8 subjects</span>
+    </div>
+    <div class="prog"><div class="prog-fill" id="ss-prog" style="width:0%;background:linear-gradient(90deg,var(--g),var(--t))"></div></div>
+  </div>
+  <div class="sec-pts-row" id="ss-pts-row" style="margin-top:10px">
+    <span class="sec-pts-label">📚 Self study points earned today</span>
+    <span class="sec-pts-val" id="ss-pts-display">0 pts</span>
+  </div>
+</div>
+
 <!-- TESTS & ASSESSMENTS -->
 <div id="monday-test-sec">
   <div class="divlbl">Monday / Weekly Test</div>
@@ -1982,6 +2005,55 @@ tr:hover td{background:#FAFBFF}
 // ════════════════════════════════════════════
 const SCOL=['#8B5CF6','#3B82F6','#EC4899','#10B981','#F97316','#D97706','#06B6D4'];
 
+// ════════════════════════════════════════════
+// HOMEWORK & SELF STUDY
+// ════════════════════════════════════════════
+const SS_SUBJECTS=[
+  {name:'Maths',            icon:'📐', col:'#8B5CF6'},
+  {name:'English',          icon:'📖', col:'#3B82F6'},
+  {name:'Science',          icon:'🔬', col:'#10B981'},
+  {name:'History & Civics', icon:'🏛️', col:'#EC4899'},
+  {name:'Geography',        icon:'🌍', col:'#F97316'},
+  {name:'Hindi',            icon:'🇮🇳', col:'#D97706'},
+  {name:'Sanskrit',         icon:'🕉️',  col:'#059669'},
+  {name:'Computers',        icon:'💻', col:'#06B6D4'},
+];
+
+function buildSS(){
+  const c=document.getElementById('ss-list'); if(!c) return;
+  c.innerHTML='';
+  SS_SUBJECTS.forEach((s,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap';
+    row.innerHTML=`
+      <input type="checkbox" id="ss-${i}" onchange="updateSS()"
+        style="width:20px;height:20px;accent-color:${s.col};cursor:pointer;flex-shrink:0">
+      <label for="ss-${i}"
+        style="font-size:12px;font-weight:800;padding:4px 10px;border-radius:8px;white-space:nowrap;
+               flex-shrink:0;cursor:pointer;color:${s.col};background:${s.col}18;border:1.5px solid ${s.col}40">
+        ${s.icon} ${s.name}</label>
+      <span style="font-size:11px;font-weight:700;color:${s.col};background:${s.col}12;
+                   border:1.5px solid ${s.col}30;border-radius:6px;padding:2px 8px;flex-shrink:0">+10 pts</span>
+      <input type="text" id="ssdet-${i}" placeholder="What did I study today..."
+        style="flex:1;min-width:140px;font-size:12px;border-color:${s.col}50">`;
+    c.appendChild(row);
+  });
+}
+
+function updateSS(){
+  let done=0;
+  SS_SUBJECTS.forEach((_,i)=>{ if(document.getElementById('ss-'+i)?.checked) done++; });
+  const total=SS_SUBJECTS.length;
+  const pct=Math.round(done/total*100);
+  const prog=document.getElementById('ss-prog');
+  if(prog) prog.style.width=pct+'%';
+  const pctEl=document.getElementById('ss-pct');
+  if(pctEl) pctEl.textContent=done+' / '+total+' subjects';
+  const ptsEl=document.getElementById('ss-pts-display');
+  if(ptsEl) ptsEl.textContent=(done*10)+' pts';
+  calcDayPts();
+}
+
 const REWARDS=[
   {pts:200,icon:'🎬',title:'1 extra movie at home',col:'#3B82F6',light:'#EFF6FF',items:['Family movie of your choice','Popcorn & snacks!','Any day, any time!']},
   {pts:400,icon:'🍕',title:'Pick family dinner',col:'#F97316',light:'#FFF7ED',items:["You choose tonight's menu","Mamma/Papa cooks your favourite!",'Full veto power!']},
@@ -2457,6 +2529,7 @@ function buildAll(){
   buildCreativeOptions();buildShlokaDisplay();
   genSudoku('easy');genLogicPuzzles();genRiddles();initMathsSprint();
   buildEarnGuide();
+  buildSS();
   setTodayDate();checkPenalty();
 }
 
@@ -2628,10 +2701,13 @@ function calcDayPts(){
 
   // Timetable + school
   const ttVal=parseInt(document.getElementById('rpt-tt')?.value||0);
-  pts+=ttVal;
-  breakdown.overview=ttVal;
+  // Self-study pts — 10 per subject checked
+  let ssPts=0;
+  SS_SUBJECTS.forEach((_,i)=>{ if(document.getElementById('ss-'+i)?.checked) ssPts+=10; });
+  pts+=ttVal+ssPts;
+  breakdown.overview=ttVal+ssPts;
   const ovEl=document.getElementById('overview-pts');
-  if(ovEl)ovEl.textContent=ttVal+' pts';
+  if(ovEl)ovEl.textContent=(ttVal+ssPts)+' pts';
 
   // Test
   let testPts=0;
@@ -2892,6 +2968,8 @@ function collectFormData(date, pts){
     parentComment:document.getElementById('parent-comment')?.value||'',
     parentRating:parseInt(document.getElementById('parent-rating')?.value||0),
     bookType:document.getElementById('book-type')?.value||'0',
+    ssDone: SS_SUBJECTS.map((_,i)=>!!document.getElementById('ss-'+i)?.checked),
+    ssDets: SS_SUBJECTS.map((_,i)=>document.getElementById('ssdet-'+i)?.value||''),
     word1:document.getElementById('word1')?.value||'',mean1:document.getElementById('mean1')?.value||'',
     word2:document.getElementById('word2')?.value||'',mean2:document.getElementById('mean2')?.value||'',
     word3:document.getElementById('word3')?.value||'',mean3:document.getElementById('mean3')?.value||'',
@@ -3317,6 +3395,7 @@ function renderParentTab(){
   const pts=calcDayPts();
   // Compute section sub-totals for the parent view
   const ttVal=parseInt(document.getElementById('rpt-tt')?.value||0);
+  let ssPtsP=0; SS_SUBJECTS.forEach((_,i)=>{ if(document.getElementById('ss-'+i)?.checked) ssPtsP+=10; });
 
   let testPts=0;
   const got=parseFloat(document.getElementById('test-got')?.value);
@@ -3340,7 +3419,7 @@ function renderParentTab(){
   const _w3=(document.getElementById('word3')?.value||'').trim(), _m3=(document.getElementById('mean3')?.value||'').trim();
   screenPts+=(bookYesP&&_w1&&_m1&&_w2&&_m2&&_w3&&_m3)?10:0;
   screenPts+=parseInt(document.getElementById('free-act')?.value||0);
-  const dailyPts=ttVal+testPts+oddaPts+gymPts+screenPts;
+  const dailyPts=ttVal+ssPtsP+testPts+oddaPts+gymPts+screenPts;
 
   let shlokaPts=0;const sh=document.getElementById('shloka-done');if(sh?.querySelector('.pg'))shlokaPts=25;
   let crPts=0;const cr=document.getElementById('creative-done');if(cr?.querySelector('.pg'))crPts=20;else if(cr?.querySelector('.pa'))crPts=10;
@@ -3360,7 +3439,7 @@ function renderParentTab(){
   // Render section bars
   const bars=document.getElementById('parent-breakdown-bars');if(!bars)return;
   const sections=[
-    {label:'📝 Daily Report',pts:dailyPts,max:430,col:'#8B5CF6',detail:`Timetable: ${ttVal} · Test: ${testPts} · Odda: ${oddaPts} · Gym: ${gymPts} · Screen: ${screenPts}`},
+    {label:'📝 Daily Report',pts:dailyPts,max:430,col:'#8B5CF6',detail:`TT: ${ttVal} · Study: ${ssPtsP} · Test: ${testPts} · Odda: ${oddaPts} · Gym: ${gymPts} · Screen: ${screenPts}`},
     {label:'🧠 Brain Lab',pts:brPts,max:55,col:'#3B82F6',detail:'Puzzles, Sudoku, Riddles completed today'},
     {label:'🕉️ Geeta & Creative',pts:soulPts,max:45,col:'#7C3AED',detail:`Shloka: ${shlokaPts} · Creative: ${crPts}`},
     {label:'⭐ Parent Rating',pts:parentRating,max:80,col:parentRating>=0?'#10B981':'#EF4444',detail:parentRating>=0?`+${parentRating} pts bonus from Parents Review`:`${parentRating} pts deducted by Parents Review`},
@@ -3934,6 +4013,8 @@ function clearDay(){
   const cRes2=document.getElementById('creative-pts-result');if(cRes2)cRes2.textContent='';
   const gMsg=document.getElementById('geeta-save-msg');if(gMsg)gMsg.textContent='';
   const crMsg=document.getElementById('creative-save-msg');if(crMsg)crMsg.textContent='';
+  buildSS();
+  updateSS();
   calcDayPts();setTodayDate();
 }
 
@@ -5242,6 +5323,17 @@ function loadDraftDay(d){
 
   // Restore gym dropdown
   if(d.bookType){ const e=document.getElementById('book-type');if(e)e.value=d.bookType; showWordBoxes(); }
+  if(d.ssDone && Array.isArray(d.ssDone)){
+    d.ssDone.forEach((checked,i)=>{
+      const cb=document.getElementById('ss-'+i); if(cb) cb.checked=!!checked;
+    });
+  }
+  if(d.ssDets && Array.isArray(d.ssDets)){
+    d.ssDets.forEach((txt,i)=>{
+      const el=document.getElementById('ssdet-'+i); if(el) el.value=txt||'';
+    });
+  }
+  updateSS();
   ['word1','mean1','word2','mean2','word3','mean3'].forEach(id=>{
     if(d[id]){ const e=document.getElementById(id);if(e)e.value=d[id]; }
   });
