@@ -2287,52 +2287,18 @@ async function saveToSupabase(data) {
       .upsert(row);
 
     if (error) {
-      console.error('Supabase error details:', error);
-      const reason = error.message || error.code || 'unknown error';
+      console.error('Supabase error:', error);
       showSyncStatus('error');
-      showDataNotSavedAlert(reason);
       return false;
     }
 
     showSyncStatus('ok');
-    // Hide any lingering error alert
-    const ea = document.getElementById('data-not-saved-alert');
-    if(ea) ea.style.display = 'none';
     return true;
 
   } catch(err) {
     showSyncStatus('error');
     console.error('Save error:', err);
-    showDataNotSavedAlert(err.message || 'Network error — check your internet connection');
     return false;
-  }
-}
-
-function showDataNotSavedAlert(reason){
-  let el = document.getElementById('data-not-saved-alert');
-  if(!el){
-    el = document.createElement('div');
-    el.id = 'data-not-saved-alert';
-    el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#B91C1C;color:#fff;padding:12px 20px;font-size:14px;font-weight:900;font-family:Nunito,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;box-shadow:0 4px 20px rgba(0,0,0,.4)';
-    document.body.appendChild(el);
-  }
-  el.style.display = 'flex';
-  el.innerHTML = `🔴 YOUR DATA IS NOT SAVED — Cloud sync failed: <span style="font-weight:700;opacity:.85;font-size:12px">${reason}</span>
-    &nbsp;<button onclick="retrySave()" style="background:#fff;color:#B91C1C;border:none;border-radius:8px;padding:5px 16px;font-weight:900;cursor:pointer;font-family:Nunito,sans-serif;font-size:13px">🔄 Retry Now</button>
-    &nbsp;<button onclick="document.getElementById('data-not-saved-alert').style.display='none'" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:8px;padding:5px 12px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif;font-size:12px">✕</button>`;
-}
-
-async function retrySave(){
-  const date = document.getElementById('rpt-date')?.value;
-  if(!date){ toast('No date selected.'); return; }
-  const el = document.getElementById('data-not-saved-alert');
-  if(el) el.innerHTML = '<span>⏳ Retrying save to cloud...</span>';
-  const pts = calcDayPts();
-  const data = collectFormData(date, pts);
-  const ok = await saveToSupabase(data);
-  if(ok){
-    if(el) el.style.display = 'none';
-    toast('✅ Data saved to cloud successfully!');
   }
 }
 
@@ -2355,7 +2321,7 @@ function showSyncStatus(state) {
     loading: { icon: '⏳', text: 'Loading data...', col: '#F59E0B' },
     saving:  { icon: '💾', text: 'Saving to cloud...', col: '#3B82F6' },
     ok:      { icon: '✅', text: 'All saved to cloud!', col: '#10B981' },
-    error:   { icon: '🔴', text: 'NOT SAVED — Cloud sync failed!', col: '#B91C1C' }
+    error:   { icon: '❌', text: 'Save failed — try the Save button again', col: '#B91C1C' }
   };
   const s = states[state] || states.ok;
   el.innerHTML = `<span style="color:${s.col};font-size:11px;font-weight:900">${s.icon} ${s.text}</span>`;
@@ -2432,62 +2398,7 @@ function toggleEx(el,gid,cls){
 // TABS — fixed: uses id suffix mapping
 // ════════════════════════════════════════════
 // ════════════════════════════════════════════
-// AUTO-SAVE ENGINE
-// ════════════════════════════════════════════
-let autoSaveTimer = null;
-let lastAutoSaveDate = null;
-
-async function autoSaveDraft(reason){
-  const date = document.getElementById('rpt-date')?.value;
-  if(!date) return;
-  // Don't auto-save if date is already approved
-  const existing = savedDays.find(d=>d.date===date);
-  if(existing?.approved) return;
-  const pts = calcDayPts();
-  const data = collectFormData(date, pts);
-  const idx = savedDays.findIndex(d=>d.date===date);
-  if(idx>=0){ savedDays[idx]={...savedDays[idx],...data}; }
-  else { savedDays.unshift(data); }
-  savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  lastAutoSaveDate = date;
-  const ok = await saveToSupabase(data);
-  updateTopBar();
-  if(ok){
-    showAutoSaveBanner('saved', reason);
-  }
-  // If not ok, saveToSupabase already shows the error banner
-}
-
-function showAutoSaveBanner(state, reason){
-  let el = document.getElementById('autosave-banner');
-  if(!el){
-    el = document.createElement('div');
-    el.id = 'autosave-banner';
-    el.style.cssText='position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9999;border-radius:12px;padding:10px 20px;font-size:13px;font-weight:800;font-family:Nunito,sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.18);transition:opacity .5s;max-width:90vw;text-align:center';
-    document.body.appendChild(el);
-  }
-  if(state==='saved'){
-    el.style.background='#ECFDF5';el.style.color='#065F46';el.style.border='2px solid #6EE7B7';
-    el.textContent='✅ Auto-saved! Draft created in History. ('+(reason||'')+')';
-  } else {
-    el.style.background='#FEF2F2';el.style.color='#B91C1C';el.style.border='2px solid #FCA5A5';
-    el.textContent='🔴 YOUR DATA IS NOT SAVED — Cloud sync failed! Check your connection.';
-  }
-  el.style.opacity='1';
-  clearTimeout(el._timer);
-  if(state==='saved'){
-    el._timer=setTimeout(()=>{el.style.opacity='0';},3500);
-  }
-  // Error banner stays visible until next successful save
-}
-
 function showTab(id,btn){
-  // Auto-save when leaving any data-entry tab (report, brain, geeta, creative)
-  const currentActive = document.querySelector('.tab.active');
-  const dataEntryTabs = new Set(['tab-report','tab-brain','tab-geeta','tab-creative']);
-  if(currentActive && dataEntryTabs.has(currentActive.id) && currentActive.id !== 'tab-'+id){
-    autoSaveDraft('switching tabs');
-  }
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
@@ -3097,10 +3008,14 @@ async function saveDraftAndGoBrainLab(){
   savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
   // Save to Supabase as draft (approved=false — no bank credit)
-  await saveToSupabase(data);
+  const ok = await saveToSupabase(data);
   updateTopBar();
-  toast('💾 Draft saved! Appears in History as Pending. Going to Brain Lab...');
-  setTimeout(()=>showTab('brain', document.querySelector('.nb.t3')),900);
+  if(ok){
+    toast('💾 Draft saved! Appears in History as Pending. Going to Brain Lab...');
+    setTimeout(()=>showTab('brain', document.querySelector('.nb.t3')),900);
+  } else {
+    toast('⚠️ Save failed — check your connection and try again.');
+  }
 }
 
 // Also allow saving draft without navigating away
@@ -3113,9 +3028,13 @@ async function saveDraftOnly(){
   if(idx>=0){ savedDays[idx]={...savedDays[idx],...data}; }
   else { savedDays.unshift(data); }
   savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  await saveToSupabase(data);
+  const ok = await saveToSupabase(data);
   updateTopBar();
-  toast('💾 Draft saved for '+fmtDate(date)+'! ('+pts+' pts · Pending approval)');
+  if(ok){
+    toast('💾 Draft saved for '+fmtDate(date)+'! ('+pts+' pts · Pending approval)');
+  } else {
+    toast('⚠️ Save failed — check your connection and try again.');
+  }
 }
 
 function updateTopBar(){
@@ -5519,30 +5438,7 @@ function renderParentComments(days){
 // ════════════════════════════════════════════
 buildAll();
 
-// ── SAFETY NET: save before page unload ──────────────────────
-window.addEventListener('beforeunload', function(e){
-  const date = document.getElementById('rpt-date')?.value;
-  if(!date) return;
-  const existing = savedDays.find(d=>d.date===date);
-  if(existing?.approved) return;
-  // Trigger a synchronous-style beacon save (best-effort)
-  const pts = typeof calcDayPts === 'function' ? calcDayPts() : 0;
-  const data = collectFormData(date, pts);
-  const idx = savedDays.findIndex(d=>d.date===date);
-  if(idx>=0){ savedDays[idx]={...savedDays[idx],...data}; }
-  else { savedDays.unshift(data); }
-  // Non-blocking async fire — browser may cancel it but worth trying
-  saveToSupabase(data);
-});
 
-// ── PERIODIC AUTO-SAVE: every 90 seconds while page is open ──
-setInterval(()=>{
-  const date = document.getElementById('rpt-date')?.value;
-  if(!date) return;
-  const existing = savedDays.find(d=>d.date===date);
-  if(existing?.approved) return;
-  autoSaveDraft('auto every 90s');
-}, 90000);
 updateTopBar();
 calcDayPts();
 updateSidePanels(0);
