@@ -2251,19 +2251,21 @@ async function saveToSupabase(data) {
   try {
     showSyncStatus('saving');
 
-    const safeData = {};
-    // Only skip truly large fields — keep all small restorable fields
-    const skipKeys = new Set(['full_data','creativeImgData']);
-    for(const [k,v] of Object.entries(data)){
-      if(skipKeys.has(k)) continue;
-      // Skip base64 images or values > 8KB
-      if(typeof v === 'string' && v.length > 8000) continue;
-      safeData[k] = v;
-    }
-
     // Helper: strict type casting to prevent Supabase column type errors
     const _int  = v => { const n = parseInt(v); return isNaN(n) ? 0 : n; };
     const _bool = v => v === true || v === 'true' || v === 1;
+
+    // Build safe JSON blob — only text/number/boolean fields, no undefined
+    const safeData = {};
+    const skipKeys = new Set(['full_data','creativeImgData']);
+    for(const [k,v] of Object.entries(data)){
+      if(skipKeys.has(k)) continue;
+      if(v === undefined || v === null) { safeData[k] = null; continue; }
+      if(typeof v === 'string' && v.length > 8000) continue;
+      // Ensure only JSON-safe primitives enter full_data
+      if(typeof v === 'object') continue;
+      safeData[k] = v;
+    }
 
     const row = {
       date: data.date,
@@ -3046,6 +3048,9 @@ function collectFormData(date, pts){
     r1:document.getElementById('r1')?.value||'',
     r2:document.getElementById('r2')?.value||'',
     r3:document.getElementById('r3')?.value||'',
+    reflPts1: reflPts1||0,
+    reflPts2: reflPts2||0,
+    reflPts3: reflPts3||0,
     parentComment:document.getElementById('parent-comment')?.value||'',
     parentRating:parseInt(document.getElementById('parent-rating')?.value||0),
     skillDesc:document.getElementById('skill-desc')?.value||'',
@@ -5371,6 +5376,11 @@ function loadDraftDay(d){
   if(d.r1){ const e=document.getElementById('r1');if(e)e.value=d.r1; }
   if(d.r2){ const e=document.getElementById('r2');if(e)e.value=d.r2; }
   if(d.r3){ const e=document.getElementById('r3');if(e)e.value=d.r3; }
+  // Restore reflection pts and re-evaluate to show verdicts
+  reflPts1 = d.reflPts1||0; reflPts2 = d.reflPts2||0; reflPts3 = d.reflPts3||0;
+  if(d.r1) setTimeout(()=>evalReflection(1), 50);
+  if(d.r2) setTimeout(()=>evalReflection(2), 50);
+  if(d.r3) setTimeout(()=>evalReflection(3), 50);
   if(d.parentComment){ const e=document.getElementById('parent-comment');if(e)e.value=d.parentComment; }
   if(d.skillDesc){ const e=document.getElementById('skill-desc');if(e)e.value=d.skillDesc; }
   if(d.skillDesc && d.skillPtsAwarded){
