@@ -817,7 +817,7 @@ tr:hover td{background:#FAFBFF}
     <div class="si" style="background:var(--pl);color:var(--p)">💻</div>
     Odda class today
     <span class="must-badge">Mandatory — −15 pts if missed!</span>
-    <span class="ptag">Max 10 pts · late/miss penalties apply</span>
+    <span class="ptag">Max 25 pts · late/miss penalties apply</span>
   </div>
   <div>
       <div class="fl">Did I attend today?</div>
@@ -2821,8 +2821,8 @@ function calcDayPts(){
     }
   }
   // else incomplete = 0 bonus pts (no deduction for assignment)
-  // Cap maximum at 10 (can still go negative for attendance/timing penalties)
-  const oddaFinal=Math.min(10,oddaPts);
+  // Cap maximum at 25 (10 att + 5 timing + 10 assignment — can still go negative)
+  const oddaFinal=Math.min(25, oddaPts);
   pts+=oddaFinal;breakdown.odda=oddaFinal;
   const oddaPtEl=document.getElementById('odda-pts-display');
   if(oddaPtEl)oddaPtEl.textContent=oddaFinal+' pts';
