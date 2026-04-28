@@ -47,8 +47,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--ink);font-
 .date-pill{background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.3)}
 .xp-wrap{background:rgba(255,255,255,.2);border-radius:10px;height:12px;overflow:hidden;margin-top:5px}
 .xp-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,#FCD34D,#F59E0B);transition:width .5s}
-.penalty-bar{background:#FEF2F2;border:2px solid #FCA5A5;border-radius:10px;padding:8px 14px;
-  margin-bottom:10px;font-size:12px;font-weight:700;color:#B91C1C;display:none;align-items:center;gap:8px}
+
 
 /* NAV TABS */
 .nav{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;padding:4px;
@@ -648,7 +647,7 @@ tr:hover td{background:#FAFBFF}
 </div>
 
 <!-- PENALTY BAR -->
-<div class="penalty-bar" id="pen-bar">⚠️ <span id="pen-msg"></span></div>
+
 
 <!-- TABS -->
 <div class="nav">
@@ -907,22 +906,26 @@ tr:hover td{background:#FAFBFF}
     </div>
   </div>
 
-  <!-- Skill builder: AI evaluated -->
-  <div style="background:var(--bl);border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--bm);background:#EFF6FF">
-    <div class="fl" style="color:var(--bd);margin-bottom:6px">🎯 Skill builder activity today <span style="font-size:10px;color:var(--bd)">(AI awards up to +10 pts · No activity = −10 pts)</span></div>
+  <!-- Skill builder: self-assessed -->
+  <div style="background:#EFF6FF;border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--bm)">
+    <div class="fl" style="color:var(--bd);margin-bottom:6px">🎯 Skill builder activity today <span style="font-size:10px;color:var(--bd)">(up to +10 pts)</span></div>
     <select id="skill-did" onchange="handleSkillSelect()" style="margin-bottom:8px">
       <option value="">Did I do a skill activity today?</option>
       <option value="yes">✅ Yes, I did!</option>
       <option value="no">❌ No, not today</option>
     </select>
     <div id="skill-yes-box" style="display:none">
-      <div class="fl" style="color:var(--bd);margin-bottom:4px">What did I learn or practise? (describe in detail)</div>
-      <textarea id="skill-desc" placeholder="e.g. I learnt how to fold an origami crane, I practised sketching faces, I solved a new type of puzzle..." style="min-height:60px;border-color:var(--bm)"></textarea>
-      <button onclick="evaluateSkillWithAI()" class="btn btn-p" style="margin-top:8px;font-size:12px;padding:7px 16px;background:linear-gradient(135deg,var(--b),var(--bd));border:none">🤖 Ask AI to evaluate my skill!</button>
-      <div id="skill-ai-result" style="display:none;margin-top:10px"></div>
+      <div class="fl" style="color:var(--bd);margin-bottom:4px">What did I learn or practise?</div>
+      <textarea id="skill-desc" placeholder="e.g. I practised sketching faces, I learnt origami, I solved a puzzle..." style="min-height:52px;border-color:var(--bm)"></textarea>
+      <div class="fl" style="color:var(--bd);margin-top:8px;margin-bottom:4px">How well did I do?</div>
+      <select id="skill-pts-select" onchange="handleSkillPtsSelect()" style="margin-bottom:6px">
+        <option value="">Rate my effort...</option>
+        <option value="5">👍 Good — I tried my best (+5 pts)</option>
+        <option value="10">🌟 Excellent — I did really well! (+10 pts)</option>
+      </select>
+      <div id="skill-pts-final" style="display:none;margin-top:4px"></div>
     </div>
-    <div id="skill-no-msg" style="display:none;margin-top:6px;font-size:12px;font-weight:800;color:var(--rd)">😔 No skill activity today — that's −10 pts. Try something new tomorrow!</div>
-    <div id="skill-pts-final" style="display:none;margin-top:6px"></div>
+    <div id="skill-no-msg" style="display:none;margin-top:6px;font-size:12px;font-weight:800;color:var(--rd)">😔 No skill activity today. Try something creative tomorrow!</div>
   </div>
 
   <!-- Reading: 10 pts with book type dropdown -->
@@ -2258,24 +2261,28 @@ async function saveToSupabase(data) {
       safeData[k] = v;
     }
 
+    // Helper: strict type casting to prevent Supabase column type errors
+    const _int  = v => { const n = parseInt(v); return isNaN(n) ? 0 : n; };
+    const _bool = v => v === true || v === 'true' || v === 1;
+
     const row = {
       date: data.date,
-      pts: data.pts || 0,
-      hw_done: data.hwDone || 0,
-      shloka_done: data.shlokaD || false,
-      creative_done: data.creativeD || false,
-      brain_done: data.brainD || false,
-      odda_done: data.odda || false,
+      pts: _int(data.pts),
+      hw_done: _int(data.hwDone),
+      shloka_done: _bool(data.shlokaD),
+      creative_done: _bool(data.creativeD),
+      brain_done: _bool(data.brainD),
+      odda_done: _bool(data.odda),
       notes: (data.parentComment || '').substring(0, 2000),
-      parent_rating: data.parentRating || 0,
-      approved: data.approved || false,
+      parent_rating: _int(data.parentRating),
+      approved: _bool(data.approved),
       saved_at: data.savedAt || new Date().toISOString(),
       full_data: JSON.stringify(safeData).substring(0, 30000)
     };
 
     const { error } = await _supabase
       .from('daily_reports')
-      .upsert(row, { onConflict: 'date' });
+      .upsert(row);
 
     if (error) {
       console.error('Supabase error details:', error);
@@ -2358,7 +2365,7 @@ let logicFrozen  = false; // once completed today, freeze
 let parentUnlocked = false; // PIN authenticated this session
 let aiSkillPts = 0; // set by AI skill evaluator
 let reflPts1=0,reflPts2=0,reflPts3=0; // per-reflection pts
-const GEMINI_KEY = 'AIzaSyALK9x-p1dyq5O0IuL7_I4-iBkHDCED318';
+// AI removed — no external API calls
 let sudokuGrid    = null, sudokuSolution = null, selectedCell = null, sudokuDifficulty = 'easy';
 let currentShloka = 0;
 let creativeChosen = null;
@@ -2843,8 +2850,10 @@ function calcDayPts(){
   const sc=document.getElementById('screen-check');
   if(sc?.querySelector('.pg'))screenPts+=10;
   else if(sc?.querySelector('.pr'))screenPts-=10;
-  // skill builder — pts awarded by AI, stored in aiSkillPts
-  screenPts+=aiSkillPts;
+  // skill builder — pts from self-assessment dropdown
+  const skillDidVal = document.getElementById('skill-did')?.value;
+  aiSkillPts = skillDidVal === 'yes' ? (parseInt(document.getElementById('skill-pts-select')?.value||0)||0) : 0;
+  screenPts += aiSkillPts;
   // book type
   const bookType=parseInt(document.getElementById('book-type')?.value||0);
   screenPts+=bookType;
@@ -2900,9 +2909,7 @@ function calcDayPts(){
   let parentRatingPts=ratingVal;
   pts+=parentRatingPts;breakdown.parentRating=parentRatingPts;
 
-  // Penalty
-  const penEl=document.getElementById('pen-bar');
-  if(penEl&&penEl.style.display==='flex')pts=Math.max(0,pts-20);
+  // Penalty bar removed — no deduction applied
 
   // Update all displays — fix #9
   const livePts=document.getElementById('day-pts-live');
@@ -2957,24 +2964,7 @@ function updateXP(pts){
 // ════════════════════════════════════════════
 // PENALTY CHECK
 // ════════════════════════════════════════════
-function checkPenalty(){
-  if(!savedDays.length)return;
-  const today=document.getElementById('rpt-date').value;if(!today)return;
-  const yesterday=new Date(today+'T12:00:00');yesterday.setDate(yesterday.getDate()-1);
-  const yStr=yesterday.toISOString().split('T')[0];
-  const yd=savedDays.find(d=>d.date===yStr);
-  const pen=document.getElementById('pen-bar');
-  if(yd){
-    const penalties=[];
-    if(!yd.shlokaD)penalties.push('Geeta Shloka (−20 pts)');
-    if(!yd.creativeD)penalties.push('Creative Activity (−20 pts)');
-    if(!yd.brainD)penalties.push('Brain Lab (−15 pts)');
-    if(penalties.length){
-      pen.style.display='flex';
-      document.getElementById('pen-msg').textContent="⚠️ Yesterday's mandatory tasks missed: "+penalties.join(', ')+'. Penalty today!';
-    }else pen.style.display='none';
-  }else pen.style.display='none';
-}
+function checkPenalty(){ /* penalty bar removed */ }
 
 // ════════════════════════════════════════════
 // REFLECTION SMART EVALUATOR
@@ -3059,6 +3049,7 @@ function collectFormData(date, pts){
     parentComment:document.getElementById('parent-comment')?.value||'',
     parentRating:parseInt(document.getElementById('parent-rating')?.value||0),
     skillDesc:document.getElementById('skill-desc')?.value||'',
+    skillPtsAwarded: parseInt(document.getElementById('skill-pts-select')?.value||0)||0,
     shlokaReflect:(document.getElementById('shloka-reflect')?.value||'').substring(0,1000),
     pastShlokas:(document.getElementById('past-shlokas')?.value||'').substring(0,3000),
     shlokaPtsAwarded: parseInt(document.getElementById('shloka-pts-award')?.value||0)||0,
@@ -3254,9 +3245,6 @@ async function approveReport(){
 
   // Save to Supabase cloud
   await saveToSupabase(data);
-
-  // Generate AI encouraging comment
-  generateAIComment(data);
 
   // Streak celebration
   const streak=getStreak();
@@ -4424,184 +4412,36 @@ function checkRiddle(i,correct,hint){
 }
 
 // ════════════════════════════════════════════
-// SKILL BUILDER — AI evaluation
+// ════════════════════════════════════════════
+// SKILL BUILDER — simple self-assessment
 // ════════════════════════════════════════════
 function handleSkillSelect(){
-  const val=document.getElementById('skill-did')?.value;
-  document.getElementById('skill-yes-box').style.display=val==='yes'?'block':'none';
-  document.getElementById('skill-no-msg').style.display=val==='no'?'block':'none';
-  document.getElementById('skill-pts-final').style.display='none';
-  document.getElementById('skill-ai-result').style.display='none';
-  if(val==='no'){aiSkillPts=-10;}
-  else{aiSkillPts=0;}
+  const val = document.getElementById('skill-did')?.value;
+  document.getElementById('skill-yes-box').style.display = val==='yes' ? 'block' : 'none';
+  document.getElementById('skill-no-msg').style.display  = val==='no'  ? 'block' : 'none';
+  document.getElementById('skill-pts-final').style.display = 'none';
+  // Reset pts select when toggling
+  const sel = document.getElementById('skill-pts-select');
+  if(sel) sel.value = '';
+  aiSkillPts = 0;
   calcDayPts();
 }
 
-function evaluateSkillWithAI(){
-  const desc=(document.getElementById('skill-desc')?.value||'').trim();
-  if(!desc){toast('Please describe what you learnt first!');return;}
-
-  const resultBox=document.getElementById('skill-ai-result');
-  resultBox.style.display='block';
-  resultBox.innerHTML=`<div style="color:var(--bd);font-size:12px;font-weight:800">🔍 Evaluating your skill activity...</div>`;
-
-  const d = desc.toLowerCase();
-  const wordCount = desc.trim().split(/\s+/).length;
-
-  // Not-a-skill keywords
-  const badWords = ['youtube','netflix','instagram','reel','tiktok','video','movie','tv','series',
-    'nothing','slept','sleep','nap','timepass','whatsapp','phone','scroll','chat',
-    'pubg','free fire','minecraft','watched','browsing','bored','sitting','lying'];
-
-  // Skill categories with keywords and base points
-  const skillCats = [
-    {label:'🎨 Art & Craft',    pts:8,  words:['draw','drawing','sketch','paint','painting','colour','color','craft','origami','clay','rangoli','mandala','doodle','art','stitch','knit','sew','crochet']},
-    {label:'🎵 Music',          pts:9,  words:['sing','singing','song','music','guitar','piano','tabla','harmonium','flute','beat','rhythm','raga','instrument','notes','practice','practise']},
-    {label:'💃 Dance',          pts:9,  words:['dance','dancing','choreograph','steps','kathak','classical','folk','mudra','expression']},
-    {label:'📚 Reading',        pts:7,  words:['read','reading','book','chapter','story','novel','encyclop','magazine','article','poem','poetry']},
-    {label:'✍️ Writing',        pts:8,  words:['write','writing','wrote','essay','diary','journal','letter','blog','script','compose','story','poem']},
-    {label:'🍳 Cooking',        pts:8,  words:['cook','cooking','bake','baking','recipe','made','prepared','kitchen','roti','sabzi','cake','sandwich','salad']},
-    {label:'🔬 Science',        pts:9,  words:['experiment','science','chemistry','physics','biology','observe','research','project','model','circuit','magnet','plant','grow']},
-    {label:'🧮 Maths & Logic',  pts:9,  words:['maths','math','puzzle','sudoku','calculate','algebra','geometry','fraction','equation','logic','rubik']},
-    {label:'🗣️ Language',       pts:8,  words:['hindi','english','sanskrit','french','language','vocabulary','grammar','translation','speak','essay']},
-    {label:'🏃 Sports',         pts:7,  words:['gymnastics','gymnastic','taekwondo','swim','swimming','yoga','exercise','skipping','badminton','cricket','football','sport','athletic','stretch','balance']},
-    {label:'💻 Coding & Tech',  pts:9,  words:['code','coding','program','python','website','app','computer','typing','type','excel','digital','robot']},
-    {label:'🏠 Life Skills',    pts:7,  words:['clean','organise','organize','arrange','manage','help','garden','plant','water','recycle','tidy','pack','fold','laundry']},
-    {label:'🧘 Mindfulness',    pts:8,  words:['meditat','prayer','shloka','mantra','gratitude','journal','reflect','breathe','calm','mindful','focus']},
-  ];
-
-  const isBad = badWords.some(k => d.includes(k));
-  let matched = null;
-  for(const cat of skillCats){
-    if(cat.words.some(k => d.includes(k))){ matched = cat; break; }
+function handleSkillPtsSelect(){
+  const val = parseInt(document.getElementById('skill-pts-select')?.value || 0);
+  aiSkillPts = val || 0;
+  const ptsEl = document.getElementById('skill-pts-final');
+  if(ptsEl){
+    if(val){
+      ptsEl.style.display = 'block';
+      const col = val===10 ? 'var(--gd)' : 'var(--bd)';
+      const icon = val===10 ? '🌟' : '👍';
+      ptsEl.innerHTML = `<span style="font-size:12px;font-weight:800;color:${col}">${icon} +${val} skill pts added!</span>`;
+    } else {
+      ptsEl.style.display = 'none';
+    }
   }
-
-  // Repeat check against past 14 days
-  const pastDescs = savedDays.slice(0,14).map(day=>{
-    try{const fd=typeof day.full_data==='string'?JSON.parse(day.full_data):day; return (fd.skillDesc||'').toLowerCase();}catch{return '';}
-  }).filter(Boolean);
-
-  let isRepeat = false;
-  if(matched && pastDescs.length > 0){
-    isRepeat = pastDescs.some(past => matched.words.some(k => past.includes(k)));
-  }
-
-  // Scoring
-  const detailBonus = wordCount >= 25 ? 2 : wordCount >= 12 ? 1 : 0;
-  const repeatPenalty = isRepeat ? 2 : 0;
-
-  let pts=0, valid=false, reason='', feedback='';
-  const warmLines = [
-    'Every skill you learn today is a gift to your future self, Vaanya! 🌟',
-    'So proud of you Vaanya — keep building, keep growing! 💫',
-    'Consistent practice makes you unstoppable, Vaanya! 🏆',
-    'Amazing effort today, Vaanya — this is exactly the spirit! ⭐',
-  ];
-
-  if(isBad && !matched){
-    pts=0; valid=false;
-    reason='Watching videos, gaming or timepass does not count as a skill activity.';
-    feedback='Try something creative or educational tomorrow, Vaanya — you have so many talents! 💪';
-  } else if(!matched){
-    pts=4; valid=true;
-    reason='Looks like it could be a skill, but describe it in more detail next time to score higher!';
-    feedback='Good effort Vaanya! Write more detail about what you actually learnt or practised. 📝';
-  } else if(isRepeat){
-    pts=Math.max(1, matched.pts - repeatPenalty + detailBonus);
-    valid=true;
-    reason=matched.label+' is great, but you have done something similar recently — try a new activity for full points!';
-    feedback='You are consistent, Vaanya! Mix in new activities to earn maximum points! 🌈';
-  } else if(wordCount < 8){
-    pts=Math.min(10, matched.pts - 1 + detailBonus);
-    valid=true;
-    reason=matched.label+' detected — good skill, but write more detail to earn bonus points!';
-    feedback='Great start Vaanya! Next time write more about what exactly you learnt! ✨';
-  } else {
-    pts=Math.min(10, matched.pts + detailBonus);
-    valid=true;
-    reason=matched.label+' — genuine skill with great description!';
-    feedback=warmLines[Math.floor(Math.random()*warmLines.length)];
-  }
-
-  // Store aiSkillPts
-  aiSkillPts = valid ? pts : 0;
-
-  // Display result
-  const col=pts>=7?'var(--gd)':pts>=4?'var(--bd)':pts>0?'var(--ad)':'var(--rd)';
-  const bg=pts>=7?'var(--gl)':pts>=4?'#EFF6FF':pts>0?'var(--al)':'var(--rl)';
-  const border=pts>=7?'var(--gm)':pts>=4?'var(--bm)':pts>0?'var(--am)':'var(--rm)';
-  const icon=pts>=7?'🌟':pts>=4?'👍':pts>0?'🙂':'❌';
-
-  resultBox.innerHTML=`
-    <div style="background:${bg};border:1.5px solid ${border};border-radius:10px;padding:12px">
-      <div style="font-size:13px;font-weight:900;color:${col};margin-bottom:6px">${icon} Verdict: ${valid&&pts>0?'+'+pts+' pts awarded':'Not counted as a skill activity'}</div>
-      <div style="font-size:12px;color:var(--ink);margin-bottom:4px">${reason}</div>
-      <div style="font-size:11px;color:${col};font-weight:700">${feedback}</div>
-      ${isRepeat?'<div style="font-size:11px;color:var(--ad);margin-top:4px">⚠️ Similar activity found in past 14 days — try something new for full points!</div>':''}
-      ${detailBonus>0?'<div style="font-size:11px;color:var(--gd);margin-top:4px">✏️ +'+detailBonus+' bonus pts for detailed description!</div>':''}
-    </div>`;
-
-  document.getElementById('skill-pts-final').style.display='block';
-  document.getElementById('skill-pts-final').innerHTML=`<span style="font-size:12px;font-weight:800;color:${col}">${icon} Skill points added: ${aiSkillPts>=0?'+':''}${aiSkillPts}</span>`;
   calcDayPts();
-  toast(aiSkillPts>0?`Skill evaluated! +${aiSkillPts} pts earned! 🎯`:'Skill not counted this time — try something creative!');
-}
-
-// ════════════════════════════════════════════
-// AI ENCOURAGING COMMENTS
-// ════════════════════════════════════════════
-async function generateAIComment(data) {
-  const el = document.getElementById('ai-comment-box');
-  if (!el) return;
-  el.style.display = 'block';
-  el.innerHTML = `<div style="color:#7C3AED;font-size:12px;font-weight:800">✨ Parents Review's AI message is being written for you...</div>`;
-
-  const streak = getStreak();
-  const hwMax = 7;
-  const prompt = `You are writing a warm, loving, encouraging message from a parent to their child Vaanya (Class 6 student, ~11 years old, Delhi, India). 
-
-Today's report:
-- Points earned: ${data.pts}
-- Homework done: ${data.hwDone}/${hwMax} subjects
-- Shloka/Geeta done: ${data.shlokaD ? 'Yes ✅' : 'No ❌'}
-- Creative activity: ${data.creativeD ? 'Yes ✅' : 'No ❌'}
-- Brain Lab: ${data.brainD ? 'Yes ✅' : 'No ❌'}
-- ODDA class: ${data.odda ? 'Yes ✅' : 'No ❌'}
-- Current streak: ${streak} days
-- Parent rating: ${data.parentRating > 0 ? '+' : ''}${data.parentRating} pts
-
-Write a short (4-5 sentences), warm, personal message from Mamma and Papa to Vaanya. 
-- Celebrate what she did well specifically
-- Gently encourage what she can improve tomorrow (if anything)
-- End with a loving motivating line about her future
-- Use emojis naturally
-- Mention her name at least once
-- Keep it heartfelt and real, not generic
-- Write in a mix of warm English (you can add 1-2 Hindi words of endearment like "beta" or "pyaari")`;
-
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        contents:[{parts:[{text:prompt}]}],
-        generationConfig:{temperature:0.7,maxOutputTokens:400}
-      })
-    });
-    const result = await response.json();
-    const comment = result.candidates?.[0]?.content?.parts?.[0]?.text || 'We are so proud of you, Vaanya! Keep shining! ⭐';
-    el.innerHTML = `
-      <div style="background:linear-gradient(135deg,#7C3AED15,#EC489915);border:2px solid #7C3AED40;border-radius:12px;padding:14px">
-        <div style="font-size:11px;font-weight:900;color:#7C3AED;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">✨ Message from Parents Review</div>
-        <div style="font-size:13px;line-height:1.8;color:#1E1B4B;font-weight:600">${comment}</div>
-        <div style="font-size:10px;color:#9CA3AF;margin-top:8px">💜 Written with love using AI</div>
-      </div>`;
-    // Update the parent comment field too
-    const pcf = document.getElementById('parent-comment');
-    if (pcf && !pcf.value) pcf.value = comment;
-  } catch(err) {
-    el.innerHTML = `<div style="color:#10B981;font-size:13px;font-weight:700">💜 We are so proud of you, Vaanya! Every day you show up and try your best — that's what matters most. Keep shining, beta! ⭐</div>`;
-  }
 }
 
 // ════════════════════════════════════════════
@@ -5459,7 +5299,8 @@ function silentClearDay(){
   const r1v=document.getElementById('r1-verdict');if(r1v)r1v.style.display='none';
   const r2v=document.getElementById('r2-verdict');if(r2v)r2v.style.display='none';
   const r3v=document.getElementById('r3-verdict');if(r3v)r3v.style.display='none';
-  const aiR=document.getElementById('skill-ai-result');if(aiR)aiR.style.display='none';
+  const skDid=document.getElementById('skill-did');if(skDid)skDid.value='';
+  const skPtsSel=document.getElementById('skill-pts-select');if(skPtsSel)skPtsSel.value='';
   const skF=document.getElementById('skill-pts-final');if(skF)skF.style.display='none';
   const skYes=document.getElementById('skill-yes-box');if(skYes)skYes.style.display='none';
   const skNo=document.getElementById('skill-no-msg');if(skNo)skNo.style.display='none';
@@ -5532,6 +5373,12 @@ function loadDraftDay(d){
   if(d.r3){ const e=document.getElementById('r3');if(e)e.value=d.r3; }
   if(d.parentComment){ const e=document.getElementById('parent-comment');if(e)e.value=d.parentComment; }
   if(d.skillDesc){ const e=document.getElementById('skill-desc');if(e)e.value=d.skillDesc; }
+  if(d.skillDesc && d.skillPtsAwarded){
+    const sd=document.getElementById('skill-did');if(sd)sd.value='yes';
+    const sb=document.getElementById('skill-yes-box');if(sb)sb.style.display='block';
+    const sp=document.getElementById('skill-pts-select');if(sp)sp.value=String(d.skillPtsAwarded);
+    aiSkillPts=d.skillPtsAwarded||0;
+  }
   if(d.testSubj){ const e=document.getElementById('test-subj');if(e)e.value=d.testSubj; }
   if(d.testGot){ const e=document.getElementById('test-got');if(e)e.value=d.testGot; }
   if(d.testTot){ const e=document.getElementById('test-tot');if(e)e.value=d.testTot; }
