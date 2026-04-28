@@ -2257,7 +2257,7 @@ async function saveToSupabase(data) {
 
     // Build safe JSON blob — only text/number/boolean fields, no undefined
     const safeData = {};
-    const skipKeys = new Set(['full_data','creativeImgData']);
+    const skipKeys = new Set(['full_data','creativeImgData','tt']); // 'tt' is a boolean column in Supabase — never send it
     for(const [k,v] of Object.entries(data)){
       if(skipKeys.has(k)) continue;
       if(v === undefined || v === null) { safeData[k] = null; continue; }
@@ -3136,7 +3136,7 @@ async function approveReport(){
   SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwDone++;});
 
   const data={date,pts,hwDone,shlokaD:shD,creativeD:crD,brainD:brD,odda:odD,
-    tt:document.getElementById('rpt-tt')?.value||'',
+    ttPts:parseInt(document.getElementById('rpt-tt')?.value||0)||0,
     r1:(document.getElementById('r1')?.value||'').substring(0,500),
     r2:(document.getElementById('r2')?.value||'').substring(0,500),
     r3:(document.getElementById('r3')?.value||'').substring(0,500),
