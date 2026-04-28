@@ -281,7 +281,6 @@ tr:hover td{background:#FAFBFF}
 .mt6{margin-top:6px}.mt10{margin-top:10px}.mt14{margin-top:14px}
 
 /* HW ROW */
-.hw-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
 .hw-label{font-size:12px;font-weight:800;padding:4px 10px;border-radius:8px;white-space:nowrap;flex-shrink:0}
 .pts-inline{font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;flex-shrink:0}
 
@@ -695,8 +694,7 @@ tr:hover td{background:#FAFBFF}
   <span id="sp-pct-lbl" style="display:none"></span>
   <span id="sp-streak" style="display:none">0</span>
   <span id="sp-ring-arc" style="display:none"></span>
-  <span id="sp-hw-num" style="display:none">0/7</span>
-  <span id="sp-hw-bar" style="display:none"></span>
+
   <span id="sp-lvl-n" style="display:none">1</span>
   <span id="sp-lvl-t" style="display:none">Beginner</span>
   <span id="sp-lvl-s" style="display:none">0 total pts</span>
@@ -787,26 +785,6 @@ tr:hover td{background:#FAFBFF}
         </div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- HOMEWORK & SUBJECTS STUDIED -->
-<div class="divlbl">Homework & subjects studied</div>
-<div class="sec" style="border-color:var(--gm)">
-  <div class="sh">
-    <div class="si" style="background:var(--gl);color:var(--g)">📚</div>
-    Homework & subjects studied today
-    <span class="ptag">15 pts per HW done ✓</span>
-  </div>
-  <!-- HW list built by JS — checkbox + subject name + pts + study notes box -->
-  <div id="hw-list"></div>
-  <div style="margin-top:8px">
-    <div class="prog"><div class="prog-fill" id="hw-prog" style="width:0%;background:linear-gradient(90deg,var(--g),var(--t))"></div></div>
-    <div style="font-size:11px;color:var(--muted);text-align:right;margin-top:4px" id="hw-pct">0% (0/7)</div>
-  </div>
-  <div class="sec-pts-row" id="hw-pts-row">
-    <span class="sec-pts-label">📚 HW points earned today</span>
-    <span class="sec-pts-val" id="hw-pts-display">0 pts</span>
   </div>
 </div>
 
@@ -2001,7 +1979,6 @@ tr:hover td{background:#FAFBFF}
 // ════════════════════════════════════════════
 // DATA CONSTANTS
 // ════════════════════════════════════════════
-const SUBJECTS=['Maths','English','Hindi','Science','Social Science','Sanskrit','Computer Sc.'];
 const SCOL=['#8B5CF6','#3B82F6','#EC4899','#10B981','#F97316','#D97706','#06B6D4'];
 
 const REWARDS=[
@@ -2034,7 +2011,6 @@ const EARN_GUIDE=[
   ['Test — 75–89%','40 pts','Enter test marks'],
   ['Test — 60–74%','25 pts','Enter test marks'],
   ['Test — attempted','10 pts','Enter any score'],
-  ['Each homework done','15 pts','7 subjects × 15 = 105 max'],
   ['Odda class attended','15 pts','Daily mandatory'],
   ['Odda assignment done','up to 20 pts','Based on accuracy %'],
   ['Gymnastics session','20 pts','Per gym class'],
@@ -2172,7 +2148,6 @@ async function loadFromSupabase() {
         return {
           date: d.date,
           pts: d.pts || 0,
-          hwDone: d.hw_done || 0,
           shlokaD: d.shloka_done === true || d.shloka_done === 'true',
           creativeD: d.creative_done === true || d.creative_done === 'true',
           brainD: d.brain_done === true || d.brain_done === 'true',
@@ -2233,7 +2208,6 @@ async function saveToSupabase(data) {
     const row = {
       date: data.date,
       pts: _int(data.pts),
-      hw_done: _bool(data.hwDone),  // boolean column: any homework done = true
       shloka_done: _bool(data.shlokaD),
       creative_done: _bool(data.creativeD),
       brain_done: _bool(data.brainD),
@@ -2449,7 +2423,6 @@ function showPuzzle(type,btn){
 // BUILD UI
 // ════════════════════════════════════════════
 function buildAll(){
-  buildHW();
   buildStars('creative-stars',5);
   buildCreativeOptions();buildShlokaDisplay();
   genSudoku('easy');genLogicPuzzles();genRiddles();initMathsSprint();
@@ -2465,18 +2438,7 @@ function setTodayDate(){
 }
 
 // ── Homework list — fix #5: subject + checkbox + pts badge + study notes textbox
-function buildHW(){
-  const c=document.getElementById('hw-list');c.innerHTML='';
-  SUBJECTS.forEach((s,i)=>{
-    const row=document.createElement('div');row.className='hw-row';
-    row.innerHTML=`
-      <input type="checkbox" id="hw-${i}" onchange="updateHW()" style="width:18px;height:18px;accent-color:${SCOL[i]};cursor:pointer;flex-shrink:0">
-      <label for="hw-${i}" class="hw-label" style="color:${SCOL[i]};background:${SCOL[i]}18;border:1.5px solid ${SCOL[i]}40">${s}</label>
-      <span class="pts-inline" style="background:${SCOL[i]}18;color:${SCOL[i]};border:1.5px solid ${SCOL[i]}40">+15 pts</span>
-      <input type="text" id="hwdet-${i}" placeholder="What I studied / what was assigned..." style="flex:1;min-width:140px;font-size:12px;border-color:${SCOL[i]}60">`;
-    c.appendChild(row);
-  });
-}
+
 
 function buildStars(id,n){
   const el=document.getElementById(id);if(!el)return;
@@ -2582,24 +2544,7 @@ function calcScore(){
 }
 
 // ════════════════════════════════════════════
-// HW UPDATE — fix #5
-// ════════════════════════════════════════════
-function updateHW(){
-  let done=0;
-  SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)done++;});
-  const pct=Math.round(done/SUBJECTS.length*100);
-  const prog=document.getElementById('hw-prog');
-  if(prog)prog.style.width=pct+'%';
-  const hwpct=document.getElementById('hw-pct');
-  if(hwpct)hwpct.textContent=pct+'% ('+done+'/'+SUBJECTS.length+' subjects)';
-  const hwPtsEl=document.getElementById('hw-pts-display');
-  if(hwPtsEl)hwPtsEl.textContent=(done*15)+' pts';
-  // update hw side panel immediately
-  const done2=Array.from({length:7},(_,i)=>document.getElementById('hw-'+i)?.checked).filter(Boolean).length;
-  const spHw=document.getElementById('sp-hw');if(spHw)spHw.textContent=done2+'/7';
-  const spHwBar=document.getElementById('sp-hw-bar');if(spHwBar)spHwBar.style.width=Math.round(done2/7*100)+'%';
-  calcDayPts();
-}
+
 
 // ════════════════════════════════════════════
 // ODDA ASSIGNMENT — fix #6
@@ -2669,10 +2614,6 @@ function calcDayPts(){
   }
   pts+=testPts;breakdown.test=testPts;
 
-  // HW
-  let hwPts=0;
-  SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwPts+=15;});
-  pts+=hwPts;breakdown.hw=hwPts;
 
   // Odda — attendance (+10 yes / -15 missed) + timing (+5 on time / -10 late) + assignment (% based max +10 / incomplete 0)
   let oddaPts=0;
@@ -2906,15 +2847,8 @@ function collectFormData(date, pts){
   const crD  = !!(document.getElementById('creative-done')?.querySelector('.pg')||document.getElementById('creative-done')?.querySelector('.pa'));
   const brD  = !!(document.getElementById('brain-done')?.querySelector('.pg')||document.getElementById('brain-done')?.querySelector('.pa'));
   const odD  = !!document.getElementById('odda-att')?.querySelector('.pg');
-  let hwDone = 0;
-  const hwChecks = {};
-  SUBJECTS.forEach((_,i)=>{
-    const checked = !!document.getElementById('hw-'+i)?.checked;
-    if(checked){ hwDone++; hwChecks['hw_'+i]=true; }
-  });
   return {
-    date, pts, hwDone,
-    ...hwChecks,
+    date, pts,
     shlokaD:shD, creativeD:crD, brainD:brD, odda:odD,
     approved:false,
 
@@ -3088,10 +3022,8 @@ async function approveReport(){
   const crD=!!(document.getElementById('creative-done')?.querySelector('.pg')||document.getElementById('creative-done')?.querySelector('.pa'));
   const brD=!!(document.getElementById('brain-done')?.querySelector('.pg')||document.getElementById('brain-done')?.querySelector('.pa'));
   const odD=!!document.getElementById('odda-att')?.querySelector('.pg');
-  let hwDone=0;
-  SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwDone++;});
 
-  const data={date,pts,hwDone,shlokaD:shD,creativeD:crD,brainD:brD,odda:odD,
+  const data={date,pts,shlokaD:shD,creativeD:crD,brainD:brD,odda:odD,
     ttPts:parseInt(document.getElementById('rpt-tt')?.value||0)||0,
 
     parentComment:(document.getElementById('parent-comment')?.value||'').substring(0,2000),
@@ -3351,7 +3283,6 @@ function renderParentTab(){
   const got=parseFloat(document.getElementById('test-got')?.value);
   const tot=parseFloat(document.getElementById('test-tot')?.value)||0;
   if(!isNaN(got)&&tot>0){const pct=got/tot*100;if(pct>=90)testPts=50;else if(pct>=75)testPts=40;else if(pct>=60)testPts=25;else testPts=10;}
-  let hwPts=0;SUBJECTS.forEach((_,i)=>{if(document.getElementById('hw-'+i)?.checked)hwPts+=15;});
   let oddaPts=0;const oAtt=document.getElementById('odda-att');
   if(oAtt?.querySelector('.pg'))oddaPts=10;
   const oTimeP=document.getElementById('odda-time');
@@ -3366,7 +3297,7 @@ function renderParentTab(){
   const skillChk=document.getElementById('skill-check');if(skillChk?.querySelector('.pb'))screenPts+=10;
   screenPts+=parseInt(document.getElementById('book-type')?.value||0);
   screenPts+=parseInt(document.getElementById('free-act')?.value||0);
-  const dailyPts=ttVal+schVal+testPts+hwPts+oddaPts+gymPts+screenPts;
+  const dailyPts=ttVal+schVal+testPts+oddaPts+gymPts+screenPts;
 
   let shlokaPts=0;const sh=document.getElementById('shloka-done');if(sh?.querySelector('.pg'))shlokaPts=25;
   let crPts=0;const cr=document.getElementById('creative-done');if(cr?.querySelector('.pg'))crPts=20;else if(cr?.querySelector('.pa'))crPts=10;
@@ -3386,7 +3317,7 @@ function renderParentTab(){
   // Render section bars
   const bars=document.getElementById('parent-breakdown-bars');if(!bars)return;
   const sections=[
-    {label:'📝 Daily Report',pts:dailyPts,max:430,col:'#8B5CF6',detail:`TT/School: ${ttVal+schVal} · Test: ${testPts} · HW: ${hwPts} · Odda: ${oddaPts} · Gym: ${gymPts} · Screen: ${screenPts}`},
+    {label:'📝 Daily Report',pts:dailyPts,max:430,col:'#8B5CF6',detail:`TT/School: ${ttVal+schVal} · Test: ${testPts} · Odda: ${oddaPts} · Gym: ${gymPts} · Screen: ${screenPts}`},
     {label:'🧠 Brain Lab',pts:brPts,max:55,col:'#3B82F6',detail:'Puzzles, Sudoku, Riddles completed today'},
     {label:'🕉️ Geeta & Creative',pts:soulPts,max:45,col:'#7C3AED',detail:`Shloka: ${shlokaPts} · Creative: ${crPts}`},
     {label:'⭐ Parent Rating',pts:parentRating,max:80,col:parentRating>=0?'#10B981':'#EF4444',detail:parentRating>=0?`+${parentRating} pts bonus from Parents Review`:`${parentRating} pts deducted by Parents Review`},
@@ -3491,10 +3422,7 @@ function viewHistDay(i, e){
 
     <!-- KEY STATS GRID -->
     <div class="hd-grid">
-      <div class="hd-stat">
-        <div class="hd-stat-num">${d.hwDone||0}/7</div>
-        <div class="hd-stat-lbl">📚 Homework Done</div>
-      </div>
+
       <div class="hd-stat" style="${d.approved?'':'background:#FFFBEB;border-color:#FCD34D'}">
         <div class="hd-stat-num" style="color:${d.approved?'#10B981':'#D97706'}">${d.approved?'✅':'⏳'}</div>
         <div class="hd-stat-lbl" style="color:${d.approved?'#065F46':'#92400E'}">${d.approved?'Parent Approved':'Awaiting Approval'}</div>
@@ -3898,7 +3826,6 @@ function renderPerfCard(days){
   const recent=days.slice(-7);
   const avgPts=recent.length?Math.round(recent.reduce((a,d)=>a+d.pts,0)/recent.length):0;
   const mandPct=recent.length?Math.round(recent.reduce((a,d)=>a+(d.shlokaD&&d.creativeD&&d.brainD?1:0),0)/recent.length*100):0;
-  const hwPct=recent.length?Math.round(recent.reduce((a,d)=>a+((d.hwDone||0)/7),0)/recent.length*100):0;
   const streak=getStreak();
   const cup=getDayCup(avgPts);
 
@@ -3961,7 +3888,7 @@ function clearDay(){
   const cRes2=document.getElementById('creative-pts-result');if(cRes2)cRes2.textContent='';
   const gMsg=document.getElementById('geeta-save-msg');if(gMsg)gMsg.textContent='';
   const crMsg=document.getElementById('creative-save-msg');if(crMsg)crMsg.textContent='';
-  updateHW();calcDayPts();setTodayDate();
+  calcDayPts();setTodayDate();
 }
 
 // ════════════════════════════════════════════
@@ -4862,7 +4789,6 @@ function loadResetReport(date){
   const tasks = document.getElementById('rrv-tasks');
   if(tasks){
     const items = [
-      {icon:'📚', label:'Homework', done: (d.hwDone||0) >= 1, sub: (d.hwDone||0)+'/7'},
       {icon:'🧠', label:'Brain Lab', done: !!d.brainD, sub: !!d.brainD?'done':'missed'},
       {icon:'🕉️', label:'Shloka',    done: !!d.shlokaD, sub: !!d.shlokaD?'done':'missed'},
       {icon:'🎨', label:'Creative',  done: !!d.creativeD, sub: !!d.creativeD?'done':'missed'},
@@ -5195,7 +5121,7 @@ function silentClearDay(){
   genSudoku('easy'); genLogicPuzzles(); initMathsSprint();
   reflPts1=0; reflPts2=0; reflPts3=0;
   if(dateVal) document.getElementById('rpt-date').value=dateVal;
-  updateHW(); calcDayPts();
+  calcDayPts();
 }
 
 function lockForm(date, pts){
@@ -5269,17 +5195,7 @@ function loadDraftDay(d){
   if(d.shlokaReflect){ const e=document.getElementById('shloka-reflect');if(e)e.value=d.shlokaReflect; }
   if(d.pastShlokas){ const e=document.getElementById('past-shlokas');if(e)e.value=d.pastShlokas; }
   checkGeetaSaveReady();
-  // Restore HW checkboxes
-  if(d.hwDone && d.hwDone>0){
-    // Restore from full_data if available
-    try{
-      const fd=typeof d.full_data==='string'?JSON.parse(d.full_data):d;
-      SUBJECTS.forEach((_,i)=>{
-        const cb=document.getElementById('hw-'+i);
-        if(cb && fd['hw_'+i]) cb.checked=true;
-      });
-    }catch(e){}
-  }
+
   // Restore gym dropdown
   if(d.gymActivity){ const e=document.getElementById('gym-today');if(e)e.value=d.gymActivity; }
   // Show draft saved info
@@ -5288,7 +5204,7 @@ function loadDraftDay(d){
   draftInfo.innerHTML='⏳ Draft from '+fmtDate(d.date)+' loaded — you can continue editing and save again anytime!';
   const mc=document.querySelector('.main-content');
   if(mc){ const old=mc.querySelector('.draft-info-bar');if(old)old.remove(); draftInfo.className='draft-info-bar'; mc.prepend(draftInfo); }
-  updateHW(); calcDayPts();
+  calcDayPts();
 }
 
 
