@@ -1093,7 +1093,10 @@ tr:hover td{background:#FAFBFF}
 </div>
 <div id="spend-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;margin-bottom:14px"></div>
 <div class="sec">
-  <div class="sh"><div class="si" style="background:var(--al);color:var(--a)">📜</div>My spending history</div>
+  <div class="sh" style="justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:8px"><div class="si" style="background:var(--al);color:var(--a)">📜</div>My spending history</div>
+    <button onclick="clearAllSpendHistory()" style="font-size:11px;font-weight:800;color:#B91C1C;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:8px;padding:5px 12px;cursor:pointer;font-family:'Nunito',sans-serif">🗑️ Clear all</button>
+  </div>
   <div id="spend-hist-list"></div>
 </div>
 </div>
@@ -2724,7 +2727,9 @@ function calcDayPts(){
   pts+=ttVal+ssPts;
   breakdown.overview=ttVal+ssPts;
   const ovEl=document.getElementById('overview-pts');
-  if(ovEl)ovEl.textContent=(ttVal+ssPts)+' pts';
+  if(ovEl)ovEl.textContent=ttVal+' pts'; // show only timetable pts in overview section
+  const ssEl=document.getElementById('ss-pts-display');
+  if(ssEl)ssEl.textContent=ssPts+' pts';
 
   // Test
   let testPts=0;
@@ -3364,8 +3369,30 @@ function spendPts(id,cost,title,col){
 }
 
 
-// ════════════════════════════════════════════
-// PARENT REVIEW TAB
+async function clearAllSpendHistory(){
+  if(!confirm('Clear ALL spending history and reset spent points to 0?\n\nThis cannot be undone.')) return;
+  try {
+    // Delete all spend records for this user from Supabase
+    await _supabase.from('spend_history').delete().neq('id', 0);
+  } catch(e) {
+    // Try alternate — delete by matching known dates
+    try {
+      const dates=[...new Set(spendHist.map(s=>s.date))];
+      for(const d of dates){
+        await _supabase.from('spend_history').delete().eq('date',d);
+      }
+    } catch(e2){ console.error('Supabase spend delete error:',e2); }
+  }
+  // Reset local state
+  spendHist=[];
+  totalSpent=0;
+  localStorage.removeItem('vaanya_spent_total');
+  localStorage.removeItem('vaanya_spend_hist');
+  localStorage.removeItem(SPEND_USED_KEY);
+  updateTopBar();
+  renderSpend();
+  toast('🗑️ Spending history cleared! Starting fresh from 0 spent.');
+}
 // ════════════════════════════════════════════
 function renderParentTab(){
   // Populate shloka reflection for parent view
