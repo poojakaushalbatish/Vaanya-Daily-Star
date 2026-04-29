@@ -123,7 +123,7 @@ tr:hover td{background:#FAFBFF}
 
 /* REWARD CARDS */
 /* ── REWARDS CARDS ── */
-.rcard{border-radius:20px;padding:14px;border:3px solid rgba(255,255,255,.55);position:relative;
+.rcard{border-radius:22px;padding:20px 16px 16px;border:3px solid rgba(255,255,255,.55);position:relative;
   overflow:hidden;cursor:pointer;transition:transform .18s,box-shadow .18s;text-align:center}
 .rcard:hover{transform:translateY(-5px) scale(1.03)}
 .rcard.unlocked{animation:rcard-glow 1.8s ease-in-out infinite}
@@ -131,33 +131,33 @@ tr:hover td{background:#FAFBFF}
   0%,100%{box-shadow:0 0 0 3px rgba(255,200,0,.55),0 6px 20px rgba(0,0,0,.18)}
   50%{box-shadow:0 0 0 7px rgba(255,200,0,.85),0 12px 32px rgba(0,0,0,.22)}}
 .rcard.locked{opacity:.73}
-.rc-icon{font-size:36px;display:block;margin-bottom:6px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.22))}
-.rc-pts{font-family:'Fredoka One',cursive;font-size:21px;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.22);margin-bottom:3px}
-.rc-title{font-size:12px;font-weight:900;color:rgba(255,255,255,.97);margin-bottom:7px;line-height:1.3;text-shadow:1px 1px 0 rgba(0,0,0,.18)}
-.rc-items{font-size:9.5px;color:rgba(255,255,255,.85);line-height:1.65;margin-bottom:6px;text-align:left}
+.rc-icon{font-size:46px;display:block;margin-bottom:8px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.22))}
+.rc-pts{font-family:'Fredoka One',cursive;font-size:24px;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.22);margin-bottom:4px}
+.rc-title{font-size:13px;font-weight:900;color:rgba(255,255,255,.97);margin-bottom:8px;line-height:1.3;text-shadow:1px 1px 0 rgba(0,0,0,.18)}
+.rc-items{font-size:11px;color:rgba(255,255,255,.87);line-height:1.7;margin-bottom:8px;text-align:left}
 .rc-lock{position:absolute;top:9px;right:11px;font-size:20px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
 .rc-prog{height:7px;border-radius:10px;background:rgba(0,0,0,.2);margin-top:8px;overflow:hidden}
 .rc-fill{height:100%;border-radius:10px;background:rgba(255,255,255,.88);transition:width .7s cubic-bezier(.34,1.56,.64,1)}
-.rc-claim{display:inline-block;background:#fff;border-radius:20px;padding:4px 13px;
-  font-family:'Fredoka One',cursive;font-size:12px;margin-top:6px;
-  box-shadow:0 2px 8px rgba(0,0,0,.15);animation:claim-bounce .75s ease-in-out infinite alternate}
+.rc-claim{display:inline-block;background:#fff;border-radius:20px;padding:6px 16px;
+  font-family:'Fredoka One',cursive;font-size:14px;margin-top:8px;
+  box-shadow:0 3px 10px rgba(0,0,0,.18);animation:claim-bounce .75s ease-in-out infinite alternate}
 @keyframes claim-bounce{from{transform:scale(1)}to{transform:scale(1.07)}}
 @keyframes spin-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes wobble-icon{from{transform:translateX(0) rotate(-10deg)}to{transform:translateX(8px) rotate(10deg)}}
 
 /* ── SPEND CARDS ── */
-.scard{border-radius:20px;padding:13px;border:3px solid rgba(255,255,255,.5);
+.scard{border-radius:22px;padding:18px 16px 16px;border:3px solid rgba(255,255,255,.5);
   transition:transform .18s,box-shadow .18s;overflow:hidden}
 .scard:hover{transform:translateY(-4px) scale(1.03)}
-.sc-cost-badge{display:inline-block;border-radius:20px;padding:4px 12px;
-  font-family:'Fredoka One',cursive;font-size:15px;margin-bottom:8px;
+.sc-cost-badge{display:inline-block;border-radius:20px;padding:5px 14px;
+  font-family:'Fredoka One',cursive;font-size:17px;margin-bottom:10px;
   background:rgba(255,255,255,.28);color:#fff;border:2px solid rgba(255,255,255,.5);
   text-shadow:1px 1px 0 rgba(0,0,0,.18)}
-.sc-icon{font-size:30px;display:block;margin-bottom:5px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.15))}
-.sc-title{font-size:12px;font-weight:900;color:rgba(255,255,255,.97);margin-bottom:4px;line-height:1.3;text-shadow:1px 1px 0 rgba(0,0,0,.18)}
-.sc-desc{font-size:10px;color:rgba(255,255,255,.82);margin-bottom:9px;line-height:1.4}
-.sc-btn{width:100%;padding:8px;border-radius:12px;border:2px solid rgba(255,255,255,.6);
-  font-family:'Fredoka One',cursive;font-size:13px;cursor:pointer;transition:all .15s;
+.sc-icon{font-size:40px;display:block;margin-bottom:7px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.18))}
+.sc-title{font-size:14px;font-weight:900;color:rgba(255,255,255,.97);margin-bottom:5px;line-height:1.3;text-shadow:1px 1px 0 rgba(0,0,0,.18)}
+.sc-desc{font-size:11.5px;color:rgba(255,255,255,.84);margin-bottom:11px;line-height:1.5}
+.sc-btn{width:100%;padding:10px;border-radius:14px;border:2px solid rgba(255,255,255,.6);
+  font-family:'Fredoka One',cursive;font-size:14px;cursor:pointer;transition:all .15s;
   background:rgba(255,255,255,.22);color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.15)}
 .sc-btn:hover:not(:disabled){background:rgba(255,255,255,.38);transform:scale(.97)}
 .sc-btn:disabled{opacity:.4;cursor:not-allowed}
@@ -1052,7 +1052,7 @@ tr:hover td{background:#FAFBFF}
     </div>
   </div>
 </div>
-<div id="reward-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;margin-bottom:16px"></div>
+<div id="reward-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:16px"></div>
 <div class="sec mt14">
   <div class="sh"><div class="si" style="background:var(--al);color:var(--a)">📋</div>Points earning guide — every day</div>
   <table><thead><tr><th>Activity</th><th>Points</th><th>Note</th></tr></thead>
@@ -1091,7 +1091,8 @@ tr:hover td{background:#FAFBFF}
     Each item costs points from your bank. Once used today it locks till tomorrow! Save big pts for the 🏆 Rewards tab!
   </div>
 </div>
-<div id="spend-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;margin-bottom:14px"></div>
+<div id="spend-quote-bar" style="margin-bottom:14px"></div>
+<div id="spend-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:14px"></div>
 <div class="sec">
   <div class="sh" style="justify-content:space-between">
     <div style="display:flex;align-items:center;gap:8px"><div class="si" style="background:var(--al);color:var(--a)">📜</div>My spending history</div>
@@ -2087,13 +2088,13 @@ const REWARDS=[
 ];
 
 const SPEND_ITEMS=[
-  {id:'tv30',   icon:'📺',  title:'30 min extra TV',       cost:80,  col:'#3B82F6',grad:'linear-gradient(135deg,#3A86FF,#06D6A0)', desc:'Watch 30 extra minutes of TV or YouTube!'},
-  {id:'tv60',   icon:'📺✨',title:'1 hour screen time',    cost:200, col:'#8B5CF6',grad:'linear-gradient(135deg,#8338EC,#3A86FF)', desc:'A full extra hour of screen time today!'},
   {id:'sweets', icon:'🍬',  title:'Eat sweets today',      cost:50,  col:'#EC4899',grad:'linear-gradient(135deg,#FF006E,#FF6B6B)', desc:'Treat yourself to mithai, chocolate or sweets!'},
-  {id:'canteen',icon:'🏫',  title:'₹30 for canteen',       cost:100, col:'#F97316',grad:'linear-gradient(135deg,#FF9A3C,#FFBE0B)', desc:'Get ₹30 to spend at the school canteen!'},
   {id:'snack',  icon:'🍟',  title:'Snack of your choice',  cost:50,  col:'#06B6D4',grad:'linear-gradient(135deg,#06D6A0,#3A86FF)', desc:'Pick any snack you want from kitchen or shop!'},
   {id:'game',   icon:'🎮',  title:'Play a game',           cost:70,  col:'#10B981',grad:'linear-gradient(135deg,#8338EC,#FF006E)', desc:'Play your favourite game — board, outdoor or video!'},
+  {id:'tv30',   icon:'📺',  title:'30 min extra TV',       cost:80,  col:'#3B82F6',grad:'linear-gradient(135deg,#3A86FF,#06D6A0)', desc:'Watch 30 extra minutes of TV or YouTube!'},
+  {id:'canteen',icon:'🏫',  title:'₹30 for canteen',       cost:100, col:'#F97316',grad:'linear-gradient(135deg,#FF9A3C,#FFBE0B)', desc:'Get ₹30 to spend at the school canteen!'},
   {id:'buy50',  icon:'🛒',  title:'Buy something — ₹50',   cost:100, col:'#D97706',grad:'linear-gradient(135deg,#FF6B6B,#FFBE0B)', desc:'Buy any small item worth up to ₹50!'},
+  {id:'tv60',   icon:'📺✨',title:'1 hour screen time',    cost:200, col:'#8B5CF6',grad:'linear-gradient(135deg,#8338EC,#3A86FF)', desc:'A full extra hour of screen time today!'},
 ];
 
 const EARN_GUIDE=[
@@ -2432,7 +2433,7 @@ function showTab(id,btn){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
-  if(id==='rewards')renderRewards();
+  if(id==='rewards'){renderRewards();setTimeout(showVaanyaMotivation,600);}
   if(id==='spend')renderSpend();
   if(id==='history')renderHistory();
   if(id==='graphs')renderGraphs();
@@ -3240,6 +3241,30 @@ async function rejectReport(){
   setTimeout(()=>showTab('report', document.querySelector('.nb.t0')), 800);
 }
 
+
+// ════════════════════════════════════════════
+// MOTIVATIONAL POP-UPS FOR VAANYA
+// ════════════════════════════════════════════
+const VAANYA_QUOTES = [
+  {icon:'\u{1F31F}',title:"You're a Superstar, Vaanya!",msg:"Every point you earn is a step closer to your dreams. Keep shining, beta!"},
+  {icon:'\u{1F525}',title:"On Fire Today!",msg:"Look at those points adding up! Consistency is your superpower, Vaanya!"},
+  {icon:'\u{1F3C6}',title:"Champion in the Making!",msg:"Champions dont give up - and you never do. Mamma and Papa are SO proud!"},
+  {icon:'\u{1F4AB}',title:"Almost There!",msg:"You are getting closer to your reward with every task. Keep going, you have got this!"},
+  {icon:'\u{1F308}',title:"Brilliant, Vaanya!",msg:"Hard work today = amazing rewards tomorrow. You are building an incredible future!"},
+  {icon:'\u{1F451}',title:"The Star of the House!",msg:"Every effort you make today makes tomorrow better. You ARE amazing, Vaanya!"},
+  {icon:'\u{1F48E}',title:"Diamonds are Made Under Pressure!",msg:"Tough tasks make you stronger. You are becoming unstoppable, Vaanya!"},
+  {icon:'\u{1F3AF}',title:"Eyes on the Prize!",msg:"Look at the rewards waiting for you - every point counts! YOU are worth it!"},
+]
+let _lastQuoteIdx = -1;
+function showVaanyaMotivation(){
+  let idx;
+  do { idx = Math.floor(Math.random()*VAANYA_QUOTES.length); } while(idx===_lastQuoteIdx);
+  _lastQuoteIdx = idx;
+  const q = VAANYA_QUOTES[idx];
+  showPop(q.icon, q.title, q.msg);
+}
+// Show a motivation pop-up when switching to rewards or spend tab
+// (called from showTab)
 // ════════════════════════════════════════════
 // REWARDS TAB
 // ════════════════════════════════════════════
@@ -3252,7 +3277,7 @@ function renderRewards(){
 
   const rewardsData=(()=>{try{return JSON.parse(localStorage.getItem('vaanya_admin_rewards')||'null')||REWARDS;}catch(e){return REWARDS;}})();
   const g=document.getElementById('reward-grid');if(!g)return;g.innerHTML='';
-  rewardsData.filter(r=>r.active!==false).forEach(r=>{
+  rewardsData.filter(r=>r.active!==false).sort((a,b)=>a.pts-b.pts).forEach(r=>{
     const unlocked=earned>=r.pts;
     const prog=Math.min(100,Math.round(earned/r.pts*100));
     const grad=r.grad||('linear-gradient(135deg,'+r.col+','+r.col+'CC)');
@@ -3305,13 +3330,48 @@ function markUsedToday(id){
 // Spend tracking helpers (SPEND_USED_KEY already declared above)
 
 
+
+// ════════════════════════════════════════════
+// SPEND PAGE QUOTES
+// ════════════════════════════════════════════
+const SPEND_QUOTES = [
+  {q:"The best rewards are the ones you earned yourself!", attr:"— Your Hard Work", grad:"linear-gradient(135deg,#FF006E,#FF8E53)", emoji:"🌟"},
+  {q:"Spend your points with joy — you worked hard for every single one!", attr:"— Mamma & Papa", grad:"linear-gradient(135deg,#8338EC,#3A86FF)", emoji:"🎉"},
+  {q:"Earning is beautiful. Spending wisely is an art!", attr:"— A lesson for life", grad:"linear-gradient(135deg,#06D6A0,#1B9AAA)", emoji:"💎"},
+  {q:"Every treat you enjoy today is a trophy from your effort!", attr:"— Your Daily Star", grad:"linear-gradient(135deg,#FFBE0B,#FB5607)", emoji:"🏆"},
+  {q:"When you earn it yourself, even a simple sweet tastes like a victory!", attr:"— Vaanya's motto", grad:"linear-gradient(135deg,#FF9A3C,#FF006E)", emoji:"🍬"},
+  {q:"Fun is sweeter when you know you deserve it!", attr:"— The feeling of achievement", grad:"linear-gradient(135deg,#3A86FF,#8338EC)", emoji:"✨"},
+  {q:"Your points, your rules, your joy. This is YOUR reward shelf!", attr:"— Mamma & Papa", grad:"linear-gradient(135deg,#06D6A0,#FFBE0B)", emoji:"🌈"},
+  {q:"The satisfaction of performing well is the real reward. Points are just the bonus!", attr:"— A wise thought", grad:"linear-gradient(135deg,#FF006E,#8338EC)", emoji:"💫"},
+];
+let _spendQIdx = 0;
+function renderSpendQuote(){
+  const el = document.getElementById('spend-quote-bar');
+  if(!el) return;
+  const q = SPEND_QUOTES[_spendQIdx % SPEND_QUOTES.length];
+  el.innerHTML =
+    '<div style="background:'+q.grad+';border-radius:18px;padding:16px 20px;border:3px solid rgba(255,255,255,.45);'+
+    'position:relative;overflow:hidden;text-align:center;cursor:pointer" onclick="nextSpendQuote()">'+
+    '<div style="position:absolute;font-size:70px;right:-10px;top:-15px;opacity:.18;pointer-events:none">'+q.emoji+'</div>'+
+    '<div style="position:absolute;font-size:50px;left:6px;bottom:-12px;opacity:.18;pointer-events:none">'+q.emoji+'</div>'+
+    '<div style="font-family:Fredoka One,cursive;font-size:16px;color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.2);'+
+    'margin-bottom:6px;position:relative;line-height:1.4">&ldquo;'+q.q+'&rdquo;</div>'+
+    '<div style="font-size:11px;color:rgba(255,255,255,.85);font-weight:800;position:relative">'+q.attr+'</div>'+
+    '<div style="font-size:10px;color:rgba(255,255,255,.65);margin-top:5px">tap for next quote ✨</div>'+
+    '</div>';
+}
+function nextSpendQuote(){
+  _spendQIdx = (_spendQIdx + 1) % SPEND_QUOTES.length;
+  renderSpendQuote();
+}
 function renderSpend(){
+  renderSpendQuote();
   const avail=availablePts();
   const el=document.getElementById('spend-avail');if(el)el.textContent=avail;
   const spendData=(()=>{try{return JSON.parse(localStorage.getItem('vaanya_admin_spend_items')||'null')||SPEND_ITEMS;}catch(e){return SPEND_ITEMS;}})();
   const usedToday=getUsedToday();
   const g=document.getElementById('spend-grid');if(!g)return;g.innerHTML='';
-  spendData.filter(s=>s.active!==false).forEach(item=>{
+  spendData.filter(s=>s.active!==false).sort((a,b)=>a.cost-b.cost).forEach(item=>{
     const can=avail>=item.cost;
     const used=usedToday.includes(item.id);
     const grad=item.grad||('linear-gradient(135deg,'+item.col+','+item.col+'BB)');
