@@ -2558,6 +2558,8 @@ function setTodayDate(){
   const t=new Date();
   const el=document.getElementById('rpt-date');
   if(!el.value)el.value=t.toISOString().split('T')[0];
+  // Initialise dataset.prev so first date change knows what was showing before
+  el.dataset.prev = el.value;
   document.getElementById('today-pill').textContent=t.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
 }
 
@@ -3007,6 +3009,35 @@ function collectFormData(date, pts){
     testTot:document.getElementById('test-tot')?.value||'',
     oddaSubj:document.getElementById('odda-subj')?.value||'',
     gymActivity:document.getElementById('gym-today')?.value||'0',
+    skillDesc:document.getElementById('skill-desc')?.value||'',
+    skillDid:document.getElementById('skill-did')?.value||'',
+    r1:document.getElementById('r1')?.value||'',
+    r2:document.getElementById('r2')?.value||'',
+    r3:document.getElementById('r3')?.value||'',
+    ttVal:document.getElementById('rpt-tt')?.value||'0',
+    schoolVal:document.getElementById('rpt-school')?.value||'0',
+    freeAct:document.getElementById('free-act')?.value||'0',
+    screenWhat:document.getElementById('screen-what')?.value||'',
+    creativeDesc:document.getElementById('creative-desc')?.value||'',
+    creativeChosen: creativeChosen||null,
+    // Pill states — stored as JSON STRING so saveToSupabase doesn't strip it
+    pillStatesJSON: JSON.stringify((()=>{
+      const ps={};
+      document.querySelectorAll('#tab-report .pills[id]').forEach(grp=>{
+        const active=grp.querySelector('.pg,.pr,.pa,.pb,.pt');
+        if(active){
+          const cls=PCLS.find(c=>active.classList.contains(c));
+          if(cls){
+            const pills=[...grp.querySelectorAll('.pill')];
+            ps[grp.id]={cls, idx:pills.indexOf(active)};
+          }
+        }
+      });
+      return ps;
+    })()),
+    // ssDone and ssDets also stored as JSON strings (arrays are objects — stripped otherwise)
+    ssDoneJSON: JSON.stringify(SS_SUBJECTS.map((_,i)=>!!document.getElementById('ss-'+i)?.checked)),
+    sDetsJSON:  JSON.stringify(SS_SUBJECTS.map((_,i)=>document.getElementById('ssdet-'+i)?.value||'')),
     savedAt:new Date().toISOString()
   };
 }
@@ -3189,6 +3220,7 @@ async function approveReport(){
 
   updateTopBar();
   lockForm(date, pts);
+  _sessionClearDate(date); // approved — session no longer needed
   populateResetDatePicker();
   showPop('✅','Report Approved! 🎉','Vaanya your report has been approved! You earned '+pts+' points today! ⭐ Keep it up!');
   toast('Report approved! +'+pts+' points saved! Report is now locked.');
@@ -5284,38 +5316,67 @@ function updateSidePanels(pts){
 // DATE CHANGE — clear form + check if approved
 // ════════════════════════════════════════════
 function onDateChange(){
-  const date = document.getElementById('rpt-date')?.value;
+  const el = document.getElementById('rpt-date');
+  const date = el?.value;
   if(!date) return;
 
-  // Always clear form first
+  // Step 1: Save session for the PREVIOUS date (before we switch)
+  const prevDate = el.dataset.prev;
+  if(prevDate && prevDate !== date && !todayApproved){
+    _sessionSaveForDate(prevDate);
+  }
+
+  // Step 2: Clear the form (suppress flag prevents blank session save)
   silentClearDay();
 
-  // Update shloka for the selected date
+  // Step 3: Update shloka for the new date
   buildShlokaDisplay();
 
+  // Step 4: Load data for selected date
   const existing = savedDays.find(d => d.date === date);
 
   if(existing && existing.approved){
-    // APPROVED — load read-only
     loadApprovedDay(existing);
     lockForm(date, existing.pts);
     toast('🔒 '+fmtDate(date)+' — Parent Approved · Read only');
   } else if(existing && !existing.approved){
-    // DRAFT — load editable so child can continue filling
+    // Draft in Supabase — also check session for this specific date
+    const sessionSnap = _sessionLoadForDate(date);
+    if(sessionSnap){
+      const snapAge = Date.now() - (sessionSnap.ts || 0);
+      const dbAge   = existing.savedAt ? Date.now() - new Date(existing.savedAt).getTime() : Infinity;
+      if(snapAge < dbAge){
+        unlockForm();
+        _restoreFormFromSnap(sessionSnap);
+        toast('✏️ Restored your unsaved work for '+fmtDate(date)+'!');
+        return;
+      }
+    }
     unlockForm();
     loadDraftDay(existing);
-    toast('✏️ Draft loaded for '+fmtDate(date)+' — you can continue editing!');
+    toast('✏️ Draft loaded for '+fmtDate(date)+' — continue where you left off!');
     checkPenalty();
     calcDayPts();
   } else {
-    // NEW DATE — fresh form
-    unlockForm();
-    checkPenalty();
-    calcDayPts();
+    // No Supabase record — check session for this specific date
+    const sessionSnap = _sessionLoadForDate(date);
+    if(sessionSnap){
+      unlockForm();
+      _restoreFormFromSnap(sessionSnap);
+      toast('✅ Your unsaved work for '+fmtDate(date)+' has been restored!');
+    } else {
+      unlockForm();
+      checkPenalty();
+      calcDayPts();
+    }
   }
+  // Remember current date for next switch
+  if(el) el.dataset.prev = date;
 }
 
 function silentClearDay(){
+  // Suppress session saves while we clear — prevents saving blank state
+  _suppressSession = true;
   // Clear without confirm dialog and without resetting date
   const dateVal = document.getElementById('rpt-date')?.value;
   document.querySelectorAll('#tab-report input[type=text],#tab-report input[type=number],#tab-report textarea').forEach(e=>{
@@ -5354,6 +5415,8 @@ function silentClearDay(){
   reflPts1=0; reflPts2=0; reflPts3=0;
   if(dateVal) document.getElementById('rpt-date').value=dateVal;
   calcDayPts();
+  // Re-enable session tracking after a short delay
+  setTimeout(()=>{ _suppressSession = false; }, 500);
 }
 
 function lockForm(date, pts){
@@ -5409,47 +5472,105 @@ function loadApprovedDay(d){
 }
 
 function loadDraftDay(d){
-  // Restore all saved text fields
+  // ── Text & select fields ──────────────────────────────────────
+  const setVal=(id,val)=>{ if(val!==undefined&&val!==null){ const e=document.getElementById(id);if(e)e.value=val; }};
+  setVal('parent-comment', d.parentComment);
+  setVal('test-subj',  d.testSubj);
+  setVal('test-got',   d.testGot);
+  setVal('test-tot',   d.testTot);
+  setVal('odda-subj',  d.oddaSubj);
+  setVal('gym-today',  d.gymActivity);
+  setVal('rpt-tt',     d.ttVal);
+  setVal('rpt-school', d.schoolVal);
+  setVal('free-act',   d.freeAct);
+  setVal('screen-what',d.screenWhat);
+  setVal('r1', d.r1); setVal('r2', d.r2); setVal('r3', d.r3);
+  setVal('shloka-reflect', d.shlokaReflect);
+  setVal('past-shlokas',   d.pastShlokas);
+  setVal('creative-desc',  d.creativeDesc);
+  setVal('word1',d.word1); setVal('mean1',d.mean1);
+  setVal('word2',d.word2); setVal('mean2',d.mean2);
+  setVal('word3',d.word3); setVal('mean3',d.mean3);
+  if(typeof checkGeetaSaveReady==='function') checkGeetaSaveReady();
 
-  if(d.parentComment){ const e=document.getElementById('parent-comment');if(e)e.value=d.parentComment; }
-  if(d.skillDesc){ const e=document.getElementById('skill-desc');if(e)e.value=d.skillDesc; }
-  if(d.skillDesc && d.skillPtsAwarded){
-    const sd=document.getElementById('skill-did');if(sd)sd.value='yes';
-    const sb=document.getElementById('skill-yes-box');if(sb)sb.style.display='block';
-    const sp=document.getElementById('skill-pts-select');if(sp)sp.value=String(d.skillPtsAwarded);
-    aiSkillPts=d.skillPtsAwarded||0;
+  // ── Skill box ─────────────────────────────────────────────────
+  if(d.skillDesc){
+    setVal('skill-desc', d.skillDesc);
+    setVal('skill-did',  d.skillDid||'');
+    if(d.skillDid==='yes'){
+      const sb=document.getElementById('skill-yes-box');if(sb)sb.style.display='block';
+      setVal('skill-pts-select', String(d.skillPtsAwarded||0));
+      aiSkillPts=d.skillPtsAwarded||0;
+    }
   }
-  if(d.testSubj){ const e=document.getElementById('test-subj');if(e)e.value=d.testSubj; }
-  if(d.testGot){ const e=document.getElementById('test-got');if(e)e.value=d.testGot; }
-  if(d.testTot){ const e=document.getElementById('test-tot');if(e)e.value=d.testTot; }
-  if(d.oddaSubj){ const e=document.getElementById('odda-subj');if(e)e.value=d.oddaSubj; }
-  if(d.shlokaReflect){ const e=document.getElementById('shloka-reflect');if(e)e.value=d.shlokaReflect; }
-  if(d.pastShlokas){ const e=document.getElementById('past-shlokas');if(e)e.value=d.pastShlokas; }
-  checkGeetaSaveReady();
 
-  // Restore gym dropdown
-  if(d.bookType){ const e=document.getElementById('book-type');if(e)e.value=d.bookType; showWordBoxes(); }
-  if(d.ssDone && Array.isArray(d.ssDone)){
-    d.ssDone.forEach((checked,i)=>{
-      const cb=document.getElementById('ss-'+i); if(cb) cb.checked=!!checked;
-    });
+  // ── Book knowledge ───────────────────────────────────────────
+  if(d.bookType&&d.bookType!=='0'){
+    setVal('book-type', d.bookType);
+    if(typeof showWordBoxes==='function') showWordBoxes();
   }
-  if(d.ssDets && Array.isArray(d.ssDets)){
-    d.ssDets.forEach((txt,i)=>{
-      const el=document.getElementById('ssdet-'+i); if(el) el.value=txt||'';
+  // ── Test chapters box ─────────────────────────────────────────
+  if(d.testSubj){ const tcBox=document.getElementById('test-chapters-box');if(tcBox)tcBox.style.display='block'; }
+
+  // ── Restore pill states — parse from JSON string (saved as string to survive Supabase filter) ──
+  const pillStates = (()=>{
+    try{
+      if(d.pillStatesJSON) return JSON.parse(d.pillStatesJSON);
+      if(d.pillStates && typeof d.pillStates==='object') return d.pillStates; // legacy
+    }catch(e){}
+    return null;
+  })();
+  if(pillStates){
+    Object.entries(pillStates).forEach(([gid,{cls,idx}])=>{
+      const grp=document.getElementById(gid);
+      if(!grp) return;
+      const pills=[...grp.querySelectorAll('.pill')];
+      if(pills[idx]){
+        pills.forEach(p=>PCLS.forEach(c=>p.classList.remove(c)));
+        pills[idx].classList.add(cls);
+      }
     });
+    const oddaGrp=document.getElementById('odda-assign');
+    if(oddaGrp&&oddaGrp.querySelector('.pg')){
+      const od=document.getElementById('odda-assign-detail');if(od)od.style.display='block';
+    }
   }
-  updateSS();
-  ['word1','mean1','word2','mean2','word3','mean3'].forEach(id=>{
-    if(d[id]){ const e=document.getElementById(id);if(e)e.value=d[id]; }
-  });
-  if(d.gymActivity){ const e=document.getElementById('gym-today');if(e)e.value=d.gymActivity; }
-  // Show draft saved info
-  const draftInfo=document.createElement('div');
-  draftInfo.style.cssText='background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:10px;padding:8px 14px;margin-bottom:10px;font-size:12px;font-weight:700;color:#92400E;display:flex;align-items:center;gap:8px';
-  draftInfo.innerHTML='⏳ Draft from '+fmtDate(d.date)+' loaded — you can continue editing and save again anytime!';
+  
+  // ── Restore ssDone/ssDets — also parse from JSON string ──────────────────
+  const ssDone = (()=>{ try{ return d.ssDoneJSON ? JSON.parse(d.ssDoneJSON) : (Array.isArray(d.ssDone)?d.ssDone:null); }catch(e){return null;} })();
+  const ssDets = (()=>{ try{ return d.sDetsJSON  ? JSON.parse(d.sDetsJSON)  : (Array.isArray(d.ssDets)?d.ssDets:null); }catch(e){return null;} })();
+  if(ssDone) ssDone.forEach((checked,i)=>{ const cb=document.getElementById('ss-'+i);if(cb)cb.checked=!!checked; });
+  if(ssDets) ssDets.forEach((txt,i)=>{ const el=document.getElementById('ssdet-'+i);if(el)el.value=txt||''; });
+  if(typeof updateSS==='function') updateSS();
+
+  // ── Creative ─────────────────────────────────────────────────
+  if(d.creativeChosen){
+    creativeChosen=d.creativeChosen;
+    document.querySelectorAll('.creative-option').forEach(el=>
+      el.classList.toggle('chosen', el.dataset.val===creativeChosen));
+    const cd=document.getElementById('creative-detail');if(cd)cd.style.display='block';
+  }
+
+  // ── Parent award dropdowns ────────────────────────────────────
+  if(d.shlokaPtsAwarded!==undefined) setVal('shloka-pts-award', String(d.shlokaPtsAwarded));
+  if(d.creativePtsAwarded!==undefined) setVal('creative-pts-award', String(d.creativePtsAwarded));
+  // Only restore parentRating if actually set (non-zero means parent rated)
+  if(d.parentRating && d.parentRating !== 0) setVal('parent-rating', String(d.parentRating));
+  else { const pr=document.getElementById('parent-rating'); if(pr) pr.selectedIndex=0; }
+
+  // ── Show draft banner ─────────────────────────────────────────
   const mc=document.querySelector('.main-content');
-  if(mc){ const old=mc.querySelector('.draft-info-bar');if(old)old.remove(); draftInfo.className='draft-info-bar'; mc.prepend(draftInfo); }
+  if(mc){
+    const old=mc.querySelector('.draft-info-bar');if(old)old.remove();
+    const bar=document.createElement('div');
+    bar.className='draft-info-bar';
+    bar.style.cssText='background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;font-weight:800;color:#92400E;display:flex;align-items:center;gap:8px';
+    bar.innerHTML='⏳ Draft from '+fmtDate(d.date)+' loaded — continue editing and save anytime!';
+    mc.prepend(bar);
+  }
+
+  // ── Recalculate from restored data ───────────────────────────
+  if(typeof checkPenalty==='function') checkPenalty();
   calcDayPts();
 }
 
@@ -5548,11 +5669,164 @@ function renderParentComments(days){
   }).join('');
 }
 
+
+
+// ════════════════════════════════════════════
+// PER-DATE SESSION SYSTEM (v2 — fixed)
+// Key insight: each date gets its OWN session slot.
+// Switching dates never overwrites another date's data.
+// ════════════════════════════════════════════
+
+function _sessionKey(date){ return 'vaanya_sess_' + date; }
+
+// Save snapshot using collectFormData so pills are always included
+function _sessionSaveForDate(date){
+  if(!date || _suppressSession) return;
+  try {
+    const pts = calcDayPts();
+    const snap = collectFormData(date, pts);
+    snap.ts = Date.now();
+    sessionStorage.setItem(_sessionKey(date), JSON.stringify(snap));
+  } catch(e){ console.warn('Session save failed', e); }
+}
+
+// Load snapshot for a specific date (returns null if none)
+function _sessionLoadForDate(date){
+  if(!date) return null;
+  try {
+    const raw = sessionStorage.getItem(_sessionKey(date));
+    return raw ? JSON.parse(raw) : null;
+  } catch(e){ return null; }
+}
+
+// Clear session for a specific date
+function _sessionClearDate(date){
+  if(date) sessionStorage.removeItem(_sessionKey(date));
+}
+
+// Restore form from a snapshot — snapshot IS a collectFormData object so loadDraftDay handles it
+function _restoreFormFromSnap(snap){
+  if(!snap || !snap.date) return;
+  const currentDate = document.getElementById('rpt-date')?.value;
+  if(snap.date !== currentDate){
+    console.warn('Session date mismatch — skipping restore', snap.date, '!=', currentDate);
+    return;
+  }
+  // Before restoring, silentClear to ensure no stale state
+  _suppressSession = true;
+  silentClearDay();
+  document.getElementById('rpt-date').value = currentDate; // restore date after clear
+  _suppressSession = false;
+  // loadDraftDay now handles everything: pills, text, creative, skill, etc.
+  loadDraftDay(snap);
+  // Override the amber banner with a green "restored" banner
+  const mc = document.querySelector('.main-content');
+  const bar = mc ? mc.querySelector('.draft-info-bar') : null;
+  if(bar){
+    bar.style.background='#ECFDF5';
+    bar.style.borderColor='#6EE7B7';
+    bar.style.color='#065F46';
+    bar.innerHTML='✅ Your work was restored after the page refreshed — continue where you left off!';
+  }
+}
+
+// After Supabase loads: decide what to show for today's date
+function _onLoadRestoreDate(date){
+  const existing = savedDays.find(d => d.date === date);
+  if(existing && existing.approved){
+    // Already approved — show locked
+    loadApprovedDay(existing);
+    lockForm(date, existing.pts);
+    return;
+  }
+  // Check session first (fastest — no network)
+  const snap = _sessionLoadForDate(date);
+  if(snap){
+    const snapAge = Date.now() - (snap.ts || 0);
+    // Session must be less than 24 hours old to be valid
+    if(snapAge < 86400000){
+      const dbAge = existing?.savedAt
+        ? Date.now() - new Date(existing.savedAt).getTime() : Infinity;
+      if(snapAge < dbAge){
+        // Session is newer than Supabase draft
+        unlockForm();
+        document.getElementById('rpt-date').value = date; // ensure date set before restore
+        _restoreFormFromSnap(snap);
+        toast('✅ Your work was restored after the page refreshed!');
+        return;
+      }
+    }
+  }
+  // Fall back to Supabase draft
+  if(existing && !existing.approved){
+    unlockForm();
+    loadDraftDay(existing);
+    toast('✏️ Draft loaded — continue where you left off!');
+    calcDayPts();
+    return;
+  }
+  // Fresh day
+  toast('☁️ Data loaded from cloud!');
+}
+
+// Wire session save to inputs — saves for the CURRENT date only
+let _sesTimer = null;
+let _suppressSession = false; // set true during silentClearDay to avoid saving blank state
+
+function _sessionWireInputs(){
+  const save = (delay) => {
+    if(_suppressSession) return;
+    if(_sesTimer) clearTimeout(_sesTimer);
+    _sesTimer = setTimeout(() => {
+      if(_suppressSession) return;
+      const date = document.getElementById('rpt-date')?.value;
+      if(date && !todayApproved) _sessionSaveForDate(date);
+    }, delay || 2000);
+  };
+  document.addEventListener('input',  ()=>save(2000));
+  document.addEventListener('change', ()=>save(2000));
+  document.addEventListener('click', e => {
+    if(e.target.closest('.pill,.creative-option,.star')) save(800);
+  });
+}
+
+// Background auto-save to Supabase every 60 seconds
+let _autoSaveTimer = null;
+function _sessionStartAutoSave(){
+  if(_autoSaveTimer) clearInterval(_autoSaveTimer);
+  _autoSaveTimer = setInterval(async () => {
+    const date = document.getElementById('rpt-date')?.value;
+    if(!date || todayApproved) return;
+    // Only auto-save if on Daily Report tab and has meaningful content
+    const pts = calcDayPts();
+    const r1  = document.getElementById('r1')?.value || '';
+    const sr  = document.getElementById('shloka-reflect')?.value || '';
+    if(pts < 5 && r1.length < 3 && sr.length < 3) return;
+    try{
+      const data = collectFormData(date, pts);
+      await saveToSupabase(data);
+      // Update in-memory
+      const idx = savedDays.findIndex(d => d.date === date);
+      if(idx >= 0) savedDays[idx] = {...savedDays[idx], ...data};
+      else savedDays.unshift(data);
+      // Flash indicator
+      const bar = document.getElementById('sync-status');
+      if(bar){
+        const orig = bar.innerHTML;
+        bar.innerHTML = '<span style="color:#10B981;font-size:11px;font-weight:800">✅ Auto-saved to cloud!</span>';
+        setTimeout(() => bar.innerHTML = orig, 3000);
+      }
+    } catch(e){ console.warn('Auto-save error:', e); }
+  }, 60000);
+}
+
+
 // ════════════════════════════════════════════
 // INIT — load cloud data then build UI
 // ════════════════════════════════════════════
 buildAll();
-
+_sessionWireInputs(); // start per-date session tracking
+_sessionStartAutoSave(); // background Supabase auto-save every 60s
 
 updateTopBar();
 calcDayPts();
@@ -5561,13 +5835,21 @@ updateSidePanels(0);
 loadFromSupabase().then(ok => {
   if (ok) {
     updateTopBar();
-    toast('☁️ Data loaded from cloud! All your history is here.');
+    // After cloud load: check today's date for draft or session data
+    const today = document.getElementById('rpt-date')?.value;
+    if(today) _onLoadRestoreDate(today);
   } else {
     // Fallback: try localStorage backup
     try {
       const local = localStorage.getItem('vaanya_days');
       if (local) { savedDays = JSON.parse(local); updateTopBar(); toast('📱 Loaded from local backup (offline mode)'); }
     } catch(e) {}
+    // Try session restore offline
+    const today = document.getElementById('rpt-date')?.value;
+    if(today){
+      const snap = _sessionLoadForDate(today);
+      if(snap){ _restoreFormFromSnap(snap); toast('📱 Offline — restored your last saved work!'); }
+    }
   }
 });
 </script>
