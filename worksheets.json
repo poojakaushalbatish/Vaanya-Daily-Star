@@ -1,0 +1,62 @@
+[
+  {
+    "id": "ws-2026-05-03-english",
+    "date": "2026-05-03",
+    "subject": "English",
+    "icon": "📖",
+    "title": "Practice English",
+    "type": "mcq",
+    "questions": [
+      {
+        "q": "SYNONYM — Choose the word closest in meaning to \"OBSTINATE\":",
+        "opts": [
+          "Obedient",
+          "Stubborn",
+          "Timid",
+          "Generous"
+        ],
+        "ans": 1
+      },
+      {
+        "q": "ANTONYM — Choose the word most opposite in meaning to \"BENEVOLENT\":",
+        "opts": [
+          "Humble",
+          "Generous",
+          "Cruel",
+          "Cheerful"
+        ],
+        "ans": 2
+      },
+      {
+        "q": "PUNCTUATION — Which sentence is punctuated correctly?",
+        "opts": [
+          "She said, \"I will come tomorrow.",
+          "She said \"I will come tomorrow.\"",
+          "She said, \"I will come tomorrow.\"",
+          "She said \"I will come, tomorrow\"."
+        ],
+        "ans": 2
+      },
+      {
+        "q": "COLLECTIVE NOUN — A group of judges is called a:",
+        "opts": [
+          "Troupe",
+          "Bench",
+          "Panel",
+          "Both (b) and (c)"
+        ],
+        "ans": 3
+      },
+      {
+        "q": "PLURAL — Which of the following is the correct plural of \"SYLLABUS\"?",
+        "opts": [
+          "Syllabuses",
+          "Syllabi",
+          "Syllabie",
+          "Both (a) and (b)"
+        ],
+        "ans": 3
+      }
+    ]
+  }
+]
