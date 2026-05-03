@@ -1106,6 +1106,7 @@ tr:hover td{background:#FAFBFF}
      TAB: BRAIN LAB
 ═══════════════════════════════════════ -->
 <div class="tab" id="tab-brain">
+
 <div class="puzzle-card">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
     <div>
@@ -1122,6 +1123,7 @@ tr:hover td{background:#FAFBFF}
     <button class="btn btn-p" style="font-size:12px;padding:7px 14px" onclick="showPuzzle('sudoku',this)">🔢 Sudoku</button>
     <button class="btn btn-o" style="font-size:12px;padding:7px 14px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff" onclick="showPuzzle('logic',this)">🧩 Logic</button>
     <button class="btn btn-o" style="font-size:12px;padding:7px 14px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff" onclick="showPuzzle('maths',this)">⚡ Maths Sprint</button>
+    <button class="btn btn-o" id="ws-tab-btn" style="font-size:12px;padding:7px 14px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff" onclick="showPuzzle('worksheet',this)">📋 Worksheets</button>
     <button class="btn btn-o" style="font-size:12px;padding:7px 14px;background:rgba(128,128,128,.15);border-color:rgba(128,128,128,.25);color:rgba(255,255,255,.38);cursor:not-allowed;text-decoration:line-through;pointer-events:none;opacity:0.45" onclick="return false;" onmousedown="return false;" title="Coming soon!">🎭 Riddles</button>
   </div>
 </div>
@@ -1231,6 +1233,10 @@ tr:hover td{background:#FAFBFF}
 </div>
 </div>
 
+<div id="puzzle-worksheet" style="display:none">
+  <div id="worksheet-section"></div>
+</div>
+
 <div class="sec mt10" id="brain-summary-sec">
   <div class="sh"><div class="si" style="background:var(--gl);color:var(--g)">🧠</div>Brain Lab — Today's Score</div>
   <div style="text-align:center;padding:10px 0">
@@ -1239,6 +1245,10 @@ tr:hover td{background:#FAFBFF}
       -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1" id="brain-pts-big">0</div>
     <div style="font-size:13px;font-weight:800;color:#065F46;margin-top:6px" id="brain-pts-msg">Complete puzzles above to earn points!</div>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap" id="brain-breakdown">
+      <div class="pts-chip" style="background:#F5F3FF;border-color:#C4B5FD;min-width:70px">
+        <div class="pts-chip-num" id="bb-worksheet" style="color:#7C3AED">0</div>
+        <div class="pts-chip-lbl" style="color:#7C3AED">📋 Worksheets</div>
+      </div>
       <span style="background:#EFF6FF;color:#1D4ED8;border:1.5px solid #93C5FD;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:800">🔢 Sudoku: <span id="bb-sudoku">0</span> pts</span>
       <span style="background:#FDF4FF;color:#7C3AED;border:1.5px solid #C084FC;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:800">🧩 Logic: <span id="bb-logic">0</span> / 20 pts</span>
       <span style="background:#FFF7ED;color:#C2410C;border:1.5px solid #FED7AA;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:800">⚡ Maths: <span id="bb-maths">0</span> / 25 pts</span>
@@ -2358,6 +2368,7 @@ function showSyncStatus(state) {
 }
 let brainPtsToday = 0;
 let sudokuPts = 0, logicPtsTotal = 0, riddlePtsTotal = 0;
+let worksheetPts = 0; // pts from daily MCQ worksheets
 let sudokuFrozen = false; // once completed today, freeze
 let logicFrozen  = false; // once completed today, freeze
 let parentUnlocked = false; // PIN authenticated this session
@@ -2433,6 +2444,7 @@ function showTab(id,btn){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
+  if(id==='brain'){} // worksheets load when Worksheets tab clicked
   if(id==='rewards'){renderRewards();setTimeout(showVaanyaMotivation,600);}
   if(id==='spend')renderSpend();
   if(id==='history')renderHistory();
@@ -2531,7 +2543,7 @@ function calcParentRating(){
 
 function showPuzzle(type,btn){
   if(type==='riddle'){toast('🎭 Riddles coming soon! Stay tuned.');return;}
-  ['sudoku','logic','riddle','maths'].forEach(t=>{
+  ['sudoku','logic','riddle','maths','worksheet'].forEach(t=>{
     const el=document.getElementById('puzzle-'+t);
     if(el)el.style.display=t===type?'block':'none';
   });
@@ -2540,6 +2552,8 @@ function showPuzzle(type,btn){
     b.style.cssText='font-size:12px;padding:7px 14px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff';
   });
   if(btn){btn.className='btn btn-p';btn.style.cssText='font-size:12px;padding:7px 14px';}
+  // When worksheet tab selected, load worksheets
+  if(type==='worksheet') loadWorksheets();
 }
 
 // ════════════════════════════════════════════
@@ -2871,7 +2885,7 @@ function calcDayPts(){
   // Points breakdown display — fix #9
   renderBreakdown(breakdown,pts);
 
-  return pts;
+  return pts; // no cap — total grows as more activities are added
 }
 
 function renderBreakdown(bd,total){
@@ -2902,10 +2916,11 @@ function renderBreakdown(bd,total){
 }
 
 function updateXP(pts){
-  const max=515;
+  const max=Math.max(515, pts); // grows above 515 if worksheets add more
   const pct=Math.min(100,Math.round(Math.max(0,pts)/max*100));
   const el=document.getElementById('xp-bar');if(el)el.style.width=pct+'%';
-  const lbl=document.getElementById('xp-lbl');if(lbl)lbl.textContent=pts+' / '+max+' pts earned today';
+  const baseLbl = pts > 515 ? pts+' pts earned today 🌟 (above base max!)' : pts+' / 515 pts earned today';
+  const lbl=document.getElementById('xp-lbl');if(lbl)lbl.textContent=baseLbl;
   updateSidePanels(pts);
 }
 
@@ -3038,6 +3053,13 @@ function collectFormData(date, pts){
     // ssDone and ssDets also stored as JSON strings (arrays are objects — stripped otherwise)
     ssDoneJSON: JSON.stringify(SS_SUBJECTS.map((_,i)=>!!document.getElementById('ss-'+i)?.checked)),
     sDetsJSON:  JSON.stringify(SS_SUBJECTS.map((_,i)=>document.getElementById('ssdet-'+i)?.value||'')),
+    // Brain lab pts — saved as plain numbers so they survive the Supabase filter
+    savedSudokuPts:    sudokuPts,
+    savedLogicPts:     logicPtsTotal,
+    savedMathsPts:     mathsPtsToday,
+    savedRiddlePts:    riddlePtsTotal,
+    savedWorksheetPts: worksheetPts,
+    savedWsAnswered:   JSON.stringify(_wsAnswered||{}),
     savedAt:new Date().toISOString()
   };
 }
@@ -4142,7 +4164,7 @@ function clearDay(){
   const prApp=document.getElementById('approved-section');if(prApp)prApp.style.display='none';
   const freeMsg=document.getElementById('free-act-msg');if(freeMsg)freeMsg.innerHTML='';
   const prRatRes=document.getElementById('parent-rating-result');if(prRatRes)prRatRes.innerHTML='';
-  creativeChosen=null;brainPtsToday=0;sudokuPts=0;logicPtsTotal=0;riddlePtsTotal=0;mathsPtsToday=0;todayApproved=false;
+  creativeChosen=null;brainPtsToday=0;sudokuPts=0;logicPtsTotal=0;riddlePtsTotal=0;mathsPtsToday=0;worksheetPts=0;todayApproved=false;
   sudokuFrozen=false;logicFrozen=false;logicCurrentPuzzles=[];mathsFrozen=false;mathsChecked=false;mathsSelected=[];
   genSudoku('easy');genLogicPuzzles();initMathsSprint();
   const sAwd=document.getElementById('shloka-pts-award');if(sAwd)sAwd.value='0';
@@ -4288,7 +4310,7 @@ function checkSudoku(){
   if(allCorrect&&allFilled){
     const bonus={easy:0,medium:5,hard:10}[sudokuDifficulty]||0;
     sudokuPts=Math.max(sudokuPts,30+bonus);
-    brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal;
+    brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal+mathsPtsToday+worksheetPts;
     msg.innerHTML=`<span style="color:#10B981;font-size:16px">🎉 PERFECT! +${30+bonus} pts!</span>`;
     toast('Sudoku solved! +'+(30+bonus)+' brain pts!');
     updateBrainDisplay();calcDayPts();
@@ -4298,7 +4320,7 @@ function checkSudoku(){
 }
 function revealSudokuHint(){
   sudokuPts=Math.max(0,sudokuPts-5);
-  brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal;
+  brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal+mathsPtsToday+worksheetPts;
   updateBrainDisplay();calcDayPts();
   for(let r=0;r<9;r++)for(let c=0;c<9;c++){
     if(sudokuGrid[r][c]===0){
@@ -4420,7 +4442,7 @@ function checkLogicAnswers(){
   // Score: 3 correct=20, 2=13, 1=7, 0=0
   const scoreMap=[0,7,13,20];
   const pts=scoreMap[correct]||0;
-  logicPtsTotal=pts;brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal;
+  logicPtsTotal=pts;brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal+mathsPtsToday+worksheetPts;
   updateBrainDisplay();calcDayPts();
 
   // Show score panel
@@ -4482,7 +4504,7 @@ function checkRiddle(i,correct,hint){
   const isRight=ans===correct.toLowerCase()||correct.toLowerCase().includes(ans)&&ans.length>2;
   riddleAnswered.push(i);
   if(isRight){
-    riddlePts+=10;riddlePtsTotal+=10;brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal;
+    riddlePts+=10;riddlePtsTotal+=10;brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal+mathsPtsToday+worksheetPts;
     document.getElementById('rid-result-'+i).innerHTML='<span style="color:#10B981;font-weight:800">🎉 Correct! +10 pts! Answer: '+correct+'</span>';
     toast('Riddle solved! +10 brain pts!');
     updateBrainDisplay();calcDayPts();
@@ -4708,7 +4730,7 @@ function checkMathsSprint(){
   const scoreMap=[0,3,8,14,20,25];
   const pts=scoreMap[correct]||0;
   mathsPtsToday=pts;
-  brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal+mathsPtsToday;
+  brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal+mathsPtsToday+worksheetPts;
   updateBrainDisplay();calcDayPts();
 
   document.getElementById('maths-score-chip').textContent=pts;
@@ -4748,6 +4770,7 @@ function updateBrainDisplay(){
   const bl = document.getElementById('bb-logic');if(bl)bl.textContent=logicPtsTotal;
   const bm = document.getElementById('bb-maths');if(bm)bm.textContent=mathsPtsToday;
   const br = document.getElementById('bb-riddle');if(br)br.textContent=riddlePtsTotal;
+  const bw = document.getElementById('bb-worksheet');if(bw)bw.textContent=worksheetPts;
   // Mood emoji + message
   const moodEl = document.getElementById('brain-mood-emoji');
   const msgEl  = document.getElementById('brain-pts-msg');
@@ -5569,6 +5592,18 @@ function loadDraftDay(d){
     mc.prepend(bar);
   }
 
+  // ── Restore brain lab pts variables (so score survives refresh) ──
+  if(d.savedSudokuPts    !== undefined) sudokuPts       = d.savedSudokuPts;
+  if(d.savedLogicPts     !== undefined) logicPtsTotal   = d.savedLogicPts;
+  if(d.savedMathsPts     !== undefined) mathsPtsToday   = d.savedMathsPts;
+  if(d.savedRiddlePts    !== undefined) riddlePtsTotal  = d.savedRiddlePts;
+  if(d.savedWorksheetPts !== undefined) worksheetPts    = d.savedWorksheetPts;
+  if(d.savedWsAnswered){
+    try{ Object.assign(_wsAnswered, JSON.parse(d.savedWsAnswered)); }catch(e){}
+  }
+  brainPtsToday = sudokuPts + logicPtsTotal + riddlePtsTotal + mathsPtsToday + worksheetPts;
+  updateBrainDisplay();
+
   // ── Recalculate from restored data ───────────────────────────
   if(typeof checkPenalty==='function') checkPenalty();
   calcDayPts();
@@ -5820,6 +5855,350 @@ function _sessionStartAutoSave(){
   }, 60000);
 }
 
+
+
+// ════════════════════════════════════════════════════════════════
+// WORKSHEET ENGINE — reads worksheets.json, renders MCQ worksheets
+// You control everything by editing worksheets.json on GitHub.
+// NEVER need to touch this code to add new worksheets.
+// ════════════════════════════════════════════════════════════════
+
+
+// Points awarded based on percentage score
+
+// ════════════════════════════════════════════════════════════════
+// WORKSHEET ENGINE v3 — KBC style, subject tabs, per-subject pts
+// Edit worksheets.json only — never touch this code
+// ════════════════════════════════════════════════════════════════
+
+// Points scale per worksheet
+function _wsPtsFromScore(correct, total){
+  if(total === 0) return 0;
+  const pct = (correct / total) * 100;
+  if(pct >= 90) return 10;
+  if(pct >= 75) return 8;
+  if(pct >= 60) return 5;
+  return 3;
+}
+
+// Subject → display config
+const WS_SUBJECTS = {
+  'English':        { icon:'📖', color:'#1D4ED8', light:'#EFF6FF', glow:'#93C5FD', badge:'E' },
+  'Mental Maths':   { icon:'🧮', color:'#D97706', light:'#FFFBEB', glow:'#FCD34D', badge:'M' },
+  'Social Science': { icon:'🌍', color:'#065F46', light:'#ECFDF5', glow:'#6EE7B7', badge:'S' },
+  'Maths':          { icon:'📐', color:'#7C3AED', light:'#F5F3FF', glow:'#C4B5FD', badge:'M' },
+  'Science':        { icon:'🔬', color:'#0E7490', light:'#ECFEFF', glow:'#67E8F9', badge:'S' },
+  'GK':             { icon:'🌍', color:'#065F46', light:'#ECFDF5', glow:'#6EE7B7', badge:'G' },
+  'General Knowledge': { icon:'🌍', color:'#065F46', light:'#ECFDF5', glow:'#6EE7B7', badge:'G' },
+};
+function _wsSubjConf(subject){
+  return WS_SUBJECTS[subject] || { icon:'📋', color:'#4C1D95', light:'#F5F3FF', glow:'#C4B5FD', badge:'W' };
+}
+
+let _wsLoaded    = false;
+let _wsAnswered  = {};
+let _wsData      = [];
+let _wsChosen    = {};
+let _wsActiveTab = null; // currently selected subject tab
+
+// Fetch and render
+async function loadWorksheets(){
+  const sec = document.getElementById('worksheet-section');
+  if(!sec) return;
+
+  const now = new Date();
+  const istDate = new Date(now.getTime() + 5.5 * 60 * 60000);
+  const today = istDate.toISOString().split('T')[0];
+
+  sec.innerHTML = `<div style="padding:20px;text-align:center;font-size:13px;color:#A5B4FC;font-weight:700">⏳ Loading worksheets...</div>`;
+
+  try {
+    const res = await fetch('worksheets.json?t=' + Date.now());
+    if(!res.ok) throw new Error('Not found');
+    _wsData = await res.json();
+    _wsLoaded = true;
+  } catch(e) {
+    sec.innerHTML = `<div style="margin:10px 0;padding:20px;text-align:center;color:#9CA3AF;font-size:13px;background:#0F172A;border-radius:16px;border:1.5px dashed #334155">📋 No worksheets.json found in your GitHub repo</div>`;
+    return;
+  }
+
+  const todaySheets = _wsData.filter(w => w.date === today);
+  if(todaySheets.length === 0){
+    sec.innerHTML = `<div style="margin:10px 0;padding:20px;text-align:center;color:#9CA3AF;font-size:13px;background:#0F172A;border-radius:16px;border:1.5px dashed #334155">📋 No worksheets for <b style="color:#C4B5FD">${today}</b> — check the date in worksheets.json</div>`;
+    return;
+  }
+
+  // Group by subject
+  const subjects = [...new Set(todaySheets.map(w => w.subject))];
+  _wsActiveTab = _wsActiveTab && subjects.includes(_wsActiveTab) ? _wsActiveTab : subjects[0];
+
+  renderWsShell(subjects, todaySheets);
+}
+
+// Render the outer shell — subject tabs + content area
+function renderWsShell(subjects, allSheets){
+  const sec = document.getElementById('worksheet-section');
+  if(!sec) return;
+
+  // Header card
+  const totalWsPts = Object.values(_wsAnswered).reduce((s,v)=>s+v.pts,0);
+  const completedCount = Object.keys(_wsAnswered).length;
+  const totalCount = allSheets.length;
+
+  let tabsHtml = subjects.map(subj => {
+    const conf = _wsSubjConf(subj);
+    const isActive = subj === _wsActiveTab;
+    const subjSheets = allSheets.filter(w => w.subject === subj);
+    const doneCount = subjSheets.filter(w => _wsAnswered[w.id]).length;
+    const tick = doneCount === subjSheets.length && doneCount > 0 ? ' ✅' : (doneCount > 0 ? ` ${doneCount}/${subjSheets.length}` : '');
+    return `<button onclick="_wsSelectTab('${subj}')" style="
+      padding:8px 16px;border-radius:50px;font-size:12px;font-weight:900;
+      font-family:'Nunito',sans-serif;cursor:pointer;border:2px solid;
+      transition:all .2s;white-space:nowrap;
+      background:${isActive ? conf.color : 'rgba(255,255,255,.07)'};
+      border-color:${isActive ? conf.color : 'rgba(255,255,255,.15)'};
+      color:${isActive ? '#fff' : 'rgba(255,255,255,.6)'};
+      box-shadow:${isActive ? '0 4px 14px rgba(0,0,0,.4)' : 'none'};
+    ">${conf.icon} ${subj}${tick}</button>`;
+  }).join('');
+
+  let html = `
+    <div style="background:linear-gradient(135deg,#0F0C29,#1a1a4e,#24243e);border-radius:20px;margin-bottom:10px;overflow:hidden;border:1.5px solid rgba(167,139,250,.25)">
+      <!-- Header -->
+      <div style="padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08)">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:16px;font-weight:900;color:#E0E7FF">📋 Today's Worksheets</div>
+            <div style="font-size:11px;color:#A5B4FC;margin-top:2px">${completedCount}/${totalCount} completed · ${totalWsPts} pts earned</div>
+          </div>
+          <div style="background:rgba(124,58,237,.3);border:1.5px solid #7C3AED;border-radius:16px;padding:6px 14px;text-align:center">
+            <div style="font-size:22px;font-weight:900;color:#C4B5FD;line-height:1" id="ws-total-disp">${totalWsPts}</div>
+            <div style="font-size:9px;color:#A5B4FC;text-transform:uppercase;letter-spacing:.06em">worksheet pts</div>
+          </div>
+        </div>
+        <!-- Subject tabs -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px" id="ws-subject-tabs">
+          ${tabsHtml}
+        </div>
+      </div>
+      <!-- Content area -->
+      <div id="ws-content-area" style="padding:16px">
+        %%WS_CONTENT%%
+      </div>
+    </div>`;
+
+  // Build content for active tab
+  const activeSheets = allSheets.filter(w => w.subject === _wsActiveTab);
+  const contentHtml = activeSheets.map((ws, wi) => _wsRenderCard(ws, wi)).join('');
+
+  html = html.replace('%%WS_CONTENT%%', contentHtml);
+  sec.innerHTML = html;
+}
+
+// Render a single worksheet card — KBC style
+function _wsRenderCard(ws, wi){
+  const done = _wsAnswered[ws.id];
+  const conf = _wsSubjConf(ws.subject);
+
+  const qs = (ws.questions || []).map((q, qi) => {
+    return _wsRenderQuestion(ws.id, q, qi, done);
+  }).join('');
+
+  const resultHtml = done ? `
+    <div style="margin-top:16px;background:rgba(16,185,129,.15);border:1.5px solid #10B981;border-radius:14px;padding:12px 16px;text-align:center">
+      <div style="font-size:20px;margin-bottom:4px">🎉</div>
+      <div style="font-size:15px;font-weight:900;color:#6EE7B7">Score: ${done.score} correct</div>
+      <div style="font-size:13px;font-weight:700;color:#A7F3D0;margin-top:2px">+${done.pts} pts earned!</div>
+    </div>` : `
+    <button onclick="_wsSubmit('${ws.id}',${wi})" style="
+      margin-top:16px;width:100%;padding:14px;
+      background:linear-gradient(135deg,${conf.color},#1D4ED8);
+      color:#fff;border:none;border-radius:14px;
+      font-size:14px;font-weight:900;cursor:pointer;
+      font-family:'Nunito',sans-serif;
+      box-shadow:0 4px 20px rgba(0,0,0,.4);
+      letter-spacing:.02em">
+      ✅ Submit & Get Points
+    </button>`;
+
+  return `
+    <div style="margin-bottom:20px">
+      <!-- Worksheet title bar -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:rgba(255,255,255,.05);border-radius:12px">
+        <div style="font-size:24px">${ws.icon || conf.icon}</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:900;color:#E0E7FF">${ws.title}</div>
+          <div style="font-size:11px;color:#A5B4FC;margin-top:1px">${ws.questions?.length||0} questions · up to 10 pts</div>
+        </div>
+        ${done ? '<div style="font-size:24px">✅</div>' : ''}
+      </div>
+      <!-- Questions -->
+      ${qs}
+      ${resultHtml}
+    </div>`;
+}
+
+// Render one KBC-style question
+function _wsRenderQuestion(wsId, q, qi, done){
+  const chosen = _wsChosen[wsId] || {};
+  const chosenIdx = chosen[qi];
+  const labels = ['A','B','C','D'];
+
+  // Build 4 options in KBC layout: A C / B D (left col: A,B  right col: C,D)
+  const optHtml = (oi) => {
+    const opt = q.opts[oi];
+    const label = labels[oi] || String.fromCharCode(65+oi);
+    let bg = 'linear-gradient(135deg,#1a237e,#283593)';
+    let border = 'rgba(100,120,220,.5)';
+    let glow = '';
+    let textCol = '#E8EAF6';
+
+    if(done){
+      if(oi === q.ans){
+        bg = 'linear-gradient(135deg,#1B5E20,#2E7D32)';
+        border = '#4CAF50'; glow = '0 0 12px rgba(76,175,80,.5)';
+        textCol = '#fff';
+      } else if(chosenIdx === oi && oi !== q.ans){
+        bg = 'linear-gradient(135deg,#7F1D1D,#991B1B)';
+        border = '#EF4444'; textCol = '#fff';
+      }
+    } else if(chosenIdx === oi){
+      bg = 'linear-gradient(135deg,#1565C0,#1976D2)';
+      border = '#FFD600'; glow = '0 0 16px rgba(255,214,0,.4)';
+      textCol = '#fff';
+    }
+
+    const disabled = done ? 'pointer-events:none' : 'cursor:pointer';
+    return `
+      <div onclick="_wsChoose('${wsId}',${qi},${oi},this)" style="
+        display:flex;align-items:center;gap:0;
+        border-radius:50px;overflow:hidden;
+        border:2px solid ${border};
+        background:${bg};
+        box-shadow:${glow || 'none'};
+        ${disabled};
+        transition:all .2s;
+        user-select:none;
+      " data-wsid="${wsId}" data-qi="${qi}" data-oi="${oi}">
+        <!-- Letter badge -->
+        <div style="
+          background:rgba(255,255,255,.12);
+          border-right:1.5px solid rgba(255,255,255,.15);
+          padding:10px 14px;
+          font-size:13px;font-weight:900;
+          color:rgba(255,255,255,.8);
+          min-width:38px;text-align:center;
+          flex-shrink:0;
+        ">${label}:</div>
+        <!-- Option text -->
+        <div style="
+          padding:10px 14px;
+          font-size:12px;font-weight:700;
+          color:${textCol};
+          flex:1;
+        ">${opt}</div>
+      </div>`;
+  };
+
+  // 2×2 grid: A|C on top, B|D on bottom
+  const opts = q.opts;
+  const grid = opts.length === 4 ? `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      ${optHtml(0)}${optHtml(2)}
+      ${optHtml(1)}${optHtml(3)}
+    </div>` : `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${q.opts.map((_,oi)=>optHtml(oi)).join('')}
+    </div>`;
+
+  return `
+    <div style="margin-bottom:16px">
+      <!-- Question pill -->
+      <div style="
+        background:linear-gradient(135deg,#1a237e,#1565C0);
+        border:2px solid rgba(100,149,237,.6);
+        border-radius:50px;
+        padding:12px 20px;
+        text-align:center;
+        font-size:13px;font-weight:800;
+        color:#E8EAF6;
+        margin-bottom:10px;
+        box-shadow:0 0 20px rgba(26,35,126,.5);
+        position:relative;
+      ">
+        <span style="color:rgba(255,255,255,.5);margin-right:6px">Q${qi+1}.</span>${q.q}
+      </div>
+      ${grid}
+    </div>`;
+}
+
+// Select a subject tab
+function _wsSelectTab(subject){
+  _wsActiveTab = subject;
+  loadWorksheets(); // re-render
+}
+
+// Handle option click
+function _wsChoose(wsId, qIdx, optIdx, el){
+  if(_wsAnswered[wsId]) return;
+  if(!_wsChosen[wsId]) _wsChosen[wsId] = {};
+  _wsChosen[wsId][qIdx] = optIdx;
+
+  // Re-render just this worksheet's content area — efficient
+  const ws = _wsData.find(w => w.id === wsId);
+  if(!ws) return;
+  const today = new Date(new Date().getTime() + 5.5*60*60000).toISOString().split('T')[0];
+  const allSheets = _wsData.filter(w => w.date === today);
+  const activeSheets = allSheets.filter(w => w.subject === _wsActiveTab);
+  const wi = activeSheets.findIndex(w => w.id === wsId);
+
+  // Re-render just the question block
+  const qBlock = el.closest('[data-ws-q]') || el.closest('.ws-q-block');
+  // Simpler: just re-render the full content area
+  const ca = document.getElementById('ws-content-area');
+  if(ca) ca.innerHTML = activeSheets.map((w, i) => _wsRenderCard(w, i)).join('');
+}
+
+// Submit and grade
+function _wsSubmit(wsId, sheetIdx){
+  const ws = _wsData.find(w => w.id === wsId);
+  if(!ws || _wsAnswered[wsId]) return;
+
+  const chosen = _wsChosen[wsId] || {};
+  const total = ws.questions.length;
+  let correct = 0;
+
+  ws.questions.forEach((q, qi) => {
+    if(chosen[qi] === q.ans) correct++;
+  });
+
+  if(Object.keys(chosen).length < total){
+    toast(`⚠️ Please answer all ${total} questions before submitting!`);
+    return;
+  }
+
+  const pts = _wsPtsFromScore(correct, total);
+  _wsAnswered[wsId] = { pts, score: `${correct}/${total}`, chosen: {...chosen} };
+
+  // Recalculate totals
+  worksheetPts = Object.values(_wsAnswered).reduce((s,v) => s + v.pts, 0);
+  brainPtsToday = sudokuPts + logicPtsTotal + riddlePtsTotal + mathsPtsToday + worksheetPts;
+  updateBrainDisplay();
+  calcDayPts();
+
+  toast(`📋 ${ws.subject} submitted! ${correct}/${total} correct — +${pts} pts! 🎉`);
+
+  // Re-render to show results
+  loadWorksheets();
+
+  // Immediately save to Supabase so refresh never loses pts
+  saveBrainDraft().catch(e => console.warn('Auto-save after worksheet failed:', e));
+}
+
+function _wsUpdateTotalDisplay(){
+  const el = document.getElementById('ws-total-disp');
+  if(el) el.textContent = Object.values(_wsAnswered).reduce((s,v)=>s+v.pts,0);
+}
 
 // ════════════════════════════════════════════
 // INIT — load cloud data then build UI
