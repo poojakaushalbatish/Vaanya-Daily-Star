@@ -1,5 +1,115 @@
 [
   {
+    "id": "ws-2026-05-05-english",
+    "date": "2026-05-05",
+    "subject": "English",
+    "icon": "📖",
+    "title": "English Olympiad — Synonyms, Antonyms, Grammar & More",
+    "type": "mcq",
+    "questions": [
+      {
+        "q": "SYNONYM — Choose the word closest in meaning to 'MELANCHOLY':",
+        "opts": [
+          "Angry",
+          "Sorrowful",
+          "Frightened",
+          "Restless"
+        ],
+        "ans": 1
+      },
+      {
+        "q": "ANTONYM — Choose the word most opposite in meaning to 'TRANQUIL':",
+        "opts": [
+          "Peaceful",
+          "Gentle",
+          "Turbulent",
+          "Steady"
+        ],
+        "ans": 2
+      },
+      {
+        "q": "COLLECTIVE NOUN — A group of kangaroos is called a:",
+        "opts": [
+          "Colony",
+          "Troop",
+          "Mob",
+          "Pod"
+        ],
+        "ans": 2
+      },
+      {
+        "q": "PLURAL — Which is the correct plural of 'RADIUS'?",
+        "opts": [
+          "Radiuses",
+          "Radii",
+          "Radiis",
+          "Both (a) and (b)"
+        ],
+        "ans": 3
+      },
+      {
+        "q": "SYNONYM — Choose the word closest in meaning to 'PERILOUS':",
+        "opts": [
+          "Peaceful",
+          "Painful",
+          "Hazardous",
+          "Powerful"
+        ],
+        "ans": 2
+      },
+      {
+        "q": "PUNCTUATION — Which sentence uses the apostrophe correctly?",
+        "opts": [
+          "The girl's left her bag on the bus.",
+          "The girls' coats were hanging on the rack.",
+          "The girl's were late for class.",
+          "The girls coat's were on the rack."
+        ],
+        "ans": 1
+      },
+      {
+        "q": "ANTONYM — Choose the word most opposite in meaning to 'INSOLENT':",
+        "opts": [
+          "Lazy",
+          "Rude",
+          "Humble",
+          "Careless"
+        ],
+        "ans": 2
+      },
+      {
+        "q": "COLLECTIVE NOUN — A group of magistrates or directors is called a:",
+        "opts": [
+          "Crew",
+          "Board",
+          "Troupe",
+          "Guild"
+        ],
+        "ans": 1
+      },
+      {
+        "q": "JUMBLED SENTENCE — Rearrange: 'never / a / liar / trusted / is / again'",
+        "opts": [
+          "A liar is never trusted again.",
+          "Never a liar is again trusted.",
+          "A liar never is trusted again.",
+          "Is a liar never again trusted."
+        ],
+        "ans": 0
+      },
+      {
+        "q": "SINGULAR — Which is the correct singular of 'APPENDICES'?",
+        "opts": [
+          "Appendix",
+          "Appendice",
+          "Appendis",
+          "Appendicia"
+        ],
+        "ans": 0
+      }
+    ]
+  },
+  {
     "id": "ws-2026-05-05-mental-maths",
     "date": "2026-05-05",
     "subject": "Mental Maths",
