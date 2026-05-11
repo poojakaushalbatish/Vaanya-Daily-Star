@@ -2623,14 +2623,30 @@ function totalEarned(){
 // Removes s13 (Ch 6 V17) that was wrongly approved — runs once, marks done.
 (function _oneTimeShlokaRepair(){
   try{
-    if(localStorage.getItem('vaanya_shloka_repair_v1')) return; // already done
-    // Remove s13 from permanent mastered store
+    if(localStorage.getItem('vaanya_shloka_repair_v1')) return;
     const mastered = JSON.parse(localStorage.getItem('vaanya_geeta_mastered')||'{}');
     if(mastered['s13']){ delete mastered['s13']; localStorage.setItem('vaanya_geeta_mastered', JSON.stringify(mastered)); }
-    // Remove s13 from progress store
     const prog = JSON.parse(localStorage.getItem('vaanya_geeta_progress')||'{}');
-    if(prog['s13']){ delete prog['s13']; localStorage.setItem('vaanya_geeta_progress', JSON.stringify(prog)); }
+    if(prog['s13']){ delete prog['s13']; }
+    Object.keys(prog).forEach(id=>{ if(prog[id]&&prog[id].status==='inprogress') delete prog[id]; });
+    localStorage.setItem('vaanya_geeta_progress', JSON.stringify(prog));
     localStorage.setItem('vaanya_shloka_repair_v1','done');
+  }catch(e){}
+})();
+
+// v2 repair — clears stale inprogress from localStorage that cause ghost locks
+(function _shlokaRepairV2(){
+  try{
+    if(localStorage.getItem('vaanya_shloka_repair_v2')) return;
+    const prog = JSON.parse(localStorage.getItem('vaanya_geeta_progress')||'{}');
+    let changed=false;
+    Object.keys(prog).forEach(id=>{
+      if(prog[id]&&prog[id].status==='inprogress'){ delete prog[id]; changed=true; }
+    });
+    if(changed) localStorage.setItem('vaanya_geeta_progress', JSON.stringify(prog));
+    const mastered = JSON.parse(localStorage.getItem('vaanya_geeta_mastered')||'{}');
+    if(mastered['s13']){ delete mastered['s13']; localStorage.setItem('vaanya_geeta_mastered', JSON.stringify(mastered)); }
+    localStorage.setItem('vaanya_shloka_repair_v2','done');
   }catch(e){}
 })();
 
@@ -2851,10 +2867,28 @@ function filterGeetaGroup(groupId,btn){
   _renderBrowseGrid();
 }
 
+function _geetaActiveInProgressId(){
+  // Returns inprogress shlokaId ONLY if it's from today or an unapproved day
+  // Ignores ghost inprogress entries left over from old approved days
+  const e=Object.entries(geetaProgress).find(([,v])=>{
+    if(v.status!=='inprogress') return false;
+    if(!v.date) return true; // no date — assume active
+    // Check if the day it was started is already approved
+    const dayRec=savedDays.find(d=>d.date===v.date);
+    if(dayRec && dayRec.approved===true){
+      // Day is approved — this is a ghost. Only keep it if it was explicitly mastered
+      // (which would have changed status). Since it's still inprogress, it's stale.
+      return false;
+    }
+    return true;
+  });
+  return e?e[0]:null;
+}
+
 function _renderBrowseGrid(){
   const grid=document.getElementById('shloka-browse-grid');
   if(!grid)return;
-  const inProgressId=_geetaInProgressId();
+  const inProgressId=_geetaActiveInProgressId();  // only non-stale inprogress
   const relearningIds=_geetaReLearningIds();
   const hasBlocker=inProgressId||relearningIds.length>0; // any active shloka blocks new ones
   const groups=geetaActiveGroup?[GITA_GROUPS.find(g=>g.id===geetaActiveGroup)].filter(Boolean):GITA_GROUPS;
@@ -2899,10 +2933,13 @@ function _renderBrowseGrid(){
 
 function _showLockedMsg(){
   const relearningIds=_geetaReLearningIds();
+  const activeId=_geetaActiveInProgressId();
   if(relearningIds.length>0){
     toast('🔒 Re-master your Relearning shloka(s) first before starting a new one! Ask Mamma or Papa to approve. 🙏');
-  }else{
+  }else if(activeId){
     toast('🔒 Finish your current shloka first! Recite it to Mamma or Papa to unlock the next one. 🙏');
+  }else{
+    toast('🔒 Complete your current shloka to unlock the next one. 🙏');
   }
 }
 
@@ -2912,7 +2949,7 @@ function _openShloka(shlokaId){
   const status=prog?prog.status:'new';
   const g=GITA_GROUPS.find(x=>x.id===s.group)||{color:'#065F46',light:'#ECFDF5',icon:'\uD83D\uDE4F',border:'#6EE7B7',name:'',chapters:''};
   const wordRows=(s.wordMeaning||[]).map(function(w){return '<tr><td style="padding:3px 8px;font-weight:800;color:#1F2937;font-size:12px;white-space:nowrap;font-style:italic">'+w.w+'</td><td style="padding:3px 8px;color:#4B5563;font-size:12px">'+w.m+'</td></tr>';}).join('');
-  const inProgressId=_geetaInProgressId();
+  const inProgressId=_geetaActiveInProgressId();
   const relearningIds=_geetaReLearningIds();
   const hasBlocker=inProgressId||relearningIds.length>0;
   // Locked if new and any shloka is active (learning or relearning)
