@@ -1577,6 +1577,39 @@ tr:hover td{background:#FAFBFF}
   <div id="parent-breakdown-bars"></div>
 </div>
 
+<!-- Parent Sudoku Unlock -->
+<div class="sec" id="parent-sudoku-sec" style="border-color:#818CF8;background:linear-gradient(135deg,#EEF2FF,#fff)">
+  <div class="sh">
+    <div class="si" style="background:#EEF2FF;color:#3730A3">🔢</div>
+    Sudoku — Parent Override
+    <span id="sudoku-freeze-badge" style="margin-left:auto;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;border:1px solid #A5B4FC;background:#EEF2FF;color:#3730A3">Checking status…</span>
+  </div>
+  <div id="parent-sudoku-status" style="font-size:13px;color:#4B5563;font-weight:700;margin-bottom:12px;line-height:1.6">
+    Loading…
+  </div>
+  <!-- Unlock button — only shown when frozen -->
+  <div id="parent-sudoku-unlock-wrap" style="display:none">
+    <div style="background:#FFF7ED;border:1.5px solid #FCD34D;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#92400E;font-weight:700;line-height:1.6">
+      ⚠️ This gives Vaanya <b>one more attempt</b> today. The sudoku will lock again automatically when she presses Check.
+      Previous pts are reset so she can earn the full score on the fresh attempt.
+    </div>
+    <button onclick="parentUnlockSudoku()"
+      style="width:100%;background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff;border:none;
+        border-radius:14px;padding:14px 18px;font-size:14px;font-weight:900;cursor:pointer;
+        font-family:'Nunito',sans-serif;box-shadow:0 4px 14px rgba(79,70,229,.4);letter-spacing:.03em">
+      🔓 Unlock Sudoku — Give One More Attempt
+    </button>
+  </div>
+  <!-- Already unlocked notice -->
+  <div id="parent-sudoku-unlocked-notice" style="display:none;background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:12px;padding:12px 16px;font-size:13px;font-weight:800;color:#065F46">
+    ✅ Sudoku is currently unlocked — Vaanya can attempt it now. It will lock automatically when she checks.
+  </div>
+  <!-- Already open (not yet attempted) notice -->
+  <div id="parent-sudoku-open-notice" style="display:none;background:#EFF6FF;border:1.5px solid #93C5FD;border-radius:12px;padding:12px 16px;font-size:13px;font-weight:800;color:#1E3A8A">
+    📖 Sudoku has not been attempted yet today — Vaanya can access it freely.
+  </div>
+</div>
+
 <!-- Shloka reflection — from child -->
 <div class="sec" style="border-color:#6EE7B7;background:linear-gradient(135deg,#F0FDF4,#fff)">
   <div class="sh"><div class="si" style="background:#ECFDF5;color:#065F46">🕉️</div>
@@ -2656,17 +2689,53 @@ let geetaSceneOpen   = false;
 
 function _geetaLoadProgress(){
   try{
-    const d=(document.getElementById('rpt-date')?.value)||
+    // ── Step 1: Build cumulative mastered map from ALL approved days ──────────
+    // A shloka mastered yesterday must stay mastered today — not reset.
+    const cumulative = {};
+    savedDays
+      .filter(d => d.approved === true)
+      .sort((a,b) => new Date(a.date) - new Date(b.date)) // oldest first so newest wins
+      .forEach(d => {
+        try{
+          const prog = d.geetaProgress ? JSON.parse(d.geetaProgress) : {};
+          Object.entries(prog).forEach(([id, val]) => {
+            // Only promote — never downgrade a mastered back to inprogress
+            if(!cumulative[id] || cumulative[id].status !== 'mastered'){
+              cumulative[id] = val;
+            }
+          });
+        }catch(e){}
+      });
+
+    // ── Step 2: Today's draft (unapproved) may have an inprogress shloka ──────
+    const todayStr = (document.getElementById('rpt-date')?.value) ||
       new Date(Date.now()+5.5*60*60000).toISOString().split('T')[0];
-    const existing=savedDays.find(x=>x.date===d);
-    const fromCloud=existing&&existing.geetaProgress?JSON.parse(existing.geetaProgress):{};
-    // Merge with localStorage so in-progress shlokas survive refresh even before cloud loads
-    let fromLocal={};
-    try{ const raw=localStorage.getItem('vaanya_geeta_progress'); if(raw) fromLocal=JSON.parse(raw)||{}; }catch(e){}
-    // Cloud wins on mastered; local wins on inprogress if cloud has nothing
-    geetaProgress={...fromLocal,...fromCloud};
+    const todayDraft = savedDays.find(x => x.date === todayStr && x.approved !== true);
+    const fromToday = todayDraft && todayDraft.geetaProgress
+      ? JSON.parse(todayDraft.geetaProgress) : {};
+
+    // ── Step 3: localStorage for mid-session inprogress (before cloud saves) ──
+    let fromLocal = {};
+    try{
+      const raw = localStorage.getItem('vaanya_geeta_progress');
+      if(raw) fromLocal = JSON.parse(raw) || {};
+    }catch(e){}
+
+    // Merge: cumulative mastered base wins; today's draft adds inprogress for today only;
+    // local fills in for anything not yet cloud-saved.
+    // Rule: mastered always beats inprogress.
+    const merged = {...fromLocal, ...fromToday, ...cumulative};
+    // Final pass: if cumulative says mastered, keep it mastered regardless of local/today
+    Object.entries(cumulative).forEach(([id, val]) => {
+      if(val.status === 'mastered') merged[id] = val;
+    });
+    geetaProgress = merged;
+
   }catch(e){
-    try{ const raw=localStorage.getItem('vaanya_geeta_progress'); geetaProgress=raw?JSON.parse(raw):{}; }catch(e2){ geetaProgress={}; }
+    try{
+      const raw = localStorage.getItem('vaanya_geeta_progress');
+      geetaProgress = raw ? JSON.parse(raw) : {};
+    }catch(e2){ geetaProgress = {}; }
   }
 }
 function _geetaTotalPts(){
@@ -2680,6 +2749,16 @@ function _geetaInProgressId(){
 
 function buildShlokaDisplay(){
   _geetaLoadProgress();
+  // Merge permanent mastered store — ensures yesterday's mastered shlokas
+  // are always reflected even before cloud data loads
+  try{
+    const mastered = JSON.parse(localStorage.getItem('vaanya_geeta_mastered')||'{}');
+    Object.entries(mastered).forEach(([id, val]) => {
+      if(!geetaProgress[id] || geetaProgress[id].status !== 'mastered'){
+        geetaProgress[id] = val;
+      }
+    });
+  }catch(e){}
   _buildGroupFilterBtns();
   _renderBrowseGrid();
   _updateGeetaHeader();
@@ -2817,19 +2896,28 @@ function _geetaStartLearn(shlokaId, silent){
   }
 }
 
-// Persist geetaProgress to localStorage so it survives page refresh
+// Persist geetaProgress to localStorage so it survives page refresh.
+// Mastered shlokas go into a SEPARATE permanent key — they are never cleared.
 function _persistGeetaToLocalStorage(){
   try{
-    const key='vaanya_geeta_progress';
-    localStorage.setItem(key, JSON.stringify(geetaProgress));
+    localStorage.setItem('vaanya_geeta_progress', JSON.stringify(geetaProgress));
+    // Also maintain a permanent mastered-only store that is never overwritten by inprogress
+    const existingMastered = JSON.parse(localStorage.getItem('vaanya_geeta_mastered')||'{}');
+    Object.entries(geetaProgress).forEach(([id, val]) => {
+      if(val.status === 'mastered') existingMastered[id] = val;
+    });
+    localStorage.setItem('vaanya_geeta_mastered', JSON.stringify(existingMastered));
   }catch(e){}
 }
 
-// Load geetaProgress from localStorage as fallback
+// Load geetaProgress from localStorage as fallback, merging permanent mastered store
 function _loadGeetaFromLocalStorage(){
   try{
-    const raw=localStorage.getItem('vaanya_geeta_progress');
-    if(raw){ const parsed=JSON.parse(raw); if(parsed&&typeof parsed==='object') geetaProgress=parsed; }
+    const raw = localStorage.getItem('vaanya_geeta_progress');
+    const progress = raw ? JSON.parse(raw) : {};
+    const mastered = JSON.parse(localStorage.getItem('vaanya_geeta_mastered')||'{}');
+    // Mastered always wins
+    geetaProgress = {...progress, ...mastered};
   }catch(e){}
 }
 
@@ -3298,6 +3386,7 @@ function collectFormData(date, pts){
     sDetsJSON:  JSON.stringify(SS_SUBJECTS.map((_,i)=>document.getElementById('ssdet-'+i)?.value||'')),
     // Brain lab pts — saved as plain numbers so they survive the Supabase filter
     savedSudokuPts:    sudokuPts,
+    savedSudokuFrozen: sudokuFrozen,  // persist freeze state so it survives refresh
     savedLogicPts:     logicPtsTotal,
     savedMathsPts:     mathsPtsToday,
     savedRiddlePts:    riddlePtsTotal,
@@ -3452,6 +3541,20 @@ async function approveReport(){
   const date=document.getElementById('rpt-date').value;
   if(!date){toast("Please set today\'s date first!");return;}
   todayApproved=true;
+
+  // ── Auto-promote shloka: if parent awarded 25 pts via dropdown,
+  //    mark the in-progress shloka as mastered in geetaProgress now,
+  //    BEFORE collectFormData snapshots it. This keeps the two systems in sync.
+  const shlokaPtsEl = document.getElementById('shloka-pts-award');
+  const shlokaPtsVal = parseInt(shlokaPtsEl?.value||0)||0;
+  if(shlokaPtsVal >= 25){
+    const inProgId = _geetaInProgressId();
+    if(inProgId){
+      geetaProgress[inProgId] = {status:'mastered', date:date, pts:25};
+      _persistGeetaToLocalStorage();
+    }
+  }
+
   const pts=calcDayPts();
 
   const shD=!!document.getElementById('shloka-done')?.querySelector('.pg');
@@ -3865,6 +3968,8 @@ function renderParentTab(){
       <div style="font-size:10px;color:var(--muted);margin-top:3px">${s.detail}</div>
     </div>`;
   }).join('');
+  // Refresh sudoku unlock panel every time parent tab renders
+  refreshParentSudokuPanel();
 }
 
 // ════════════════════════════════════════════
@@ -4443,6 +4548,7 @@ function toast(msg){
 // SUDOKU ENGINE
 // ════════════════════════════════════════════
 function genSudoku(diff){
+  if(sudokuFrozen){ toast('🔒 Sudoku is locked for today! Ask Mamma or Papa to unlock one more attempt.'); return; }
   sudokuDifficulty=diff;
   document.getElementById('sudoku-msg').textContent='';
   const base=generateSudokuPuzzle(diff);
@@ -4544,6 +4650,7 @@ function enterSudokuNum(n){
   else cell.classList.remove('entered');
 }
 function checkSudoku(){
+  if(sudokuFrozen){ toast('🔒 Sudoku is locked for today!'); return; }
   let allCorrect=true,allFilled=true;
   const cells=document.querySelectorAll('.sc-cell');
   for(let r=0;r<9;r++)for(let c=0;c<9;c++){
@@ -4560,9 +4667,15 @@ function checkSudoku(){
     msg.innerHTML=`<span style="color:#10B981;font-size:16px">🎉 PERFECT! +${30+bonus} pts!</span>`;
     toast('Sudoku solved! +'+(30+bonus)+' brain pts!');
     updateBrainDisplay();calcDayPts();
-    freezeSudoku();
-  }else if(!allFilled){msg.innerHTML='<span style="color:#F97316">Fill all cells first!</span>';}
-  else{msg.innerHTML='<span style="color:#EF4444">Some cells have errors. Keep trying! 💪</span>';}
+  } else if(!allFilled){
+    msg.innerHTML='<span style="color:#F97316">Some cells are empty — sudoku checked & locked now! 🔒</span>';
+  } else {
+    msg.innerHTML='<span style="color:#EF4444">Some cells have errors — sudoku checked & locked now! 🔒</span>';
+  }
+  // Always freeze after Check, regardless of result
+  freezeSudoku();
+  // Persist freeze state immediately
+  saveBrainDraft();
 }
 function revealSudokuHint(){
   sudokuPts=Math.max(0,sudokuPts-5);
@@ -5052,9 +5165,33 @@ function freezeSudoku(){
   document.querySelectorAll('.sc-cell:not(.given)').forEach(c=>{c.onclick=null;c.style.cursor='default';});
   // Disable difficulty + action buttons inside puzzle-sudoku
   document.querySelectorAll('#puzzle-sudoku .btn').forEach(b=>{b.disabled=true;b.style.opacity='.4';b.style.cursor='not-allowed';});
-  // Show frozen badge
+  // Show frozen badge + parent unlock hint
   const msg=document.getElementById('sudoku-msg');
-  if(msg) msg.innerHTML='<span style="background:#ECFDF5;color:#065F46;border:1.5px solid #6EE7B7;border-radius:10px;padding:6px 14px;font-size:13px;font-weight:800">✅ Sudoku done for today! Points locked in. Come back tomorrow! 🔒</span>';
+  const diff=sudokuDifficulty||'easy';
+  const diffLabel={easy:'Easy',medium:'Medium',hard:'Hard'}[diff]||diff;
+  if(msg) msg.innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+      <span style="background:#ECFDF5;color:#065F46;border:1.5px solid #6EE7B7;border-radius:10px;
+        padding:8px 14px;font-size:13px;font-weight:800;display:inline-block">
+        ✅ Sudoku (${diffLabel}) checked &amp; locked for today! ${sudokuPts>0?'🏆 '+sudokuPts+' pts earned!':'Come back tomorrow!'} 🔒
+      </span>
+      <span style="color:#9CA3AF;font-size:11px;font-weight:700">
+        🔐 Mamma or Papa can unlock one more attempt from the Parents Review tab.
+      </span>
+    </div>`;
+}
+
+function unfreezeSudoku(){
+  sudokuFrozen = false;
+  sudokuPts = 0; // reset pts so the fresh attempt can earn full points
+  brainPtsToday = sudokuPts + logicPtsTotal + riddlePtsTotal + mathsPtsToday + worksheetPts;
+  // Re-enable all buttons and cells
+  document.querySelectorAll('.npbtn').forEach(b=>{b.disabled=false;b.style.opacity='';b.style.cursor='';});
+  document.querySelectorAll('#puzzle-sudoku .btn').forEach(b=>{b.disabled=false;b.style.opacity='';b.style.cursor='';});
+  // Generate a fresh puzzle at easy (parent can pick difficulty after)
+  genSudoku('easy');
+  updateBrainDisplay(); calcDayPts();
+  toast('🔓 Sudoku unlocked! Vaanya gets one more attempt. It will lock again after she checks.');
 }
 
 function freezeLogic(){
@@ -5879,6 +6016,11 @@ function loadDraftDay(d){
   if(d.savedWsAnswered){
     try{ Object.assign(_wsAnswered, JSON.parse(d.savedWsAnswered)); }catch(e){}
   }
+  // ── Restore sudoku freeze state ──────────────────────────────
+  if(d.savedSudokuFrozen === true || (d.savedSudokuPts > 0 && d.savedSudokuFrozen !== false)){
+    sudokuFrozen = false; // reset so freezeSudoku() can run
+    freezeSudoku();
+  }
   brainPtsToday = sudokuPts + logicPtsTotal + riddlePtsTotal + mathsPtsToday + worksheetPts;
   updateBrainDisplay();
 
@@ -6033,6 +6175,47 @@ async function rejectPendingReport(){
   if(summary) summary.style.display = 'none';
   renderPendingQueue();
 }
+// ════════════════════════════════════════════
+// PARENT SUDOKU UNLOCK
+// ════════════════════════════════════════════
+function refreshParentSudokuPanel(){
+  const badge          = document.getElementById('sudoku-freeze-badge');
+  const status         = document.getElementById('parent-sudoku-status');
+  const unlockW        = document.getElementById('parent-sudoku-unlock-wrap');
+  const unlockedNotice = document.getElementById('parent-sudoku-unlocked-notice');
+  const openNotice     = document.getElementById('parent-sudoku-open-notice');
+  if(!status) return;
+
+  if(sudokuFrozen){
+    if(badge){ badge.textContent='🔒 Locked'; badge.style.background='#FEF2F2'; badge.style.color='#B91C1C'; badge.style.borderColor='#FCA5A5'; }
+    const diffLabel = {easy:'Easy',medium:'Medium',hard:'Hard'}[sudokuDifficulty||'easy']||'—';
+    status.innerHTML = `Vaanya completed her sudoku attempt today (<b>${sudokuPts} pts</b>, <b>${diffLabel}</b> difficulty).<br>
+      <span style="color:#6B7280;font-size:12px">The sudoku is locked. You can grant one more attempt below.</span>`;
+    if(unlockW) unlockW.style.display='block';
+    if(unlockedNotice) unlockedNotice.style.display='none';
+    if(openNotice) openNotice.style.display='none';
+  } else if(sudokuPts > 0){
+    if(badge){ badge.textContent='🔓 Unlocked'; badge.style.background='#ECFDF5'; badge.style.color='#065F46'; badge.style.borderColor='#6EE7B7'; }
+    status.textContent = 'Sudoku is currently unlocked — Vaanya is on her bonus attempt.';
+    if(unlockW) unlockW.style.display='none';
+    if(unlockedNotice) unlockedNotice.style.display='block';
+    if(openNotice) openNotice.style.display='none';
+  } else {
+    if(badge){ badge.textContent='📖 Not attempted'; badge.style.background='#EFF6FF'; badge.style.color='#1E3A8A'; badge.style.borderColor='#93C5FD'; }
+    status.textContent = 'Vaanya has not attempted today\'s sudoku yet. No unlock needed.';
+    if(unlockW) unlockW.style.display='none';
+    if(unlockedNotice) unlockedNotice.style.display='none';
+    if(openNotice) openNotice.style.display='block';
+  }
+}
+
+function parentUnlockSudoku(){
+  unfreezeSudoku();
+  saveBrainDraft();           // persist unfrozen state immediately
+  refreshParentSudokuPanel();
+  toast('🔓 Sudoku unlocked! Vaanya gets one more attempt — will lock again after she checks.');
+}
+
 // ════════════════════════════════════════════
 function renderParentComments(days){
   const el = document.getElementById('parent-comments-list');
