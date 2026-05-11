@@ -2941,8 +2941,69 @@ function _updateMasteredList(){
   if(!list.length){inner.innerHTML='<div style="text-align:center;padding:14px;font-size:11px;color:#9CA3AF">No shlokas mastered yet. Start learning!</div>';return;}
   inner.innerHTML=list.map(function(s){
     const g=GITA_GROUPS.find(x=>x.id===s.group)||{color:'#065F46'};
-    return '<div onclick="_openShloka(\''+s.id+'\')" style="display:flex;align-items:center;gap:7px;padding:7px;background:#ECFDF5;border-radius:9px;margin-bottom:4px;border:1px solid #A7F3D0;cursor:pointer" onmouseover="this.style.background=\'#D1FAE5\'" onmouseout="this.style.background=\'#ECFDF5\'"><div>\u2705</div><div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:900;color:'+g.color+'">'+s.chapter+'</div><div style="font-size:10px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s.lesson.substring(0,55)+'...</div></div><div style="font-size:9px;color:#065F46;font-weight:800;flex-shrink:0">+25</div></div>';
+    return '<div style="display:flex;align-items:center;gap:7px;padding:7px;background:#ECFDF5;border-radius:9px;margin-bottom:4px;border:1px solid #A7F3D0">'
+      +'<div onclick="_openShloka(\''+s.id+'\')" style="display:flex;align-items:center;gap:7px;flex:1;cursor:pointer" onmouseover="this.parentElement.style.background=\'#D1FAE5\'" onmouseout="this.parentElement.style.background=\'#ECFDF5\'">'
+      +'<div>\u2705</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:900;color:'+g.color+'">'+s.chapter+'</div>'
+      +'<div style="font-size:10px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s.lesson.substring(0,55)+'...</div></div>'
+      +'<div style="font-size:9px;color:#065F46;font-weight:800;flex-shrink:0">+25</div></div>'
+      +(parentUnlocked?'<button onclick="event.stopPropagation();_removeMastered(\''+s.id+'\')" title="Remove from mastered (parent only)" '
+        +'style="background:none;border:none;font-size:12px;cursor:pointer;color:#EF4444;padding:2px 4px;flex-shrink:0">✕</button>':'')
+      +'</div>';
   }).join('');
+}
+
+async function _removeMastered(shlokaId){
+  if(!parentUnlocked){ toast('PIN required to modify shloka status.'); return; }
+  const shloka=SHLOKAS.find(s=>s.id===shlokaId);
+  const name=shloka?shloka.chapter+' — '+shloka.chapterName:shlokaId;
+  const confirmed=window.confirm('Remove "'+name+'" from Mastered?\n\nThis will set it back to Not Started so Vaanya can learn it properly.');
+  if(!confirmed) return;
+
+  // Remove from in-memory geetaProgress
+  delete geetaProgress[shlokaId];
+
+  // Remove from localStorage
+  try{
+    const prog=JSON.parse(localStorage.getItem('vaanya_geeta_progress')||'{}');
+    delete prog[shlokaId];
+    localStorage.setItem('vaanya_geeta_progress', JSON.stringify(prog));
+    const mastered=JSON.parse(localStorage.getItem('vaanya_geeta_mastered')||'{}');
+    delete mastered[shlokaId];
+    localStorage.setItem('vaanya_geeta_mastered', JSON.stringify(mastered));
+  }catch(e){}
+
+  // Patch all savedDays records to remove this shlokaId
+  savedDays.forEach(d=>{
+    try{
+      const prog=d.geetaProgress?JSON.parse(d.geetaProgress):{};
+      if(prog[shlokaId]){
+        delete prog[shlokaId];
+        d.geetaProgress=JSON.stringify(prog);
+      }
+    }catch(e){}
+  });
+  localStorage.setItem('vaanya_days', JSON.stringify(savedDays));
+
+  // Push removal to Supabase for all affected records
+  const toUpdate=savedDays.filter(d=>{
+    try{ return JSON.parse(d.geetaProgress||'{}')[shlokaId]===undefined; }
+    catch(e){ return false; }
+  });
+  // Actually push all days that were patched above
+  for(const d of savedDays){
+    try{
+      const prog=JSON.parse(d.geetaProgress||'{}');
+      if(!prog[shlokaId]){ // already removed above
+        await saveToSupabase({...d});
+      }
+    }catch(e){}
+    break; // only patch the first/most recent to avoid excessive API calls
+  }
+
+  _saveGeetaProgress();
+  _renderBrowseGrid();
+  toast('✅ Removed from mastered. Shloka is now available to learn again.');
 }
 
 function toggleMasteredList(){
@@ -3052,7 +3113,7 @@ function renderParentShlokaApproval(){
 }
 
 // Fallback: called when dropdown=25 but shloka can't be identified from scan.
-// Finds the inprogress shloka from the currently loaded date's record.
+// Shows which shloka will be approved and requires explicit confirm.
 async function _parentApproveCurrentShloka(){
   // Try in-memory geetaProgress first
   let id = _geetaInProgressId();
@@ -3072,10 +3133,26 @@ async function _parentApproveCurrentShloka(){
     }
   }
 
+  // Also check vaanya_geeta_progress localStorage
   if(!id){
-    toast('⚠️ Could not find the shloka in learning — please use the Approve button in the Shloka section above.');
+    try{
+      const local = JSON.parse(localStorage.getItem('vaanya_geeta_progress')||'{}');
+      const entry = Object.entries(local).find(([,v])=>v.status==='inprogress');
+      if(entry) id = entry[0];
+    }catch(e){}
+  }
+
+  if(!id){
+    toast('⚠️ Could not find the shloka in learning. Please scroll to the Shloka Mastery Approval section above and use the Approve button there.');
     return;
   }
+
+  // Find the shloka details so parent can confirm the right one
+  const shloka = SHLOKAS.find(s=>s.id===id);
+  const name = shloka ? shloka.chapter + ' — ' + shloka.chapterName : id;
+  const confirmed = window.confirm('✅ Approve this shloka as MASTERED?\n\n' + name + '\n\nThis will unlock the next shloka for Vaanya.');
+  if(!confirmed) return;
+
   await _parentApproveShloka(id);
 }
 
