@@ -2967,24 +2967,105 @@ function toggleGeetaScene(){
 function renderParentShlokaApproval(){
   const container=document.getElementById('parent-shloka-approval-section');
   if(!container)return;
-  _geetaLoadProgress();
-  const pending=SHLOKAS.filter(s=>geetaProgress[s.id]&&geetaProgress[s.id].status==='inprogress');
+
+  // Build the full cumulative geetaProgress from all days (same as _geetaLoadProgress)
+  // so we see inprogress shlokas from yesterday or any past day
+  const cumulative={};
+  savedDays
+    .sort((a,b)=>new Date(a.date)-new Date(b.date))
+    .forEach(d=>{
+      try{
+        const prog=d.geetaProgress?JSON.parse(d.geetaProgress):{};
+        Object.entries(prog).forEach(([id,val])=>{
+          if(!cumulative[id]||cumulative[id].status!=='mastered') cumulative[id]=val;
+        });
+      }catch(e){}
+    });
+  // Merge with current in-memory geetaProgress (may have local changes)
+  Object.entries(geetaProgress).forEach(([id,val])=>{
+    if(!cumulative[id]||cumulative[id].status!=='mastered') cumulative[id]=val;
+    if(val.status==='mastered') cumulative[id]=val; // mastered always wins
+  });
+
+  const pending=SHLOKAS.filter(s=>cumulative[s.id]&&cumulative[s.id].status==='inprogress');
   if(!pending.length){
     container.innerHTML='<div style="font-size:12px;color:#9CA3AF;text-align:center;padding:12px">No shlokas awaiting approval. Vaanya needs to start learning one first.</div>';
     return;
   }
   container.innerHTML=pending.map(function(s){
-    return '<div style="background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:13px;padding:13px;margin-bottom:9px"><div style="font-size:13px;font-weight:900;color:#92400E;margin-bottom:2px">'+s.chapter+'</div><div style="font-size:12px;font-weight:800;color:#78350F;margin-bottom:4px">'+s.chapterName+'</div><div style="font-size:12px;color:#374151;margin-bottom:4px;font-style:italic">&ldquo;'+s.meaning.substring(0,100)+'...&rdquo;</div><div style="font-size:11px;color:#78350F;margin-bottom:10px;line-height:1.5">Ask Vaanya to recite this shloka. If she recites correctly \u2014 tap Approve.</div><button onclick="_parentApproveShloka(\''+s.id+'\')" style="background:linear-gradient(135deg,#065F46,#10B981);color:#fff;border:none;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:900;cursor:pointer;font-family:\'Nunito\',sans-serif">\u2705 Approve \u2014 Mark as Mastered (+25 pts)</button></div>';
+    const prog=cumulative[s.id];
+    const since=prog&&prog.date?' · learning since '+fmtDate(prog.date):'';
+    return '<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:13px;padding:14px;margin-bottom:9px">'
+      +'<div style="font-size:13px;font-weight:900;color:#92400E;margin-bottom:2px">'+s.chapter+since+'</div>'
+      +'<div style="font-size:12px;font-weight:800;color:#78350F;margin-bottom:6px">'+s.chapterName+'</div>'
+      +'<div style="font-size:12px;color:#374151;margin-bottom:6px;font-style:italic">&ldquo;'+s.meaning.substring(0,120)+'...&rdquo;</div>'
+      +'<div style="font-size:11px;color:#78350F;margin-bottom:12px;line-height:1.6">Ask Vaanya to recite this shloka. If she recites correctly \u2014 tap Approve below.</div>'
+      +'<button onclick="_parentApproveShloka(\''+s.id+'\')" '
+      +'style="width:100%;background:linear-gradient(135deg,#065F46,#10B981);color:#fff;border:none;'
+      +'padding:13px 22px;border-radius:12px;font-size:14px;font-weight:900;cursor:pointer;'
+      +'font-family:\'Nunito\',sans-serif;box-shadow:0 4px 14px rgba(16,185,129,.35);letter-spacing:.03em">'
+      +'\u2705 Approve \u2014 Mark as Mastered &amp; Unlock Next Shloka</button>'
+      +'</div>';
   }).join('');
 }
 
-function _parentApproveShloka(shlokaId){
+async function _parentApproveShloka(shlokaId){
   const today=new Date(Date.now()+5.5*60*60000).toISOString().split('T')[0];
   geetaProgress[shlokaId]={status:'mastered',date:today,pts:25};
   _saveGeetaProgress();
   _persistGeetaToLocalStorage();
-  renderParentShlokaApproval();_renderBrowseGrid();
-  toast('\u2705 Shloka approved! Vaanya earned 25 pts! \uD83C\uDF89');
+
+  // ── Find which day's record holds this shloka and patch it in Supabase ──────
+  // It may be today OR a previously approved day that was reopened.
+  // We update every savedDays record that mentions this shlokaId as inprogress,
+  // plus always patch today. This ensures the cloud record is correct on reload.
+  const geetaStr = JSON.stringify(geetaProgress);
+
+  // Update all in-memory savedDays records that are approved (so cumulative load picks it up)
+  savedDays.forEach(d => {
+    try{
+      const prog = d.geetaProgress ? JSON.parse(d.geetaProgress) : {};
+      if(prog[shlokaId]){
+        prog[shlokaId] = {status:'mastered', date:today, pts:25};
+        d.geetaProgress = JSON.stringify(prog);
+      }
+    }catch(e){}
+  });
+  // Also patch today's record if it exists
+  const todayRec = savedDays.find(d=>d.date===today);
+  if(todayRec){ todayRec.geetaProgress = geetaStr; }
+  localStorage.setItem('vaanya_days', JSON.stringify(savedDays));
+
+  // Persist to Supabase: patch every approved day that had this shloka as inprogress
+  const patchTargets = savedDays.filter(d => {
+    try{
+      const prog = d.geetaProgress ? JSON.parse(d.geetaProgress) : {};
+      // already patched above in memory; now just push to Supabase
+      return prog[shlokaId] !== undefined;
+    }catch(e){ return false; }
+  });
+
+  for(const d of patchTargets){
+    try{
+      await saveToSupabase({
+        date: d.date,
+        approved: d.approved,
+        pts: d.pts,
+        geetaProgress: d.geetaProgress,
+        // must include required fields to avoid Supabase overwrite with nulls
+        ...d
+      });
+    }catch(e){}
+  }
+
+  // Also set the shloka-pts-award dropdown to 25 so the report pts reflect mastery
+  const awd = document.getElementById('shloka-pts-award');
+  if(awd) awd.value = '25';
+  calcDayPts();
+
+  renderParentShlokaApproval();
+  _renderBrowseGrid();
+  toast('✅ Shloka mastered! Saved to cloud. New shlokas now unlocked 🎉');
 }
 
 
@@ -3970,6 +4051,8 @@ function renderParentTab(){
   }).join('');
   // Refresh sudoku unlock panel every time parent tab renders
   refreshParentSudokuPanel();
+  // Refresh shloka approval panel — shows inprogress shlokas from any day
+  renderParentShlokaApproval();
 }
 
 // ════════════════════════════════════════════
