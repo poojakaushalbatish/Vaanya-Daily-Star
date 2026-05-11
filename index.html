@@ -3106,85 +3106,65 @@ function renderParentShlokaApproval(){
   const container=document.getElementById('parent-shloka-approval-section');
   if(!container)return;
 
-  // ── Collect ALL inprogress shlokas across every saved day ──────────────────
-  // Key: shlokaId → {status, date, fromDate} — mastered always beats inprogress
-  const allProgress={};
+  // Use the already-loaded geetaProgress directly — it's been correctly built
+  // by _geetaLoadProgress() which handles all the cumulative merging.
+  // Looking for inprogress OR relearning shlokas.
+  const pending=SHLOKAS.filter(s=>
+    geetaProgress[s.id] &&
+    (geetaProgress[s.id].status==='inprogress' || geetaProgress[s.id].status==='relearning')
+  );
 
-  // 1. Scan all savedDays (approved or not) oldest→newest
-  [...savedDays]
-    .sort((a,b)=>new Date(a.date)-new Date(b.date))
-    .forEach(d=>{
-      try{
-        const prog=d.geetaProgress?JSON.parse(d.geetaProgress):{};
-        Object.entries(prog).forEach(([id,val])=>{
-          const cur=allProgress[id];
-          if(!cur) allProgress[id]={...val, fromDate:d.date};
-          else if(cur.status!=='mastered' && val.status==='mastered')
-            allProgress[id]={...val, fromDate:d.date}; // mastered wins
-          else if(cur.status==='inprogress' && val.status==='inprogress')
-            allProgress[id]={...val, fromDate:d.date}; // keep most recent inprogress date
-        });
-      }catch(e){}
-    });
+  // If in-memory has nothing, also check the currently loaded day's raw record
+  // (handles case where report was reopened for edit and geetaProgress wasn't refreshed)
+  if(!pending.length){
+    const loadedDate=document.getElementById('rpt-date')?.value;
+    if(loadedDate){
+      const rec=savedDays.find(d=>d.date===loadedDate);
+      if(rec&&rec.geetaProgress){
+        try{
+          const prog=JSON.parse(rec.geetaProgress);
+          const entry=Object.entries(prog).find(([,v])=>v.status==='inprogress'||v.status==='relearning');
+          if(entry){
+            // Found it in the cloud record — merge into geetaProgress and re-render
+            geetaProgress[entry[0]]=entry[1];
+            renderParentShlokaApproval();
+            return;
+          }
+        }catch(e){}
+      }
+    }
+  }
 
-  // 2. Also fold in live in-memory geetaProgress (may have unsaved local changes)
-  Object.entries(geetaProgress).forEach(([id,val])=>{
-    const cur=allProgress[id];
-    if(!cur) allProgress[id]={...val, fromDate:'today'};
-    else if(val.status==='mastered') allProgress[id]={...val, fromDate:cur.fromDate};
-    else if(!cur || cur.status!=='mastered') allProgress[id]={...val, fromDate:cur?.fromDate||'today'};
-  });
-
-  // 3. Check if dropdown is set to 25 — if so, the parent intends to approve something
+  // Dropdown check — if parent has set 25 pts but no shloka found
   const dropdownVal=parseInt(document.getElementById('shloka-pts-award')?.value||0)||0;
 
-  // Find pending (inprogress) shlokas
-  const pending=SHLOKAS.filter(s=>allProgress[s.id]&&(allProgress[s.id].status==='inprogress'||allProgress[s.id].status==='relearning'));
-
-  // If no inprogress shloka found but dropdown is 25pts,
-  // check geetaProgress directly for anything marked inprogress in any source
-  const inProgressId=_geetaInProgressId();
-  const extraShloka = (dropdownVal>=25 && !pending.length && inProgressId)
-    ? SHLOKAS.find(s=>s.id===inProgressId) : null;
-
-  const displayList = extraShloka
-    ? [...pending, extraShloka].filter((s,i,a)=>a.findIndex(x=>x.id===s.id)===i)
-    : pending;
-
-  if(!displayList.length){
-    // Last resort: if dropdown says 25 but we genuinely can't find the shloka,
-    // show a generic approve button
+  if(!pending.length){
     if(dropdownVal>=25){
-      container.innerHTML=`<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:13px;padding:14px;margin-bottom:9px">
-        <div style="font-size:13px;font-weight:900;color:#92400E;margin-bottom:6px">🕉️ Shloka Approval</div>
-        <div style="font-size:12px;color:#78350F;margin-bottom:12px;line-height:1.6">
-          You have set 25 pts for shloka. Tap below to officially mark the shloka as <b>Mastered</b> and unlock the next one in the Geeta tab.
-        </div>
-        <button onclick="_parentApproveCurrentShloka()"
-          style="width:100%;background:linear-gradient(135deg,#065F46,#10B981);color:#fff;border:none;
-          padding:13px 22px;border-radius:12px;font-size:14px;font-weight:900;cursor:pointer;
-          font-family:'Nunito',sans-serif;box-shadow:0 4px 14px rgba(16,185,129,.35)">
-          ✅ Mark as Mastered &amp; Unlock Next Shloka
-        </button></div>`;
+      // Show a clear message instead of a blind approve button
+      container.innerHTML='<div style="background:#FFF7ED;border:1.5px solid #FCD34D;border-radius:12px;padding:12px 14px;font-size:12px;color:#92400E;font-weight:700;line-height:1.6">'
+        +'⚠️ No shloka found in <b>Learning</b> or <b>Relearning</b> status.<br>'
+        +'Please go to the <b>Geeta — Soul Work</b> tab, have Vaanya tap on a shloka to start learning it first, then come back here to approve.</div>';
       return;
     }
     container.innerHTML='<div style="font-size:12px;color:#9CA3AF;text-align:center;padding:12px">No shlokas awaiting approval. Vaanya needs to start learning one first.</div>';
     return;
   }
 
-  container.innerHTML=displayList.map(function(s){
-    const prog=allProgress[s.id]||{};
+  container.innerHTML=pending.map(function(s){
+    const prog=geetaProgress[s.id]||{};
     const isRelearning=prog.status==='relearning';
-    const since=prog.fromDate&&prog.fromDate!=='today'?' · '+(isRelearning?'relearning since ':'learning since ')+fmtDate(prog.fromDate):'';
+    const since=prog.date?' · '+(isRelearning?'relearning since ':'learning since ')+fmtDate(prog.date):'';
     const btnLabel=isRelearning?'✅ Re-Master — Mark as Mastered Again':'✅ Approve — Mark as Mastered & Unlock Next Shloka';
     const cardBg=isRelearning?'#EFF6FF':'#FFFBEB';
     const cardBord=isRelearning?'#93C5FD':'#FCD34D';
     const headerCol=isRelearning?'#1D4ED8':'#92400E';
     const subCol=isRelearning?'#1E3A8A':'#78350F';
-    const noteText=isRelearning?'Vaanya has been re-practicing this shloka. If she recites it correctly — tap Re-Master below.':'Ask Vaanya to recite this shloka. If correct — tap Approve below.';
+    const noteText=isRelearning
+      ?'Vaanya has been re-practising this shloka. If she recites it correctly — tap Re-Master below.'
+      :'Ask Vaanya to recite this shloka. If correct — tap Approve below.';
     return '<div style="background:'+cardBg+';border:2px solid '+cardBord+';border-radius:13px;padding:14px;margin-bottom:9px">'
       +'<div style="font-size:13px;font-weight:900;color:'+headerCol+';margin-bottom:2px">'+s.chapter+since+'</div>'
-      +'<div style="font-size:12px;font-weight:800;color:'+subCol+';margin-bottom:6px">'+s.chapterName+'</div>'
+      +'<div style="font-size:12px;font-weight:800;color:'+subCol+';margin-bottom:6px">'+s.chapterName+' — <i>'+s.chapterMeaning+'</i></div>'
       +'<div style="font-size:12px;color:#374151;margin-bottom:6px;font-style:italic">&ldquo;'+s.meaning.substring(0,120)+'...&rdquo;</div>'
       +'<div style="font-size:11px;color:'+subCol+';margin-bottom:12px;line-height:1.6">'+noteText+'</div>'
       +'<button onclick="_parentApproveShloka(\''+s.id+'\')" '
@@ -3489,13 +3469,17 @@ function calcDayPts(){
   // parentPts intentionally 0 — comments are feedback only, not scored
   pts+=parentPts;breakdown.parent=parentPts;
 
-  // Shloka — pts from parent award dropdown
+  // Shloka — pts from geetaProgress (cumulative) OR parent award dropdown, whichever is higher
+  // But only count the dropdown when it's been explicitly set (non-zero)
+  // to avoid double-counting mastered pts that are already in geetaProgress
+  const _lgPts=parseInt(document.getElementById('shloka-pts-award')?.value||0)||0;
   let shlokaPts=Object.values(geetaProgress||{}).reduce(function(s,v){return s+(v.status==='mastered'?25:v.status==='inprogress'?10:v.status==='relearning'?10:0);},0);
-  var _lgPts=parseInt(document.getElementById('shloka-pts-award')?.value||0)||0;
-  shlokaPts=Math.max(shlokaPts,_lgPts);
+  // If parent dropdown is set, use it directly (it reflects the current session's intent)
+  // Don't add it on top of geetaProgress — they describe the same shloka
+  if(_lgPts>0) shlokaPts=Math.max(shlokaPts,_lgPts);
   pts+=shlokaPts; breakdown.shloka=shlokaPts;
   const shRes=document.getElementById('shloka-pts-result');
-  if(shRes) shRes.textContent = shlokaPts>0 ? '+'+shlokaPts+' pts awarded ✅' : '';
+  if(shRes) shRes.textContent = _lgPts>0 ? '+'+_lgPts+' pts awarded ✅' : (shlokaPts>0?'+'+shlokaPts+' pts ✅':'');
 
   // Creative — pts from parent award dropdown
   let crPts = parseInt(document.getElementById('creative-pts-award')?.value||0)||0;
@@ -4175,6 +4159,9 @@ async function clearAllSpendHistory(){
 }
 // ════════════════════════════════════════════
 function renderParentTab(){
+  // Always reload geetaProgress from cloud+localStorage before rendering
+  // so the approval panel has the freshest state
+  _geetaLoadProgress();
   // Populate shloka reflection for parent view
   const shlokaReflect = (document.getElementById('shloka-reflect')?.value||'').trim();
   const shlokaDisp = document.getElementById('parent-shloka-display');
