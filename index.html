@@ -1637,7 +1637,7 @@ tr:hover td{background:#FAFBFF}
       🎯 Award Shloka Points (max 25 pts)
       <span style="flex:1;height:1px;background:linear-gradient(90deg,#6EE7B7,transparent)"></span>
     </div>
-    <select id="shloka-pts-award" onchange="calcDayPts()"
+    <select id="shloka-pts-award" onchange="calcDayPts();if(parentUnlocked)renderParentShlokaApproval();"
       style="width:100%;padding:11px 14px;font-size:13px;font-weight:800;
         border:1.5px solid #A7F3D0;border-radius:12px;background:#fff;color:#064E3B;
         font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:8px">
@@ -2968,104 +2968,171 @@ function renderParentShlokaApproval(){
   const container=document.getElementById('parent-shloka-approval-section');
   if(!container)return;
 
-  // Build the full cumulative geetaProgress from all days (same as _geetaLoadProgress)
-  // so we see inprogress shlokas from yesterday or any past day
-  const cumulative={};
-  savedDays
+  // ── Collect ALL inprogress shlokas across every saved day ──────────────────
+  // Key: shlokaId → {status, date, fromDate} — mastered always beats inprogress
+  const allProgress={};
+
+  // 1. Scan all savedDays (approved or not) oldest→newest
+  [...savedDays]
     .sort((a,b)=>new Date(a.date)-new Date(b.date))
     .forEach(d=>{
       try{
         const prog=d.geetaProgress?JSON.parse(d.geetaProgress):{};
         Object.entries(prog).forEach(([id,val])=>{
-          if(!cumulative[id]||cumulative[id].status!=='mastered') cumulative[id]=val;
+          const cur=allProgress[id];
+          if(!cur) allProgress[id]={...val, fromDate:d.date};
+          else if(cur.status!=='mastered' && val.status==='mastered')
+            allProgress[id]={...val, fromDate:d.date}; // mastered wins
+          else if(cur.status==='inprogress' && val.status==='inprogress')
+            allProgress[id]={...val, fromDate:d.date}; // keep most recent inprogress date
         });
       }catch(e){}
     });
-  // Merge with current in-memory geetaProgress (may have local changes)
+
+  // 2. Also fold in live in-memory geetaProgress (may have unsaved local changes)
   Object.entries(geetaProgress).forEach(([id,val])=>{
-    if(!cumulative[id]||cumulative[id].status!=='mastered') cumulative[id]=val;
-    if(val.status==='mastered') cumulative[id]=val; // mastered always wins
+    const cur=allProgress[id];
+    if(!cur) allProgress[id]={...val, fromDate:'today'};
+    else if(val.status==='mastered') allProgress[id]={...val, fromDate:cur.fromDate};
+    else if(!cur || cur.status!=='mastered') allProgress[id]={...val, fromDate:cur?.fromDate||'today'};
   });
 
-  const pending=SHLOKAS.filter(s=>cumulative[s.id]&&cumulative[s.id].status==='inprogress');
-  if(!pending.length){
+  // 3. Check if dropdown is set to 25 — if so, the parent intends to approve something
+  const dropdownVal=parseInt(document.getElementById('shloka-pts-award')?.value||0)||0;
+
+  // Find pending (inprogress) shlokas
+  const pending=SHLOKAS.filter(s=>allProgress[s.id]&&allProgress[s.id].status==='inprogress');
+
+  // If no inprogress shloka found but dropdown is 25pts,
+  // check geetaProgress directly for anything marked inprogress in any source
+  const inProgressId=_geetaInProgressId();
+  const extraShloka = (dropdownVal>=25 && !pending.length && inProgressId)
+    ? SHLOKAS.find(s=>s.id===inProgressId) : null;
+
+  const displayList = extraShloka
+    ? [...pending, extraShloka].filter((s,i,a)=>a.findIndex(x=>x.id===s.id)===i)
+    : pending;
+
+  if(!displayList.length){
+    // Last resort: if dropdown says 25 but we genuinely can't find the shloka,
+    // show a generic approve button
+    if(dropdownVal>=25){
+      container.innerHTML=`<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:13px;padding:14px;margin-bottom:9px">
+        <div style="font-size:13px;font-weight:900;color:#92400E;margin-bottom:6px">🕉️ Shloka Approval</div>
+        <div style="font-size:12px;color:#78350F;margin-bottom:12px;line-height:1.6">
+          You have set 25 pts for shloka. Tap below to officially mark the shloka as <b>Mastered</b> and unlock the next one in the Geeta tab.
+        </div>
+        <button onclick="_parentApproveCurrentShloka()"
+          style="width:100%;background:linear-gradient(135deg,#065F46,#10B981);color:#fff;border:none;
+          padding:13px 22px;border-radius:12px;font-size:14px;font-weight:900;cursor:pointer;
+          font-family:'Nunito',sans-serif;box-shadow:0 4px 14px rgba(16,185,129,.35)">
+          ✅ Mark as Mastered &amp; Unlock Next Shloka
+        </button></div>`;
+      return;
+    }
     container.innerHTML='<div style="font-size:12px;color:#9CA3AF;text-align:center;padding:12px">No shlokas awaiting approval. Vaanya needs to start learning one first.</div>';
     return;
   }
-  container.innerHTML=pending.map(function(s){
-    const prog=cumulative[s.id];
-    const since=prog&&prog.date?' · learning since '+fmtDate(prog.date):'';
+
+  container.innerHTML=displayList.map(function(s){
+    const prog=allProgress[s.id]||{};
+    const since=prog.fromDate&&prog.fromDate!=='today'?' · learning since '+fmtDate(prog.fromDate):'';
     return '<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:13px;padding:14px;margin-bottom:9px">'
       +'<div style="font-size:13px;font-weight:900;color:#92400E;margin-bottom:2px">'+s.chapter+since+'</div>'
       +'<div style="font-size:12px;font-weight:800;color:#78350F;margin-bottom:6px">'+s.chapterName+'</div>'
       +'<div style="font-size:12px;color:#374151;margin-bottom:6px;font-style:italic">&ldquo;'+s.meaning.substring(0,120)+'...&rdquo;</div>'
-      +'<div style="font-size:11px;color:#78350F;margin-bottom:12px;line-height:1.6">Ask Vaanya to recite this shloka. If she recites correctly \u2014 tap Approve below.</div>'
+      +'<div style="font-size:11px;color:#78350F;margin-bottom:12px;line-height:1.6">Ask Vaanya to recite this shloka. If correct — tap Approve below.</div>'
       +'<button onclick="_parentApproveShloka(\''+s.id+'\')" '
       +'style="width:100%;background:linear-gradient(135deg,#065F46,#10B981);color:#fff;border:none;'
       +'padding:13px 22px;border-radius:12px;font-size:14px;font-weight:900;cursor:pointer;'
       +'font-family:\'Nunito\',sans-serif;box-shadow:0 4px 14px rgba(16,185,129,.35);letter-spacing:.03em">'
-      +'\u2705 Approve \u2014 Mark as Mastered &amp; Unlock Next Shloka</button>'
+      +'✅ Approve — Mark as Mastered &amp; Unlock Next Shloka</button>'
       +'</div>';
   }).join('');
 }
 
+// Fallback: called when dropdown=25 but shloka can't be identified from scan.
+// Finds the inprogress shloka from the currently loaded date's record.
+async function _parentApproveCurrentShloka(){
+  // Try in-memory geetaProgress first
+  let id = _geetaInProgressId();
+
+  // If not in memory, scan the loaded day's cloud record directly
+  if(!id){
+    const loadedDate = document.getElementById('rpt-date')?.value;
+    if(loadedDate){
+      const rec = savedDays.find(d=>d.date===loadedDate);
+      if(rec && rec.geetaProgress){
+        try{
+          const prog = JSON.parse(rec.geetaProgress);
+          const entry = Object.entries(prog).find(([,v])=>v.status==='inprogress');
+          if(entry) id = entry[0];
+        }catch(e){}
+      }
+    }
+  }
+
+  if(!id){
+    toast('⚠️ Could not find the shloka in learning — please use the Approve button in the Shloka section above.');
+    return;
+  }
+  await _parentApproveShloka(id);
+}
+
 async function _parentApproveShloka(shlokaId){
   const today=new Date(Date.now()+5.5*60*60000).toISOString().split('T')[0];
-  geetaProgress[shlokaId]={status:'mastered',date:today,pts:25};
+  const masteredEntry={status:'mastered', date:today, pts:25};
+
+  // Update in-memory geetaProgress
+  geetaProgress[shlokaId]=masteredEntry;
   _saveGeetaProgress();
   _persistGeetaToLocalStorage();
 
-  // ── Find which day's record holds this shloka and patch it in Supabase ──────
-  // It may be today OR a previously approved day that was reopened.
-  // We update every savedDays record that mentions this shlokaId as inprogress,
-  // plus always patch today. This ensures the cloud record is correct on reload.
-  const geetaStr = JSON.stringify(geetaProgress);
-
-  // Update all in-memory savedDays records that are approved (so cumulative load picks it up)
-  savedDays.forEach(d => {
+  // ── Patch EVERY savedDays record that mentions this shlokaId ─────────────
+  // This covers: the day it was started, any reopened day, today's record
+  const patched=[];
+  savedDays.forEach(d=>{
     try{
-      const prog = d.geetaProgress ? JSON.parse(d.geetaProgress) : {};
+      const prog=d.geetaProgress?JSON.parse(d.geetaProgress):{};
       if(prog[shlokaId]){
-        prog[shlokaId] = {status:'mastered', date:today, pts:25};
-        d.geetaProgress = JSON.stringify(prog);
+        prog[shlokaId]=masteredEntry;
+        d.geetaProgress=JSON.stringify(prog);
+        patched.push(d);
       }
     }catch(e){}
   });
-  // Also patch today's record if it exists
-  const todayRec = savedDays.find(d=>d.date===today);
-  if(todayRec){ todayRec.geetaProgress = geetaStr; }
-  localStorage.setItem('vaanya_days', JSON.stringify(savedDays));
 
-  // Persist to Supabase: patch every approved day that had this shloka as inprogress
-  const patchTargets = savedDays.filter(d => {
-    try{
-      const prog = d.geetaProgress ? JSON.parse(d.geetaProgress) : {};
-      // already patched above in memory; now just push to Supabase
-      return prog[shlokaId] !== undefined;
-    }catch(e){ return false; }
-  });
-
-  for(const d of patchTargets){
-    try{
-      await saveToSupabase({
-        date: d.date,
-        approved: d.approved,
-        pts: d.pts,
-        geetaProgress: d.geetaProgress,
-        // must include required fields to avoid Supabase overwrite with nulls
-        ...d
-      });
-    }catch(e){}
+  // Also patch the currently loaded date (rpt-date) even if geetaProgress was empty there
+  const loadedDate=document.getElementById('rpt-date')?.value||today;
+  let loadedRec=savedDays.find(d=>d.date===loadedDate);
+  if(!patched.find(d=>d.date===loadedDate)){
+    if(loadedRec){
+      try{
+        const prog=loadedRec.geetaProgress?JSON.parse(loadedRec.geetaProgress):{};
+        prog[shlokaId]=masteredEntry;
+        loadedRec.geetaProgress=JSON.stringify(prog);
+        patched.push(loadedRec);
+      }catch(e){}
+    }
   }
 
-  // Also set the shloka-pts-award dropdown to 25 so the report pts reflect mastery
-  const awd = document.getElementById('shloka-pts-award');
-  if(awd) awd.value = '25';
+  localStorage.setItem('vaanya_days',JSON.stringify(savedDays));
+
+  // ── Push every patched record to Supabase ────────────────────────────────
+  for(const d of patched){
+    try{ await saveToSupabase({...d}); }catch(e){ console.warn('Shloka patch failed for',d.date,e); }
+  }
+
+  // ── Update dropdown + pts ────────────────────────────────────────────────
+  const awd=document.getElementById('shloka-pts-award');
+  if(awd) awd.value='25';
   calcDayPts();
 
+  // ── Refresh Geeta tab so it shows mastered immediately ───────────────────
+  buildShlokaDisplay();
+
   renderParentShlokaApproval();
-  _renderBrowseGrid();
-  toast('✅ Shloka mastered! Saved to cloud. New shlokas now unlocked 🎉');
+  toast('✅ Shloka mastered! Cloud updated. New shlokas now unlocked in the Geeta tab 🎉');
 }
 
 
