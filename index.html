@@ -2671,6 +2671,10 @@ function buildAll(){
   // Reset all in-memory pts to 0 — will be restored from cloud/session after load
   brainPtsToday=0; sudokuPts=0; logicPtsTotal=0; riddlePtsTotal=0;
   mathsPtsToday=0; worksheetPts=0; aiSkillPts=0;
+  // Reset parent-tab dropdowns explicitly (they live outside #tab-report)
+  const _bShAwd=document.getElementById('shloka-pts-award'); if(_bShAwd) _bShAwd.selectedIndex=0;
+  const _bCrAwd=document.getElementById('creative-pts-award'); if(_bCrAwd) _bCrAwd.selectedIndex=0;
+  const _bPrRat=document.getElementById('parent-rating'); if(_bPrRat) _bPrRat.selectedIndex=0;
   // Seed geetaProgress from permanent mastered store — ensures mastered shlokas
   // are always shown correctly even before cloud data arrives
   geetaProgress={};
@@ -6211,6 +6215,10 @@ function silentClearDay(){
   document.querySelectorAll('#tab-report select').forEach(e=>{
     if(e.id!=='rpt-date') e.selectedIndex=0;
   });
+  // These dropdowns live in #tab-parent (not #tab-report) so must be reset explicitly
+  const _shAwd=document.getElementById('shloka-pts-award'); if(_shAwd) _shAwd.selectedIndex=0;
+  const _crAwd=document.getElementById('creative-pts-award'); if(_crAwd) _crAwd.selectedIndex=0;
+  const _prRat=document.getElementById('parent-rating'); if(_prRat) _prRat.selectedIndex=0;
   PCLS.forEach(cl=>document.querySelectorAll('#tab-report .'+cl).forEach(e=>e.classList.remove(cl)));
   document.querySelectorAll('#tab-report .star').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('#tab-report .creative-option').forEach(o=>o.classList.remove('chosen'));
@@ -6846,9 +6854,12 @@ function _onLoadRestoreDate(date){
   }
 
   // Fresh day — no data anywhere
-  // Reset all in-memory pts so nothing carries over from previous session
   brainPtsToday=0; sudokuPts=0; logicPtsTotal=0; riddlePtsTotal=0;
   mathsPtsToday=0; worksheetPts=0; aiSkillPts=0;
+  // Explicitly reset dropdowns that live outside #tab-report
+  const _fShAwd=document.getElementById('shloka-pts-award'); if(_fShAwd) _fShAwd.selectedIndex=0;
+  const _fCrAwd=document.getElementById('creative-pts-award'); if(_fCrAwd) _fCrAwd.selectedIndex=0;
+  const _fPrRat=document.getElementById('parent-rating'); if(_fPrRat) _fPrRat.selectedIndex=0;
   // Seed geetaProgress from permanent mastered only — no inprogress on a fresh day
   geetaProgress={};
   try{
