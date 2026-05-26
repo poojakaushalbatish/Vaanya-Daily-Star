@@ -1707,81 +1707,6 @@ tr:hover td{background:#FAFBFF}
     🔐 Enter Parent PIN
   </button>
 </div>
-
-<!-- ═══════ WORDBOOK TAB ═══════ -->
-<div class="tab" id="tab-wordbook">
-
-  <!-- GAMIFICATION HEADER -->
-  <div id="wb-level-banner" style="background:linear-gradient(135deg,#059669,#0D9488);border-radius:18px;padding:18px 20px;margin-bottom:16px;color:#fff;position:relative;overflow:hidden">
-    <div style="position:absolute;top:-20px;right:-10px;width:100px;height:100px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);pointer-events:none"></div>
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <div style="font-size:48px" id="wb-badge">🌱</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;opacity:.8;margin-bottom:3px">MY WORDBOOK</div>
-        <div id="wb-level-title" style="font-size:20px;font-weight:900;line-height:1.2">Word Seedling</div>
-        <div id="wb-word-count" style="font-size:12px;opacity:.85;margin-top:3px">0 words collected</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div id="wb-next-label" style="font-size:10px;opacity:.7;margin-bottom:4px">Next level in</div>
-        <div id="wb-next-count" style="font-size:22px;font-weight:900">10 words</div>
-      </div>
-    </div>
-    <!-- Progress bar -->
-    <div style="background:rgba(255,255,255,.2);border-radius:6px;height:8px;overflow:hidden;margin-top:14px">
-      <div id="wb-progress-bar" style="height:100%;background:rgba(255,255,255,.9);border-radius:6px;width:0%;transition:width .6s ease"></div>
-    </div>
-    <div id="wb-progress-label" style="font-size:10px;opacity:.75;margin-top:5px;text-align:center">0 / 10 words to next level</div>
-  </div>
-
-  <!-- SEARCH -->
-  <div style="position:relative;margin-bottom:12px">
-    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">🔍</span>
-    <input type="text" id="wb-search" placeholder="Search your words or meanings..."
-      oninput="wbSearch()"
-      style="width:100%;box-sizing:border-box;padding:11px 14px 11px 40px;border-radius:12px;
-      border:2px solid #D1FAE5;background:#fff;font-size:13px;font-weight:700;
-      font-family:'Nunito',sans-serif;outline:none">
-  </div>
-
-  <!-- FILTER PILLS -->
-  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="wb-filters">
-    <button onclick="wbFilter('all',this)" class="wb-fpill wb-active">All</button>
-    <button onclick="wbFilter('today',this)" class="wb-fpill">Today</button>
-    <button onclick="wbFilter('A',this)" class="wb-fpill">A–E</button>
-    <button onclick="wbFilter('F',this)" class="wb-fpill">F–J</button>
-    <button onclick="wbFilter('K',this)" class="wb-fpill">K–O</button>
-    <button onclick="wbFilter('P',this)" class="wb-fpill">P–T</button>
-    <button onclick="wbFilter('U',this)" class="wb-fpill">U–Z</button>
-  </div>
-
-  <!-- ADD NEW WORD PANEL -->
-  <div style="background:linear-gradient(135deg,#F0FDF4,#ECFDF5);border:2px solid #A7F3D0;border-radius:16px;padding:16px;margin-bottom:16px">
-    <div style="font-size:13px;font-weight:900;color:#065F46;margin-bottom:12px;display:flex;align-items:center;gap:6px">
-      <span>✨</span> Add a New Word
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <input type="text" id="wb-new-word" placeholder="Word (e.g. serendipity)"
-        style="border-color:#6EE7B7;font-size:13px;font-weight:700">
-      <input type="text" id="wb-new-meaning" placeholder="Meaning"
-        style="border-color:#6EE7B7;font-size:12px">
-      <textarea id="wb-new-example" placeholder="Example sentence (required)"
-        rows="2" style="border-color:#6EE7B7;font-size:12px;resize:none;border-radius:8px;padding:8px 10px;font-family:'Nunito',sans-serif;border:1.5px solid #6EE7B7;width:100%;box-sizing:border-box"></textarea>
-      <button onclick="wbAddWord()" style="background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 3px 10px rgba(16,185,129,.3)">
-        💾 Save to My WordBook
-      </button>
-    </div>
-  </div>
-
-  <!-- WORDS LIST -->
-  <div id="wb-list">
-    <div style="text-align:center;padding:40px 20px;color:#9CA3AF;font-size:13px;font-weight:700">
-      📖 Your WordBook is empty!<br>
-      <span style="font-size:11px">Start by adding words from Reading Today in the Daily Report.</span>
-    </div>
-  </div>
-
-</div><!-- end wordbook tab -->
-
 <!-- EDIT WORD MODAL -->
 <div id="wb-edit-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:20px;padding:24px;width:90%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
@@ -2244,6 +2169,82 @@ tr:hover td{background:#FAFBFF}
 
 </div><!-- end parent-content -->
 </div><!-- end tab-parent -->
+
+
+<!-- ═══════ WORDBOOK TAB ═══════ -->
+<div class="tab" id="tab-wordbook">
+
+  <!-- GAMIFICATION HEADER -->
+  <div id="wb-level-banner" style="background:linear-gradient(135deg,#059669,#0D9488);border-radius:18px;padding:18px 20px;margin-bottom:16px;color:#fff;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-20px;right:-10px;width:100px;height:100px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);pointer-events:none"></div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="font-size:48px" id="wb-badge">🌱</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;opacity:.8;margin-bottom:3px">MY WORDBOOK</div>
+        <div id="wb-level-title" style="font-size:20px;font-weight:900;line-height:1.2">Word Seedling</div>
+        <div id="wb-word-count" style="font-size:12px;opacity:.85;margin-top:3px">0 words collected</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div id="wb-next-label" style="font-size:10px;opacity:.7;margin-bottom:4px">Next level in</div>
+        <div id="wb-next-count" style="font-size:22px;font-weight:900">10 words</div>
+      </div>
+    </div>
+    <!-- Progress bar -->
+    <div style="background:rgba(255,255,255,.2);border-radius:6px;height:8px;overflow:hidden;margin-top:14px">
+      <div id="wb-progress-bar" style="height:100%;background:rgba(255,255,255,.9);border-radius:6px;width:0%;transition:width .6s ease"></div>
+    </div>
+    <div id="wb-progress-label" style="font-size:10px;opacity:.75;margin-top:5px;text-align:center">0 / 10 words to next level</div>
+  </div>
+
+  <!-- SEARCH -->
+  <div style="position:relative;margin-bottom:12px">
+    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">🔍</span>
+    <input type="text" id="wb-search" placeholder="Search your words or meanings..."
+      oninput="wbSearch()"
+      style="width:100%;box-sizing:border-box;padding:11px 14px 11px 40px;border-radius:12px;
+      border:2px solid #D1FAE5;background:#fff;font-size:13px;font-weight:700;
+      font-family:'Nunito',sans-serif;outline:none">
+  </div>
+
+  <!-- FILTER PILLS -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="wb-filters">
+    <button onclick="wbFilter('all',this)" class="wb-fpill wb-active">All</button>
+    <button onclick="wbFilter('today',this)" class="wb-fpill">Today</button>
+    <button onclick="wbFilter('A',this)" class="wb-fpill">A–E</button>
+    <button onclick="wbFilter('F',this)" class="wb-fpill">F–J</button>
+    <button onclick="wbFilter('K',this)" class="wb-fpill">K–O</button>
+    <button onclick="wbFilter('P',this)" class="wb-fpill">P–T</button>
+    <button onclick="wbFilter('U',this)" class="wb-fpill">U–Z</button>
+  </div>
+
+  <!-- ADD NEW WORD PANEL -->
+  <div style="background:linear-gradient(135deg,#F0FDF4,#ECFDF5);border:2px solid #A7F3D0;border-radius:16px;padding:16px;margin-bottom:16px">
+    <div style="font-size:13px;font-weight:900;color:#065F46;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+      <span>✨</span> Add a New Word
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <input type="text" id="wb-new-word" placeholder="Word (e.g. serendipity)"
+        style="border-color:#6EE7B7;font-size:13px;font-weight:700">
+      <input type="text" id="wb-new-meaning" placeholder="Meaning"
+        style="border-color:#6EE7B7;font-size:12px">
+      <textarea id="wb-new-example" placeholder="Example sentence (required)"
+        rows="2" style="border-color:#6EE7B7;font-size:12px;resize:none;border-radius:8px;padding:8px 10px;font-family:'Nunito',sans-serif;border:1.5px solid #6EE7B7;width:100%;box-sizing:border-box"></textarea>
+      <button onclick="wbAddWord()" style="background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 3px 10px rgba(16,185,129,.3)">
+        💾 Save to My WordBook
+      </button>
+    </div>
+  </div>
+
+  <!-- WORDS LIST -->
+  <div id="wb-list">
+    <div style="text-align:center;padding:40px 20px;color:#9CA3AF;font-size:13px;font-weight:700">
+      📖 Your WordBook is empty!<br>
+      <span style="font-size:11px">Start by adding words from Reading Today in the Daily Report.</span>
+    </div>
+  </div>
+
+</div><!-- end wordbook tab -->
+
 
 <div class="tab" id="tab-history">
 <div style="font-size:20px;font-weight:900;margin-bottom:5px">📅 My Daily History</div>
