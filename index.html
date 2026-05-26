@@ -865,20 +865,20 @@ tr:hover td{background:#FAFBFF}
   <div>
       <div class="fl">Did I attend today?</div>
       <div class="pills" id="odda-att">
-        <div class="pill" onclick="toggleEx(this,'odda-att','pg');calcDayPts()">✅ Yes, attended! (+10)</div>
-        <div class="pill" onclick="toggleEx(this,'odda-att','pr');calcDayPts()">❌ Missed (−15)</div>
+        <div class="pill" onclick="toggleExDeselect(this,'odda-att','pg');calcDayPts()">✅ Yes, attended! (+10)</div>
+        <div class="pill" onclick="toggleExDeselect(this,'odda-att','pr');calcDayPts()">❌ Missed (−15)</div>
       </div>
       <div class="fl mt10">Did I join on time?</div>
       <div class="pills" id="odda-time">
-        <div class="pill" onclick="toggleEx(this,'odda-time','pg');calcDayPts()">⏰ Joined on time! (+5)</div>
-        <div class="pill" onclick="toggleEx(this,'odda-time','pr');calcDayPts()">🐢 Slightly late (−10)</div>
+        <div class="pill" onclick="toggleExDeselect(this,'odda-time','pg');calcDayPts()">⏰ Joined on time! (+5)</div>
+        <div class="pill" onclick="toggleExDeselect(this,'odda-time','pr');calcDayPts()">🐢 Slightly late (−10)</div>
       </div>
       <div class="fl mt10">Subject covered</div>
       <input type="text" id="odda-subj" placeholder="e.g. Maths — fractions, decimals">
       <div class="fl mt10">Odda assignment completed?</div>
       <div class="pills" id="odda-assign">
-        <div class="pill" onclick="toggleEx(this,'odda-assign','pg');showOddaAssign(true);calcDayPts()">✅ Yes, completed!</div>
-        <div class="pill" onclick="toggleEx(this,'odda-assign','pr');showOddaAssign(false);calcDayPts()">❌ Incomplete</div>
+        <div class="pill" onclick="toggleExDeselect(this,'odda-assign','pg');showOddaAssign(this.classList.contains('pg'));calcDayPts()">✅ Yes, completed!</div>
+        <div class="pill" onclick="toggleExDeselect(this,'odda-assign','pr');showOddaAssign(false);calcDayPts()">❌ Incomplete</div>
       </div>
       <div id="odda-assign-detail" style="display:none;margin-top:10px;background:var(--gl);border-radius:10px;padding:10px;border:1.5px solid var(--gm)">
         <div class="fl" style="color:var(--gd)">Marks obtained / Total marks</div>
@@ -2775,6 +2775,17 @@ function toggleEx(el,gid,cls){
   const g=document.getElementById(gid);
   if(g)g.querySelectorAll('.pill').forEach(p=>PCLS.forEach(c=>p.classList.remove(c)));
   el.classList.add(cls);
+}
+
+// Deselectable version — tapping already-selected pill clears it back to neutral
+function toggleExDeselect(el,gid,cls){
+  const g=document.getElementById(gid);
+  if(!g) return;
+  const alreadySelected = el.classList.contains(cls);
+  // Clear all pills in group
+  g.querySelectorAll('.pill').forEach(p=>PCLS.forEach(c=>p.classList.remove(c)));
+  // If not already selected → select it; if already selected → leave cleared (deselect)
+  if(!alreadySelected) el.classList.add(cls);
 }
 
 
