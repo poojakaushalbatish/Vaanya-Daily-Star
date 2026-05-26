@@ -2757,7 +2757,7 @@ function showTab(id,btn){
   document.getElementById('tab-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
   if(id==='brain'){} // worksheets load when Worksheets tab clicked
-  if(id==='wordbook'){ wbLoad(); }
+  if(id==='wordbook'){ wbWords=[]; wbLoad(); }
   if(id==='rewards'){renderRewards();setTimeout(showVaanyaMotivation,600);}
   if(id==='spend')renderSpend();
   if(id==='history')renderHistory();
@@ -7238,38 +7238,52 @@ function wbCardColor(word){
 
 // ── Load all words from Supabase ──────────────────────────────
 async function wbLoad(){
-  if(!_supabase){ wbRender(); return; }
+  const list=document.getElementById('wb-list');
+
+  // Show loading state immediately
+  if(list) list.innerHTML='<div style="text-align:center;padding:30px;color:#059669;font-size:13px;font-weight:800">⏳ Loading your WordBook...</div>';
+
+  // Wait for Supabase to be ready (max 5 seconds)
+  if(!_supabase){
+    if(list) list.innerHTML='<div style="text-align:center;padding:30px;color:#EF4444;font-size:12px;font-weight:700">⚠️ Not connected to cloud.</div>';
+    return;
+  }
+
+  // If dbReady is false, wait up to 5s for it
+  let waited=0;
+  while(typeof dbReady!=='undefined' && !dbReady && waited<5000){
+    await new Promise(r=>setTimeout(r,200));
+    waited+=200;
+  }
+
   try{
     const {data,error}=await _supabase
       .from('vaanya_wordbook')
       .select('*')
-      .order('date_added',{ascending:false});
+      .order('id',{ascending:false}); // order by id (most recently inserted first)
+
     if(error){
       console.warn('WordBook load error',error);
-      // Show friendly error in the tab
-      const list=document.getElementById('wb-list');
-      if(list) list.innerHTML='<div style="background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:12px;padding:16px;margin:8px 0;font-size:12px;font-weight:700;color:#B91C1C">'
-        +'⚠️ WordBook table not found in Supabase.<br><br>'
-        +'Please run this SQL in your Supabase dashboard → SQL Editor:<br><br>'
+      if(list) list.innerHTML='<div style="background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:12px;padding:16px;font-size:12px;font-weight:700;color:#B91C1C">'
+        +'⚠️ Error loading WordBook: '+error.message+'<br><br>'
+        +'If table is missing, run this SQL in Supabase → SQL Editor:<br>'
         +'<code style="background:#fff;padding:8px;border-radius:6px;display:block;font-size:10px;margin-top:6px;white-space:pre-wrap;border:1px solid #FCA5A5">'
-        +'create table vaanya_wordbook (\n'
-        +'  id         bigint generated always as identity primary key,\n'
-        +'  word       text not null,\n'
-        +'  meaning    text not null,\n'
-        +'  example    text not null,\n'
-        +'  date_added date default current_date,\n'
-        +'  source     text default \'daily_report\'\n'
-        +');\n\n'
-        +'-- Allow read/write:\n'
+        +'create table vaanya_wordbook (id bigint generated always as identity primary key, word text not null, meaning text not null, example text not null, date_added date default current_date, source text default \'daily_report\');\n'
         +'alter table vaanya_wordbook enable row level security;\n'
         +'create policy "allow all" on vaanya_wordbook for all using (true) with check (true);'
         +'</code></div>';
       return;
     }
-    if(data){ wbWords=data; }
+
+    wbWords = data || [];
+    console.log('WordBook loaded:', wbWords.length, 'words');
     wbRender();
     wbUpdateGamification();
-  }catch(e){ console.warn('WordBook load error',e); wbRender(); }
+
+  }catch(e){
+    console.warn('WordBook exception',e);
+    if(list) list.innerHTML='<div style="text-align:center;padding:30px;color:#EF4444;font-size:12px;font-weight:700">⚠️ Failed to load: '+e.message+'</div>';
+  }
 }
 
 // ── Save a single word to Supabase ───────────────────────────
@@ -7388,54 +7402,68 @@ function checkWordSaved(){
 function wbRender(){
   const list=document.getElementById('wb-list');
   if(!list) return;
+
   const today=new Date(Date.now()+5.5*60*60000).toISOString().split('T')[0];
 
   let filtered=[...wbWords];
+
   // Search filter
   if(wbSearch_){
     const q=wbSearch_.toLowerCase();
     filtered=filtered.filter(w=>
-      w.word.toLowerCase().includes(q)||
+      (w.word||'').toLowerCase().includes(q)||
       (w.meaning||'').toLowerCase().includes(q)
     );
   }
+
   // Alphabet/date filter
   if(wbFilter_==='today'){
-    filtered=filtered.filter(w=>w.date_added===today);
+    // Compare just the date part (handles timezone differences)
+    filtered=filtered.filter(w=>{
+      if(!w.date_added) return false;
+      const d=w.date_added.substring(0,10); // YYYY-MM-DD
+      return d===today;
+    });
   } else if(wbFilter_!=='all'){
     const ranges={A:[65,69],F:[70,74],K:[75,79],P:[80,84],U:[85,122]};
     const r=ranges[wbFilter_];
     if(r) filtered=filtered.filter(w=>{
-      const c=w.word.toUpperCase().charCodeAt(0);
-      return c>=r[0]&&c<=r[1];
+      const ch=(w.word||'A').toUpperCase().charCodeAt(0);
+      return ch>=r[0]&&ch<=r[1];
     });
   }
 
   if(!filtered.length){
-    list.innerHTML='<div style="text-align:center;padding:40px 20px;color:#9CA3AF;font-size:13px;font-weight:700">'+(wbSearch_?'🔍 No words match "'+wbSearch_+'"':'📖 No words here yet!')+'</div>';
+    const msg=wbSearch_
+      ? '🔍 No words match "'+wbSearch_+'"'
+      : wbFilter_==='today'
+        ? '📅 No words added today yet — add from Reading Today section!'
+        : '📖 No words here yet!';
+    list.innerHTML='<div style="text-align:center;padding:40px 20px;color:#9CA3AF;font-size:13px;font-weight:700">'+msg+'</div>';
     return;
   }
 
   // Sort alphabetically, group by first letter
-  const sorted=[...filtered].sort((a,b)=>a.word.localeCompare(b.word));
-  let html='',lastLetter='';
+  const sorted=[...filtered].sort((a,b)=>(a.word||'').localeCompare(b.word||''));
+  let html='', lastLetter='';
   sorted.forEach(w=>{
-    const fl=w.word[0].toUpperCase();
+    const wordText=w.word||'';
+    const fl=wordText[0]?.toUpperCase()||'?';
     if(fl!==lastLetter){
       html+='<div class="wb-alpha-hdr">'+fl+'</div>';
       lastLetter=fl;
     }
-    const col=wbCardColor(w.word);
-    const dateStr=w.date_added?w.date_added.split('-').reverse().join(' '):'';
-    html+=`<div class="wb-card" style="border-left-color:${col.border};background:${col.bg}">
-      <div class="wb-word" style="color:${col.text}">${wbHighlight(w.word)}</div>
-      <div class="wb-meaning">${wbHighlight(w.meaning||'')}</div>
-      ${w.example?`<div class="wb-example">💬 "${wbHighlight(w.example)}"</div>`:''}
-      <div class="wb-meta">
-        <span class="wb-date">📅 ${dateStr}${w.source==='manual'?' · Added manually':' · From Daily Report'}</span>
-        <button class="wb-edit-btn" onclick="wbOpenEdit('${w.id}')">✏️ Edit</button>
-      </div>
-    </div>`;
+    const col=wbCardColor(wordText);
+    const rawDate=w.date_added||'';
+    const dateStr=rawDate?rawDate.substring(0,10).split('-').reverse().join(' May '):'';
+    html+='<div class="wb-card" style="border-left-color:'+col.border+';background:'+col.bg+'">'
+      +'<div class="wb-word" style="color:'+col.text+'">'+wbHighlight(wordText)+'</div>'
+      +'<div class="wb-meaning">'+wbHighlight(w.meaning||'')+'</div>'
+      +(w.example?'<div class="wb-example">💬 "'+wbHighlight(w.example)+'"</div>':'')
+      +'<div class="wb-meta">'
+      +'<span class="wb-date">📅 '+rawDate.substring(0,10)+(w.source==="manual"?" · Added manually":" · From Daily Report")+'</span>'
+      +'<button class="wb-edit-btn" onclick="wbOpenEdit(\''+w.id+'\')">✏️ Edit</button>'
+      +'</div></div>';
   });
   list.innerHTML=html;
 }
