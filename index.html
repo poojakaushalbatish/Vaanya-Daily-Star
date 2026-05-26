@@ -304,7 +304,20 @@ tr:hover td{background:#FAFBFF}
 .sec-pts-label{font-size:11px;font-weight:800;color:var(--gd)}
 .sec-pts-val{font-size:20px;font-weight:900;color:var(--gd)}
 
-/* ODDA ASSIGNMENT */
+/* WORDBOOK */
+.wb-fpill{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800;cursor:pointer;border:1.5px solid #A7F3D0;background:#fff;color:#065F46;font-family:'Nunito',sans-serif;transition:all .18s}
+.wb-fpill:hover{background:#ECFDF5}
+.wb-fpill.wb-active{background:#059669;color:#fff;border-color:#059669}
+.wb-card{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:8px;border-left:4px solid #059669;box-shadow:0 2px 8px rgba(0,0,0,.06);transition:all .2s}
+.wb-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:translateY(-1px)}
+.wb-word{font-size:16px;font-weight:900;color:#1E293B;margin-bottom:3px}
+.wb-meaning{font-size:12px;color:#374151;font-weight:700;margin-bottom:5px}
+.wb-example{font-size:11px;color:#6B7280;font-style:italic;line-height:1.6}
+.wb-meta{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.wb-date{font-size:9px;color:#9CA3AF;font-weight:700}
+.wb-edit-btn{background:#F0FDF4;border:1px solid #A7F3D0;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:800;color:#059669;cursor:pointer;font-family:'Nunito',sans-serif}
+.wb-edit-btn:hover{background:#DCFCE7}
+.wb-alpha-hdr{font-size:11px;font-weight:900;color:#059669;text-transform:uppercase;letter-spacing:.1em;padding:8px 4px 4px;border-bottom:2px solid #ECFDF5;margin-bottom:6px}
 .odda-assign-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
 
 @media(max-width:600px){
@@ -668,6 +681,7 @@ tr:hover td{background:#FAFBFF}
   <button class="nb t3" onclick="showTab('brain',this)">🧠 Brain Lab</button>
   <button class="nb t4" onclick="showTab('geeta',this)">🕉️ Geeta — Soul Work</button>
   <button class="nb t7" onclick="showTab('creative',this)">🎨 Creative Moments</button>
+  <button class="nb t3" onclick="showTab('wordbook',this)">📖 My WordBook</button>
   <button class="nb t4" id="btn-parent-tab" onclick="showParentTabWithPin(this)">👨‍👩‍👧 Parents Review</button>
   <button class="nb t1" onclick="showTab('rewards',this)">🎁 Rewards</button>
   <button class="nb t2" onclick="showTab('spend',this)">🛒 Spend</button>
@@ -916,8 +930,8 @@ tr:hover td{background:#FAFBFF}
     </select>
     <div class="fl mt10">Did I join on time?</div>
     <div class="pills" id="gym-time">
-      <div class="pill" onclick="toggleEx(this,'gym-time','pg');calcDayPts()">✅ Joined on time! (+5)</div>
-      <div class="pill" onclick="toggleEx(this,'gym-time','pr');calcDayPts()">🐢 Slightly late (−10)</div>
+      <div class="pill" onclick="toggleExDeselect(this,'gym-time','pg');calcDayPts()">✅ Joined on time! (+5)</div>
+      <div class="pill" onclick="toggleExDeselect(this,'gym-time','pr');calcDayPts()">🐢 Slightly late (−10)</div>
     </div>
     <div id="gym-pts-msg" style="margin-top:6px;font-size:11px;font-weight:800"></div>
   </div>
@@ -940,8 +954,8 @@ tr:hover td{background:#FAFBFF}
   <div style="background:var(--pkl);border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--pkm)">
     <div class="fl" style="color:var(--pkd);margin-bottom:6px">📺 Screen time today <span style="font-size:10px;color:var(--pkd)">(limit: 30 mins)</span></div>
     <div class="pills" id="screen-check">
-      <div class="pill" onclick="toggleEx(this,'screen-check','pg');calcDayPts()">✅ 30 mins or less (+10)</div>
-      <div class="pill" onclick="toggleEx(this,'screen-check','pr');calcDayPts()">❌ More than 30 mins (−10)</div>
+      <div class="pill" onclick="toggleExDeselect(this,'screen-check','pg');calcDayPts()">✅ 30 mins or less (+10)</div>
+      <div class="pill" onclick="toggleExDeselect(this,'screen-check','pr');calcDayPts()">❌ More than 30 mins (−10)</div>
     </div>
 
   </div>
@@ -968,7 +982,7 @@ tr:hover td{background:#FAFBFF}
     <div id="skill-no-msg" style="display:none;margin-top:6px;font-size:12px;font-weight:800;color:var(--rd)">😔 No skill activity today. Try something creative tomorrow!</div>
   </div>
 
-  <!-- Reading: Yes/No + 3 new words with meanings (+10 pts when all filled) -->
+  <!-- Reading: Yes/No + 3 new words with meanings + examples (+10 pts when all 3 filled) -->
   <div style="background:#ECFDF5;border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--gm)">
     <div class="fl" style="color:var(--gd);margin-bottom:6px">📚 Reading today <span style="font-size:10px;color:var(--gd)">(+10 pts when all 3 words filled)</span></div>
     <select id="book-type" onchange="showWordBoxes();calcDayPts()" style="margin-bottom:8px">
@@ -977,24 +991,53 @@ tr:hover td{background:#FAFBFF}
       <option value="no">❌ No, not today</option>
     </select>
     <div id="word-boxes" style="display:none;margin-top:6px">
-      <div class="fl" style="color:var(--gd);margin-bottom:6px;font-size:11px;font-weight:800">📝 Write 3 new words you learned today with their meanings:</div>
-      <div style="display:flex;flex-direction:column;gap:7px">
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="word1" placeholder="Word 1" style="flex:1;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
-          <span style="color:var(--gd);font-weight:900;font-size:13px">→</span>
-          <input type="text" id="mean1" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
+      <div class="fl" style="color:var(--gd);margin-bottom:8px;font-size:11px;font-weight:800">📝 Write 3 new words — word, meaning and an example sentence:</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+
+        <!-- Word 1 -->
+        <div style="background:#fff;border-radius:10px;border:1.5px solid var(--gm);padding:9px 10px">
+          <div style="font-size:9px;font-weight:900;color:var(--gd);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Word 1</div>
+          <div style="display:flex;gap:6px;margin-bottom:5px">
+            <input type="text" id="word1" placeholder="e.g. perseverance" style="flex:1;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
+            <input type="text" id="mean1" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
+          </div>
+          <input type="text" id="exam1" placeholder="Example sentence (required to save)" style="width:100%;box-sizing:border-box;border-color:var(--gm);font-size:11px" oninput="checkWordSaved()">
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="word2" placeholder="Word 2" style="flex:1;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
-          <span style="color:var(--gd);font-weight:900;font-size:13px">→</span>
-          <input type="text" id="mean2" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
+
+        <!-- Word 2 -->
+        <div style="background:#fff;border-radius:10px;border:1.5px solid var(--gm);padding:9px 10px">
+          <div style="font-size:9px;font-weight:900;color:var(--gd);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Word 2</div>
+          <div style="display:flex;gap:6px;margin-bottom:5px">
+            <input type="text" id="word2" placeholder="e.g. luminous" style="flex:1;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
+            <input type="text" id="mean2" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
+          </div>
+          <input type="text" id="exam2" placeholder="Example sentence (required to save)" style="width:100%;box-sizing:border-box;border-color:var(--gm);font-size:11px" oninput="checkWordSaved()">
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="word3" placeholder="Word 3" style="flex:1;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
-          <span style="color:var(--gd);font-weight:900;font-size:13px">→</span>
-          <input type="text" id="mean3" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm)" oninput="calcWordPts()">
+
+        <!-- Word 3 -->
+        <div style="background:#fff;border-radius:10px;border:1.5px solid var(--gm);padding:9px 10px">
+          <div style="font-size:9px;font-weight:900;color:var(--gd);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Word 3</div>
+          <div style="display:flex;gap:6px;margin-bottom:5px">
+            <input type="text" id="word3" placeholder="e.g. ephemeral" style="flex:1;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
+            <input type="text" id="mean3" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
+          </div>
+          <input type="text" id="exam3" placeholder="Example sentence (required to save)" style="width:100%;box-sizing:border-box;border-color:var(--gm);font-size:11px" oninput="checkWordSaved()">
         </div>
+
       </div>
+
+      <!-- Save to WordBook button -->
+      <div id="save-wordbook-wrap" style="margin-top:12px;display:none">
+        <button onclick="saveWordsToWordBook()" id="save-wordbook-btn"
+          style="width:100%;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;
+          border-radius:12px;padding:12px 16px;font-size:13px;font-weight:900;cursor:pointer;
+          font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(16,185,129,.3);
+          display:flex;align-items:center;justify-content:center;gap:8px">
+          <span>📖</span><span id="save-wordbook-label">Save to My WordBook</span>
+        </button>
+        <div id="save-wordbook-status" style="margin-top:6px;font-size:11px;font-weight:700;color:var(--gd);text-align:center"></div>
+      </div>
+
       <div id="word-pts-msg" style="margin-top:8px;font-size:12px;font-weight:800;color:var(--gd)"></div>
     </div>
   </div>
@@ -1665,7 +1708,107 @@ tr:hover td{background:#FAFBFF}
   </button>
 </div>
 
-<!-- PARENT CONTENT — shown after PIN -->
+<!-- ═══════ WORDBOOK TAB ═══════ -->
+<div class="tab" id="tab-wordbook">
+
+  <!-- GAMIFICATION HEADER -->
+  <div id="wb-level-banner" style="background:linear-gradient(135deg,#059669,#0D9488);border-radius:18px;padding:18px 20px;margin-bottom:16px;color:#fff;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-20px;right:-10px;width:100px;height:100px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);pointer-events:none"></div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="font-size:48px" id="wb-badge">🌱</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;opacity:.8;margin-bottom:3px">MY WORDBOOK</div>
+        <div id="wb-level-title" style="font-size:20px;font-weight:900;line-height:1.2">Word Seedling</div>
+        <div id="wb-word-count" style="font-size:12px;opacity:.85;margin-top:3px">0 words collected</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div id="wb-next-label" style="font-size:10px;opacity:.7;margin-bottom:4px">Next level in</div>
+        <div id="wb-next-count" style="font-size:22px;font-weight:900">10 words</div>
+      </div>
+    </div>
+    <!-- Progress bar -->
+    <div style="background:rgba(255,255,255,.2);border-radius:6px;height:8px;overflow:hidden;margin-top:14px">
+      <div id="wb-progress-bar" style="height:100%;background:rgba(255,255,255,.9);border-radius:6px;width:0%;transition:width .6s ease"></div>
+    </div>
+    <div id="wb-progress-label" style="font-size:10px;opacity:.75;margin-top:5px;text-align:center">0 / 10 words to next level</div>
+  </div>
+
+  <!-- SEARCH -->
+  <div style="position:relative;margin-bottom:12px">
+    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">🔍</span>
+    <input type="text" id="wb-search" placeholder="Search your words or meanings..."
+      oninput="wbSearch()"
+      style="width:100%;box-sizing:border-box;padding:11px 14px 11px 40px;border-radius:12px;
+      border:2px solid #D1FAE5;background:#fff;font-size:13px;font-weight:700;
+      font-family:'Nunito',sans-serif;outline:none">
+  </div>
+
+  <!-- FILTER PILLS -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="wb-filters">
+    <button onclick="wbFilter('all',this)" class="wb-fpill wb-active">All</button>
+    <button onclick="wbFilter('today',this)" class="wb-fpill">Today</button>
+    <button onclick="wbFilter('A',this)" class="wb-fpill">A–E</button>
+    <button onclick="wbFilter('F',this)" class="wb-fpill">F–J</button>
+    <button onclick="wbFilter('K',this)" class="wb-fpill">K–O</button>
+    <button onclick="wbFilter('P',this)" class="wb-fpill">P–T</button>
+    <button onclick="wbFilter('U',this)" class="wb-fpill">U–Z</button>
+  </div>
+
+  <!-- ADD NEW WORD PANEL -->
+  <div style="background:linear-gradient(135deg,#F0FDF4,#ECFDF5);border:2px solid #A7F3D0;border-radius:16px;padding:16px;margin-bottom:16px">
+    <div style="font-size:13px;font-weight:900;color:#065F46;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+      <span>✨</span> Add a New Word
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <input type="text" id="wb-new-word" placeholder="Word (e.g. serendipity)"
+        style="border-color:#6EE7B7;font-size:13px;font-weight:700">
+      <input type="text" id="wb-new-meaning" placeholder="Meaning"
+        style="border-color:#6EE7B7;font-size:12px">
+      <textarea id="wb-new-example" placeholder="Example sentence (required)"
+        rows="2" style="border-color:#6EE7B7;font-size:12px;resize:none;border-radius:8px;padding:8px 10px;font-family:'Nunito',sans-serif;border:1.5px solid #6EE7B7;width:100%;box-sizing:border-box"></textarea>
+      <button onclick="wbAddWord()" style="background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 3px 10px rgba(16,185,129,.3)">
+        💾 Save to My WordBook
+      </button>
+    </div>
+  </div>
+
+  <!-- WORDS LIST -->
+  <div id="wb-list">
+    <div style="text-align:center;padding:40px 20px;color:#9CA3AF;font-size:13px;font-weight:700">
+      📖 Your WordBook is empty!<br>
+      <span style="font-size:11px">Start by adding words from Reading Today in the Daily Report.</span>
+    </div>
+  </div>
+
+</div><!-- end wordbook tab -->
+
+<!-- EDIT WORD MODAL -->
+<div id="wb-edit-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:20px;padding:24px;width:90%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="font-size:15px;font-weight:900;color:#065F46;margin-bottom:16px">✏️ Edit Word</div>
+    <input type="hidden" id="wb-edit-id">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#6B7280;margin-bottom:4px">WORD</div>
+        <input type="text" id="wb-edit-word" style="width:100%;box-sizing:border-box;border-color:#A7F3D0;font-weight:800">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#6B7280;margin-bottom:4px">MEANING</div>
+        <input type="text" id="wb-edit-meaning" style="width:100%;box-sizing:border-box;border-color:#A7F3D0">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#6B7280;margin-bottom:4px">EXAMPLE SENTENCE</div>
+        <textarea id="wb-edit-example" rows="2" style="width:100%;box-sizing:border-box;border:1.5px solid #A7F3D0;border-radius:8px;padding:8px 10px;font-family:'Nunito',sans-serif;resize:none"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button onclick="wbSaveEdit()" style="flex:1;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif">✅ Save Changes</button>
+        <button onclick="document.getElementById('wb-edit-modal').style.display='none'" style="flex:1;background:#F9FAFB;color:#374151;border:1.5px solid #E5E7EB;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PARENT TAB ═══════ -->
 <div id="parent-content" style="display:none">
 
 <!-- ══════════════════════════════════════════════
@@ -2613,6 +2756,7 @@ function showTab(id,btn){
   document.getElementById('tab-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
   if(id==='brain'){} // worksheets load when Worksheets tab clicked
+  if(id==='wordbook'){ wbLoad(); }
   if(id==='rewards'){renderRewards();setTimeout(showVaanyaMotivation,600);}
   if(id==='spend')renderSpend();
   if(id==='history')renderHistory();
@@ -2662,13 +2806,15 @@ function showWordBoxes(){
   const box = document.getElementById('word-boxes');
   if(box) box.style.display = val === 'yes' ? 'block' : 'none';
   if(val !== 'yes'){
-    // Clear word boxes when switching to No
-    ['word1','mean1','word2','mean2','word3','mean3'].forEach(id=>{
+    ['word1','mean1','exam1','word2','mean2','exam2','word3','mean3','exam3'].forEach(id=>{
       const e=document.getElementById(id); if(e) e.value='';
     });
     const msg=document.getElementById('word-pts-msg'); if(msg) msg.textContent='';
+    const wrap=document.getElementById('save-wordbook-wrap');
+    if(wrap) wrap.style.display='none';
   }
   calcWordPts();
+  checkWordSaved();
 }
 
 function calcWordPts(){
@@ -4122,9 +4268,9 @@ function collectFormData(date, pts){
     bookType:document.getElementById('book-type')?.value||'0',
     ssDone: SS_SUBJECTS.map((_,i)=>!!document.getElementById('ss-'+i)?.checked),
     ssDets: SS_SUBJECTS.map((_,i)=>document.getElementById('ssdet-'+i)?.value||''),
-    word1:document.getElementById('word1')?.value||'',mean1:document.getElementById('mean1')?.value||'',
-    word2:document.getElementById('word2')?.value||'',mean2:document.getElementById('mean2')?.value||'',
-    word3:document.getElementById('word3')?.value||'',mean3:document.getElementById('mean3')?.value||'',
+    word1:document.getElementById('word1')?.value||'',mean1:document.getElementById('mean1')?.value||'',exam1:document.getElementById('exam1')?.value||'',
+    word2:document.getElementById('word2')?.value||'',mean2:document.getElementById('mean2')?.value||'',exam2:document.getElementById('exam2')?.value||'',
+    word3:document.getElementById('word3')?.value||'',mean3:document.getElementById('mean3')?.value||'',exam3:document.getElementById('exam3')?.value||'',
     skillPtsAwarded: parseInt(document.getElementById('skill-pts-select')?.value||0)||0,
     shlokaReflect:(document.getElementById('shloka-reflect')?.value||'').substring(0,1000),
     pastShlokas:(document.getElementById('past-shlokas')?.value||'').substring(0,3000),
@@ -5295,7 +5441,7 @@ function clearDay(){
   document.querySelectorAll('#odda-time .pill, #gym-time .pill').forEach(p=>{p.classList.remove('pg','pr','pa','pb','pt');});
   const tcBox=document.getElementById('test-chapters-box');if(tcBox)tcBox.style.display='none';
   const wBox=document.getElementById('word-boxes');if(wBox)wBox.style.display='none';
-  ['word1','mean1','word2','mean2','word3','mean3'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['word1','mean1','exam1','word2','mean2','exam2','word3','mean3','exam3'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const wpMsg=document.getElementById('word-pts-msg');if(wpMsg)wpMsg.textContent='';
   const btEl=document.getElementById('book-type');if(btEl)btEl.value='0';
   const prPend=document.getElementById('parent-pending-section');if(prPend)prPend.style.display='none'; /* always hidden */
@@ -6742,9 +6888,9 @@ function loadDraftDay(d){
   setVal('shloka-reflect', d.shlokaReflect);
   setVal('past-shlokas',   d.pastShlokas);
   setVal('creative-desc',  d.creativeDesc);
-  setVal('word1',d.word1); setVal('mean1',d.mean1);
-  setVal('word2',d.word2); setVal('mean2',d.mean2);
-  setVal('word3',d.word3); setVal('mean3',d.mean3);
+  setVal('word1',d.word1); setVal('mean1',d.mean1); setVal('exam1',d.exam1||'');
+  setVal('word2',d.word2); setVal('mean2',d.mean2); setVal('exam2',d.exam2||'');
+  setVal('word3',d.word3); setVal('mean3',d.mean3); setVal('exam3',d.exam3||'');
   if(typeof checkGeetaSaveReady==='function') checkGeetaSaveReady();
 
   // ── Skill box ─────────────────────────────────────────────────
@@ -7065,7 +7211,315 @@ function renderParentShlokaMgmt(){
 }
 
 // ════════════════════════════════════════════
-// PARENT SUDOKU UNLOCK
+// MY WORDBOOK — Full JS
+// ════════════════════════════════════════════
+let wbWords = []; // in-memory cache from Supabase
+let wbFilter_ = 'all';
+let wbSearch_ = '';
+
+const WB_LEVELS = [
+  {min:0,  max:10,  title:'Word Seedling',  badge:'🌱'},
+  {min:10, max:25,  title:'Word Explorer',  badge:'🔍'},
+  {min:25, max:50,  title:'Word Wizard',    badge:'🧙'},
+  {min:50, max:100, title:'Word Champion',  badge:'🏆'},
+  {min:100,max:9999,title:'Word Master',    badge:'👑'},
+];
+
+// Pastel card colours by first letter
+function wbCardColor(word){
+  const ch=(word||'A').toUpperCase().charCodeAt(0);
+  if(ch<=69)  return {border:'#818CF8',bg:'#EEF2FF',text:'#3730A3'};  // A–E indigo
+  if(ch<=74)  return {border:'#60A5FA',bg:'#EFF6FF',text:'#1D4ED8'};  // F–J blue
+  if(ch<=79)  return {border:'#34D399',bg:'#ECFDF5',text:'#065F46'};  // K–O green
+  if(ch<=84)  return {border:'#FB923C',bg:'#FFF7ED',text:'#92400E'};  // P–T orange
+  return       {border:'#F472B6',bg:'#FDF4FF',text:'#86198F'};        // U–Z pink
+}
+
+// ── Load all words from Supabase ──────────────────────────────
+async function wbLoad(){
+  if(!_supabase){ wbRender(); return; }
+  try{
+    const {data,error}=await _supabase
+      .from('vaanya_wordbook')
+      .select('*')
+      .order('date_added',{ascending:false});
+    if(error){
+      console.warn('WordBook load error',error);
+      // Show friendly error in the tab
+      const list=document.getElementById('wb-list');
+      if(list) list.innerHTML='<div style="background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:12px;padding:16px;margin:8px 0;font-size:12px;font-weight:700;color:#B91C1C">'
+        +'⚠️ WordBook table not found in Supabase.<br><br>'
+        +'Please run this SQL in your Supabase dashboard → SQL Editor:<br><br>'
+        +'<code style="background:#fff;padding:8px;border-radius:6px;display:block;font-size:10px;margin-top:6px;white-space:pre-wrap;border:1px solid #FCA5A5">'
+        +'create table vaanya_wordbook (\n'
+        +'  id         bigint generated always as identity primary key,\n'
+        +'  word       text not null,\n'
+        +'  meaning    text not null,\n'
+        +'  example    text not null,\n'
+        +'  date_added date default current_date,\n'
+        +'  source     text default \'daily_report\'\n'
+        +');\n\n'
+        +'-- Allow read/write:\n'
+        +'alter table vaanya_wordbook enable row level security;\n'
+        +'create policy "allow all" on vaanya_wordbook for all using (true) with check (true);'
+        +'</code></div>';
+      return;
+    }
+    if(data){ wbWords=data; }
+    wbRender();
+    wbUpdateGamification();
+  }catch(e){ console.warn('WordBook load error',e); wbRender(); }
+}
+
+// ── Save a single word to Supabase ───────────────────────────
+async function wbSaveToSupabase(word,meaning,example,source){
+  if(!_supabase) return null;
+  const today=new Date(Date.now()+5.5*60*60000).toISOString().split('T')[0];
+  try{
+    const {data,error}=await _supabase
+      .from('vaanya_wordbook')
+      .insert([{word:word.trim(),meaning:meaning.trim(),example:example.trim(),date_added:today,source:source||'daily_report'}])
+      .select();
+    if(error){
+      console.warn('WordBook save error',error.message,error.code);
+      if(error.code==='42P01') toast('⚠️ WordBook table missing in Supabase — see My WordBook tab for setup instructions.');
+      else toast('⚠️ Save failed: '+error.message);
+      return null;
+    }
+    return data?.[0]||null;
+  }catch(e){ console.warn('WordBook save exception',e); return null; }
+}
+
+// ── Update a word in Supabase ────────────────────────────────
+async function wbUpdateInSupabase(id,word,meaning,example){
+  if(!_supabase) return false;
+  const {error}=await _supabase
+    .from('vaanya_wordbook')
+    .update({word:word.trim(),meaning:meaning.trim(),example:example.trim()})
+    .eq('id',id);
+  return !error;
+}
+
+// ── Add word from WordBook tab ───────────────────────────────
+async function wbAddWord(){
+  const word   =(document.getElementById('wb-new-word')?.value||'').trim();
+  const meaning=(document.getElementById('wb-new-meaning')?.value||'').trim();
+  const example=(document.getElementById('wb-new-example')?.value||'').trim();
+  if(!word){   toast('⚠️ Please enter a word.'); return; }
+  if(!meaning){ toast('⚠️ Please enter the meaning.'); return; }
+  if(!example){ toast('⚠️ Please add an example sentence — it helps remember words!'); return; }
+  // Check duplicate
+  if(wbWords.some(w=>w.word.toLowerCase()===word.toLowerCase())){
+    toast('📖 "'+word+'" is already in your WordBook!'); return;
+  }
+  const saved=await wbSaveToSupabase(word,meaning,example,'manual');
+  if(saved){
+    wbWords.unshift(saved);
+    document.getElementById('wb-new-word').value='';
+    document.getElementById('wb-new-meaning').value='';
+    document.getElementById('wb-new-example').value='';
+    wbRender(); wbUpdateGamification();
+    toast('✨ "'+word+'" added to your WordBook! 📖');
+  } else {
+    toast('⚠️ Could not save — please check connection.');
+  }
+}
+
+// ── Save words from Reading Today section ────────────────────
+async function saveWordsToWordBook(){
+  const btn=document.getElementById('save-wordbook-btn');
+  const lbl=document.getElementById('save-wordbook-label');
+  const status=document.getElementById('save-wordbook-status');
+  if(btn){ btn.disabled=true; btn.style.opacity='.7'; }
+  if(lbl) lbl.textContent='Saving…';
+
+  const words=[
+    {w:(document.getElementById('word1')?.value||'').trim(), m:(document.getElementById('mean1')?.value||'').trim(), e:(document.getElementById('exam1')?.value||'').trim()},
+    {w:(document.getElementById('word2')?.value||'').trim(), m:(document.getElementById('mean2')?.value||'').trim(), e:(document.getElementById('exam2')?.value||'').trim()},
+    {w:(document.getElementById('word3')?.value||'').trim(), m:(document.getElementById('mean3')?.value||'').trim(), e:(document.getElementById('exam3')?.value||'').trim()},
+  ].filter(x=>x.w&&x.m&&x.e);
+
+  if(!words.length){
+    toast('⚠️ Fill Word + Meaning + Example sentence to save.');
+    if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+    if(lbl) lbl.textContent='Save to My WordBook';
+    return;
+  }
+
+  let saved=0, skipped=0;
+  for(const item of words){
+    if(wbWords.some(w=>w.word.toLowerCase()===item.w.toLowerCase())){
+      skipped++; continue;
+    }
+    const result=await wbSaveToSupabase(item.w,item.m,item.e,'daily_report');
+    if(result){ wbWords.unshift(result); saved++; }
+  }
+
+  wbRender(); wbUpdateGamification();
+
+  if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+  if(lbl) lbl.textContent='✅ Saved!';
+  if(status){
+    const parts=[];
+    if(saved)   parts.push(saved+' word'+(saved>1?'s':'')+' saved!');
+    if(skipped) parts.push(skipped+' already in WordBook.');
+    status.textContent=parts.join(' ');
+    setTimeout(()=>{ status.textContent=''; if(lbl) lbl.textContent='Save to My WordBook'; },4000);
+  }
+  toast('📖 '+saved+' word'+(saved!==1?'s':'')+' added to your WordBook! 🌟');
+}
+
+// ── Check which words are saveable → show/hide Save button ───
+function checkWordSaved(){
+  const words=[
+    {w:(document.getElementById('word1')?.value||'').trim(), m:(document.getElementById('mean1')?.value||'').trim(), e:(document.getElementById('exam1')?.value||'').trim()},
+    {w:(document.getElementById('word2')?.value||'').trim(), m:(document.getElementById('mean2')?.value||'').trim(), e:(document.getElementById('exam2')?.value||'').trim()},
+    {w:(document.getElementById('word3')?.value||'').trim(), m:(document.getElementById('mean3')?.value||'').trim(), e:(document.getElementById('exam3')?.value||'').trim()},
+  ];
+  const ready=words.filter(x=>x.w&&x.m&&x.e).length;
+  const wrap=document.getElementById('save-wordbook-wrap');
+  if(wrap) wrap.style.display=ready>0?'block':'none';
+  const lbl=document.getElementById('save-wordbook-label');
+  if(lbl) lbl.textContent='Save '+ready+' Word'+(ready!==1?'s':'')+' to My WordBook';
+}
+
+// ── Render word cards ─────────────────────────────────────────
+function wbRender(){
+  const list=document.getElementById('wb-list');
+  if(!list) return;
+  const today=new Date(Date.now()+5.5*60*60000).toISOString().split('T')[0];
+
+  let filtered=[...wbWords];
+  // Search filter
+  if(wbSearch_){
+    const q=wbSearch_.toLowerCase();
+    filtered=filtered.filter(w=>
+      w.word.toLowerCase().includes(q)||
+      (w.meaning||'').toLowerCase().includes(q)
+    );
+  }
+  // Alphabet/date filter
+  if(wbFilter_==='today'){
+    filtered=filtered.filter(w=>w.date_added===today);
+  } else if(wbFilter_!=='all'){
+    const ranges={A:[65,69],F:[70,74],K:[75,79],P:[80,84],U:[85,122]};
+    const r=ranges[wbFilter_];
+    if(r) filtered=filtered.filter(w=>{
+      const c=w.word.toUpperCase().charCodeAt(0);
+      return c>=r[0]&&c<=r[1];
+    });
+  }
+
+  if(!filtered.length){
+    list.innerHTML='<div style="text-align:center;padding:40px 20px;color:#9CA3AF;font-size:13px;font-weight:700">'+(wbSearch_?'🔍 No words match "'+wbSearch_+'"':'📖 No words here yet!')+'</div>';
+    return;
+  }
+
+  // Sort alphabetically, group by first letter
+  const sorted=[...filtered].sort((a,b)=>a.word.localeCompare(b.word));
+  let html='',lastLetter='';
+  sorted.forEach(w=>{
+    const fl=w.word[0].toUpperCase();
+    if(fl!==lastLetter){
+      html+='<div class="wb-alpha-hdr">'+fl+'</div>';
+      lastLetter=fl;
+    }
+    const col=wbCardColor(w.word);
+    const dateStr=w.date_added?w.date_added.split('-').reverse().join(' '):'';
+    html+=`<div class="wb-card" style="border-left-color:${col.border};background:${col.bg}">
+      <div class="wb-word" style="color:${col.text}">${wbHighlight(w.word)}</div>
+      <div class="wb-meaning">${wbHighlight(w.meaning||'')}</div>
+      ${w.example?`<div class="wb-example">💬 "${wbHighlight(w.example)}"</div>`:''}
+      <div class="wb-meta">
+        <span class="wb-date">📅 ${dateStr}${w.source==='manual'?' · Added manually':' · From Daily Report'}</span>
+        <button class="wb-edit-btn" onclick="wbOpenEdit('${w.id}')">✏️ Edit</button>
+      </div>
+    </div>`;
+  });
+  list.innerHTML=html;
+}
+
+function wbHighlight(text){
+  if(!wbSearch_) return text;
+  const re=new RegExp('('+wbSearch_.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return text.replace(re,'<mark style="background:#FEF08A;border-radius:3px;padding:0 2px">$1</mark>');
+}
+
+// ── Search and filter ─────────────────────────────────────────
+function wbSearch(){
+  wbSearch_=(document.getElementById('wb-search')?.value||'').trim();
+  wbRender();
+}
+function wbFilter(f,btn){
+  wbFilter_=f;
+  document.querySelectorAll('.wb-fpill').forEach(p=>p.classList.remove('wb-active'));
+  if(btn) btn.classList.add('wb-active');
+  wbRender();
+}
+
+// ── Gamification update ───────────────────────────────────────
+function wbUpdateGamification(){
+  const count=wbWords.length;
+  let level=WB_LEVELS[WB_LEVELS.length-1];
+  let next=null;
+  for(let i=0;i<WB_LEVELS.length;i++){
+    if(count<WB_LEVELS[i].max){
+      level=WB_LEVELS[i]; next=WB_LEVELS[i]; break;
+    }
+    if(count>=WB_LEVELS[i].min) level=WB_LEVELS[i];
+  }
+  const el=id=>document.getElementById(id);
+  if(el('wb-badge')) el('wb-badge').textContent=level.badge;
+  if(el('wb-level-title')) el('wb-level-title').textContent=level.title;
+  if(el('wb-word-count')) el('wb-word-count').textContent=count+' word'+(count!==1?'s':'')+' collected';
+  if(next&&next.max<9999){
+    const inLevel=count-next.min;
+    const levelSize=next.max-next.min;
+    const pct=Math.min(100,Math.round(inLevel/levelSize*100));
+    if(el('wb-progress-bar')) el('wb-progress-bar').style.width=pct+'%';
+    if(el('wb-progress-label')) el('wb-progress-label').textContent=count+' / '+next.max+' words to next level';
+    if(el('wb-next-count')) el('wb-next-count').textContent=(next.max-count)+' words';
+    if(el('wb-next-label')) el('wb-next-label').textContent='Next: '+WB_LEVELS[WB_LEVELS.indexOf(next)+1]?.title||'';
+  } else {
+    if(el('wb-progress-bar')) el('wb-progress-bar').style.width='100%';
+    if(el('wb-progress-label')) el('wb-progress-label').textContent='🎉 Maximum level reached!';
+    if(el('wb-next-count')) el('wb-next-count').textContent='👑';
+    if(el('wb-next-label')) el('wb-next-label').textContent='Word Master!';
+  }
+}
+
+// ── Edit word ─────────────────────────────────────────────────
+function wbOpenEdit(id){
+  const w=wbWords.find(x=>String(x.id)===String(id));
+  if(!w) return;
+  document.getElementById('wb-edit-id').value=id;
+  document.getElementById('wb-edit-word').value=w.word||'';
+  document.getElementById('wb-edit-meaning').value=w.meaning||'';
+  document.getElementById('wb-edit-example').value=w.example||'';
+  document.getElementById('wb-edit-modal').style.display='flex';
+}
+async function wbSaveEdit(){
+  const id=document.getElementById('wb-edit-id').value;
+  const word=(document.getElementById('wb-edit-word')?.value||'').trim();
+  const meaning=(document.getElementById('wb-edit-meaning')?.value||'').trim();
+  const example=(document.getElementById('wb-edit-example')?.value||'').trim();
+  if(!word||!meaning||!example){ toast('⚠️ All fields are required.'); return; }
+  const ok=await wbUpdateInSupabase(id,word,meaning,example);
+  if(ok){
+    const idx=wbWords.findIndex(x=>String(x.id)===String(id));
+    if(idx>=0) wbWords[idx]={...wbWords[idx],word,meaning,example};
+    document.getElementById('wb-edit-modal').style.display='none';
+    wbRender();
+    toast('✅ Word updated!');
+  } else {
+    toast('⚠️ Update failed. Please try again.');
+  }
+}
+// Close edit modal on backdrop click
+document.addEventListener('click',e=>{
+  const modal=document.getElementById('wb-edit-modal');
+  if(modal&&e.target===modal) modal.style.display='none';
+});
 // ════════════════════════════════════════════
 function refreshParentSudokuPanel(){
   const badge          = document.getElementById('sudoku-freeze-badge');
