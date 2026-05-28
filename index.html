@@ -278,6 +278,38 @@ tr:hover td{background:#FAFBFF}
   cursor:pointer;width:100%;transition:all .2s;box-shadow:0 4px 14px rgba(245,158,11,.4)}
 .approval-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(245,158,11,.5)}
 
+/* ── PARENT TAB ACCORDION ── */
+.pr-acc-sec{background:var(--white);border:2px solid var(--border);border-radius:16px;margin-bottom:10px;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.pr-acc-sec.pr-open{box-shadow:0 4px 18px rgba(0,0,0,.07)}
+.pr-acc-header{display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;user-select:none;transition:background .15s}
+.pr-acc-header:hover{background:#FAFBFF}
+.pr-acc-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.pr-acc-title{font-size:15px;font-weight:900;color:var(--ink);flex:1;min-width:0}
+.pr-acc-pts{font-size:13px;font-weight:900;padding:5px 13px;border-radius:20px;white-space:nowrap;margin-left:8px;flex-shrink:0}
+.pr-acc-chevron{font-size:12px;color:var(--muted);transition:transform .25s;flex-shrink:0;margin-left:4px}
+.pr-open .pr-acc-chevron{transform:rotate(180deg)}
+.pr-acc-body{display:none;padding:16px 18px 18px;border-top:1.5px solid var(--border)}
+.pr-open .pr-acc-body{display:block}
+.pr-section-bar-wrap{background:var(--border);border-radius:6px;height:12px;overflow:hidden;margin:8px 0 3px}
+.pr-section-bar{height:100%;border-radius:6px;transition:width .5s ease}
+.pr-area-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:9px;margin-bottom:4px;background:var(--bg)}
+.pr-area-lbl{font-size:12px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px}
+.pr-area-pts{font-size:13px;font-weight:900}
+.pr-brain-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.pr-brain-card{border:2px solid var(--border);border-radius:11px;padding:11px 13px;background:var(--white)}
+.pr-brain-sub-title{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px}
+.pr-brain-sub-pts{font-size:22px;font-weight:900;line-height:1;color:#2563EB}
+.pr-brain-mini-bar{background:var(--border);border-radius:4px;height:6px;overflow:hidden;margin-top:7px}
+.pr-brain-mini-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#3B82F6,#1D4ED8)}
+.pr-words-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pr-word-pill{padding:6px 15px;border-radius:20px;font-size:13px;font-weight:800;background:#F5F3FF;border:2px solid #C4B5FD;color:#5B21B6}
+.pr-overall-bar-wrap{background:var(--border);border-radius:8px;height:18px;overflow:hidden;margin:10px 0 3px;position:relative}
+.pr-overall-bar{height:100%;border-radius:8px;background:linear-gradient(90deg,#7C3AED,#EC4899,#F59E0B);transition:width .6s ease}
+.pr-approve-btn{background:linear-gradient(135deg,#10B981,#047857);color:#fff;border:none;border-radius:var(--rad);padding:22px;font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(16,185,129,.45);letter-spacing:.04em;width:100%}
+.pr-approve-btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(16,185,129,.5)}
+.pr-reject-btn{background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;border:none;border-radius:var(--rad);padding:22px;font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(239,68,68,.45);letter-spacing:.04em;width:100%}
+.pr-reject-btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(239,68,68,.5)}
+
 /* BUTTONS */
 .btn{padding:10px 22px;border-radius:var(--rads);font-family:'Nunito',sans-serif;font-size:13px;
   font-weight:800;cursor:pointer;border:2px solid transparent;transition:all .15s}
@@ -1604,90 +1636,124 @@ tr:hover td{background:#FAFBFF}
 ═══════════════════════════════════════ -->
 <div class="tab" id="tab-creative">
 
-
-<!-- Header -->
-<div style="background:linear-gradient(135deg,#4C1D95,#6D28D9,#7C3AED);border-radius:18px;
-  padding:16px 20px;margin-bottom:14px;color:#fff;border:2px solid rgba(196,181,253,.3)">
-  <div style="font-size:20px;font-weight:900;margin-bottom:4px">🎨 Creative Moments</div>
-  <div style="font-size:11px;color:#DDD6FE;font-weight:700;line-height:1.6">
-    Create something beautiful today · Upload a photo of your work · Parents will award your points!
-    <span style="background:rgba(255,255,255,.15);padding:2px 10px;border-radius:10px;margin-left:4px;display:inline-block">Mandatory — −20 pts if skipped!</span>
+<!-- ── HEADER BANNER ── -->
+<div style="background:linear-gradient(135deg,#4C1D95,#6D28D9,#7C3AED);border-radius:18px;padding:18px 22px;margin-bottom:16px;color:#fff;border:2px solid rgba(196,181,253,.3);display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+  <div style="font-size:44px;line-height:1">🎨</div>
+  <div style="flex:1">
+    <div style="font-size:20px;font-weight:900;margin-bottom:3px">Creative Moments</div>
+    <div style="font-size:11px;color:#DDD6FE;font-weight:700;line-height:1.6">Create something beautiful today · Upload a photo · Parents will award your points!</div>
+  </div>
+  <div style="background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:12px;padding:8px 16px;text-align:center;flex-shrink:0">
+    <div style="font-size:18px;font-weight:900;line-height:1">+20</div>
+    <div style="font-size:9px;opacity:.8;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">pts from Parents</div>
   </div>
 </div>
 
-<!-- Activity grid -->
-<div style="background:#fff;border-radius:18px;border:2px solid #DDD6FE;margin-bottom:14px;overflow:hidden;
-  box-shadow:0 4px 20px rgba(124,58,237,.08)">
-  <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);padding:13px 18px;
-    display:flex;align-items:center;gap:10px">
-    <div style="font-size:14px;font-weight:900;color:#F5F3FF">Choose your creative activity today</div>
-    <div style="margin-left:auto;background:#C4B5FD;color:#3B0764;border-radius:10px;
-      padding:4px 12px;font-size:11px;font-weight:900">+20 pts from Parents</div>
-  </div>
-  <div style="padding:14px 16px">
-    <div class="g3" id="creative-options" style="margin-bottom:14px"></div>
+<!-- ── ACTIVITY SELECTOR CARD ── -->
+<div style="background:#fff;border-radius:18px;border:2px solid #DDD6FE;margin-bottom:14px;overflow:hidden;box-shadow:0 4px 20px rgba(124,58,237,.06)">
 
-    <!-- Description -->
-    <div id="creative-detail">
-      <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;
-        color:#5B21B6;margin-bottom:7px">🌟 Tell me about what I created today</div>
+  <!-- Card header -->
+  <div style="background:linear-gradient(135deg,#EDE9FE,#F5F3FF);padding:14px 18px;border-bottom:1.5px solid #DDD6FE;display:flex;align-items:center;gap:10px">
+    <div style="width:32px;height:32px;background:linear-gradient(135deg,#7C3AED,#5B21B6);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">✨</div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:900;color:#3B0764">Choose your creative activity today</div>
+      <div style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:1px">Pick one activity and give it your best!</div>
+    </div>
+  </div>
+
+  <div style="padding:18px 18px 20px">
+
+    <!-- ── DROPDOWN ── -->
+    <div style="position:relative;margin-bottom:18px">
+      <select id="creative-activity-select" onchange="onCreativeSelect(this.value)"
+        style="width:100%;padding:14px 48px 14px 18px;font-size:14px;font-weight:800;
+          border:2px solid #C4B5FD;border-radius:14px;background:#F5F3FF;color:#3B0764;
+          font-family:'Nunito',sans-serif;cursor:pointer;outline:none;
+          -webkit-appearance:none;appearance:none;line-height:1.4">
+        <option value="">-- Select an activity --</option>
+        <option value="draw">🎨  Drawing / Painting</option>
+        <option value="poem">✍️  Write a Poem</option>
+        <option value="story">📖  Write a Story or a Paragraph</option>
+        <option value="craft">✂️  Paper Craft / Origami</option>
+        <option value="mandala">🌸  Mandala Art</option>
+        <option value="journal">📔  Diary / Gratitude Journal</option>
+      </select>
+      <!-- Custom chevron -->
+      <div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:14px;color:#7C3AED">&#9660;</div>
+    </div>
+
+    <!-- ── SELECTED ACTIVITY DISPLAY CARD (shown after pick) ── -->
+    <div id="creative-activity-card" style="display:none;border-radius:14px;padding:16px 18px;margin-bottom:18px;border:2px solid #DDD6FE;background:linear-gradient(135deg,#F5F3FF,#EFF6FF)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div id="creative-card-icon" style="font-size:36px;line-height:1"></div>
+        <div>
+          <div id="creative-card-title" style="font-size:15px;font-weight:900;color:#3B0764"></div>
+          <div id="creative-card-desc" style="font-size:12px;color:#6D28D9;font-weight:700;margin-top:2px;line-height:1.5"></div>
+        </div>
+      </div>
+      <!-- Thin colour bar for personality -->
+      <div id="creative-card-bar" style="height:4px;border-radius:4px;background:linear-gradient(90deg,#8B5CF6,#EC4899);margin-bottom:0"></div>
+    </div>
+
+    <!-- ── DESCRIBE YOUR WORK ── -->
+    <div id="creative-detail" style="display:none">
+      <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#5B21B6;margin-bottom:7px">🌟 Tell me about what I created today</div>
       <textarea id="creative-desc"
         style="width:100%;background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:12px;
-          padding:11px 14px;color:#3B0764;font-size:13px;font-family:'Nunito',sans-serif;
-          resize:none;min-height:80px;margin-bottom:14px;line-height:1.7"
-        placeholder="Describe your drawing / poem / craft / rangoli in detail..."></textarea>
-    </div>
+          padding:12px 14px;color:#3B0764;font-size:13px;font-family:'Nunito',sans-serif;
+          resize:none;min-height:90px;margin-bottom:16px;line-height:1.7;outline:none;box-sizing:border-box"
+        placeholder="Describe your work in detail..."></textarea>
 
-    <!-- Upload image -->
-    <div style="border:2px dashed #DDD6FE;border-radius:14px;padding:18px;text-align:center;
-      background:#F5F3FF;margin-bottom:12px;cursor:pointer" onclick="document.getElementById('creative-img-upload').click()">
-      <div style="font-size:32px;margin-bottom:8px">📷</div>
-      <div style="font-size:13px;font-weight:800;color:#5B21B6;margin-bottom:4px">Upload a photo of your creative work</div>
-      <div style="font-size:11px;color:#8B5CF6;font-weight:700">Take a photo and upload it here so Mamma &amp; Papa can see!</div>
-      <input type="file" id="creative-img-upload" accept="image/*" capture="environment"
-        style="display:none" onchange="previewCreativeImg(this)">
-    </div>
-
-    <!-- Image preview -->
-    <div id="creative-img-preview" style="display:none;margin-bottom:12px;text-align:center">
-      <img id="creative-img-show" style="max-width:100%;border-radius:14px;
-        border:3px solid #8B5CF6;box-shadow:0 6px 20px rgba(124,58,237,.2)">
-      <div style="margin-top:8px;font-size:11px;font-weight:800;color:#5B21B6">
-        ✅ Photo uploaded! Parents will see this in their review.
-        <button onclick="clearCreativeImg()" style="background:none;border:none;color:#EF4444;
-          font-size:11px;font-weight:800;cursor:pointer;margin-left:8px;font-family:'Nunito',sans-serif">✕ Remove</button>
+      <!-- ── UPLOAD PHOTO ── -->
+      <div style="border:2px dashed #C4B5FD;border-radius:14px;padding:20px;text-align:center;
+        background:#F5F3FF;margin-bottom:12px;cursor:pointer;transition:background .15s"
+        onclick="document.getElementById('creative-img-upload').click()"
+        onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
+        <div style="font-size:34px;margin-bottom:8px">📷</div>
+        <div style="font-size:13px;font-weight:900;color:#5B21B6;margin-bottom:4px">Upload a photo of your work</div>
+        <div style="font-size:11px;color:#8B5CF6;font-weight:700">Tap to take a photo or choose from gallery</div>
+        <input type="file" id="creative-img-upload" accept="image/*" capture="environment"
+          style="display:none" onchange="previewCreativeImg(this)">
       </div>
-    </div>
 
-    <!-- Points note -->
-    <div style="background:linear-gradient(135deg,#F5F3FF,#EFF6FF);border:1.5px solid #DDD6FE;
-      border-radius:12px;padding:11px 16px;display:flex;align-items:center;gap:12px">
-      <div style="font-size:22px">👩‍👧‍👦</div>
-      <div style="flex:1">
-        <div style="font-size:12px;font-weight:900;color:#4C1D95">Show your work to Mamma &amp; Papa!</div>
-        <div style="font-size:11px;color:#6D28D9;font-weight:700;margin-top:2px">
-          Points will be awarded by Parents after they review your uploaded photo 🎨
+      <!-- Image preview -->
+      <div id="creative-img-preview" style="display:none;margin-bottom:14px;text-align:center">
+        <img id="creative-img-show" style="max-width:100%;border-radius:14px;border:3px solid #8B5CF6;box-shadow:0 6px 20px rgba(124,58,237,.2)">
+        <div style="margin-top:8px;font-size:11px;font-weight:800;color:#5B21B6">
+          ✅ Photo uploaded! Parents will see this.
+          <button onclick="clearCreativeImg()" style="background:none;border:none;color:#EF4444;font-size:11px;font-weight:800;cursor:pointer;margin-left:8px;font-family:'Nunito',sans-serif">✕ Remove</button>
+        </div>
+      </div>
+
+      <!-- Parents note -->
+      <div style="background:linear-gradient(135deg,#EDE9FE,#EFF6FF);border:1.5px solid #C4B5FD;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:0">
+        <div style="font-size:22px">👩‍👧‍👦</div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:900;color:#4C1D95">Show your work to Mamma &amp; Papa!</div>
+          <div style="font-size:11px;color:#6D28D9;font-weight:700;margin-top:2px">Points will be awarded after they review your photo 🎨</div>
         </div>
       </div>
     </div>
 
-    <!-- hidden compat -->
+    <!-- hidden compat elements — JS reads these -->
+    <div id="creative-options" style="display:none"></div>
     <div id="creative-done" style="display:none"></div>
     <div id="creative-stars" style="display:none"></div>
   </div>
 </div>
 
-<!-- SAVE BUTTON -->
-<div style="margin-top:14px;text-align:center">
+<!-- ── SAVE BUTTON ── -->
+<div style="margin-top:6px;text-align:center">
   <button onclick="saveCreativeDraft()"
     style="background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;border:none;
-      border-radius:14px;padding:14px 40px;font-size:15px;font-weight:900;cursor:pointer;
-      font-family:'Nunito',sans-serif;box-shadow:0 4px 16px rgba(124,58,237,.35);
-      letter-spacing:.03em">
+      border-radius:14px;padding:15px 48px;font-size:15px;font-weight:900;cursor:pointer;
+      font-family:'Nunito',sans-serif;box-shadow:0 4px 16px rgba(124,58,237,.35);letter-spacing:.03em;
+      transition:all .2s"
+    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(124,58,237,.45)'"
+    onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(124,58,237,.35)'">
     💾 Save My Creative Work
   </button>
-  <div id="creative-save-msg" style="margin-top:8px;font-size:12px;font-weight:700;
-    color:#7C3AED;min-height:20px"></div>
+  <div id="creative-save-msg" style="margin-top:10px;font-size:12px;font-weight:700;color:#7C3AED;min-height:20px"></div>
 </div>
 
 </div><!-- end tab-creative -->
@@ -1743,45 +1809,52 @@ tr:hover td{background:#FAFBFF}
 <!-- ══════════════════════════════════════════════
      PENDING APPROVALS QUEUE — shown when past days are waiting
 ══════════════════════════════════════════════ -->
-<div id="pending-queue-sec" style="display:none;background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FCD34D;border-radius:18px;padding:18px 20px;margin-bottom:16px">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-    <div style="font-size:28px">⏳</div>
-    <div style="flex:1">
-      <div style="font-size:15px;font-weight:900;color:#92400E">Reports Waiting for Approval</div>
-      <div style="font-size:12px;color:#78350F;margin-top:2px;line-height:1.5">Select a pending date below, review Vaanya's work, then Approve or Reject.</div>
-    </div>
-    <div id="pending-count-badge" style="background:#F59E0B;color:#fff;font-size:12px;font-weight:900;padding:4px 12px;border-radius:50px;flex-shrink:0"></div>
+<!-- ═══════════════════════════════════════════
+     SECTION 0 — PENDING APPROVALS QUEUE
+════════════════════════════════════════════ -->
+<div id="pending-queue-sec" class="pr-acc-sec" style="display:none;border-color:#FCD34D">
+  <div class="pr-acc-header" onclick="prToggle('pending-queue-sec')" style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7)">
+    <div class="pr-acc-icon" style="background:#FEF3C7;color:#92400E">⏳</div>
+    <div class="pr-acc-title" style="color:#92400E">Reports Awaiting Approval</div>
+    <span class="pr-acc-pts" id="pending-count-badge" style="background:#F59E0B;color:#fff"></span>
+    <span class="pr-acc-chevron" style="color:#92400E">▼</span>
   </div>
-  <!-- Pending date cards -->
-  <div id="pending-date-cards" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
-  <!-- Currently reviewing banner -->
-  <div id="pending-reviewing-bar" style="display:none;background:#fff;border:1.5px solid #FCD34D;border-radius:12px;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-    <div>
-      <div style="font-size:11px;font-weight:900;color:#92400E;text-transform:uppercase;letter-spacing:.06em">Now reviewing</div>
-      <div style="font-size:15px;font-weight:900;color:#1F2937" id="pending-reviewing-date">—</div>
+  <div class="pr-acc-body" style="background:linear-gradient(135deg,#FFFBEB,#fff)">
+    <div style="font-size:12px;color:#78350F;font-weight:700;margin-bottom:12px;line-height:1.5">Select a pending date below, review Vaanya's work, then Approve or Reject.</div>
+    <!-- Pending date cards -->
+    <div id="pending-date-cards" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
+    <!-- Currently reviewing banner -->
+    <div id="pending-reviewing-bar" style="display:none;background:#fff;border:1.5px solid #FCD34D;border-radius:12px;padding:11px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:11px;font-weight:900;color:#92400E;text-transform:uppercase;letter-spacing:.06em">Now reviewing</div>
+        <div style="font-size:15px;font-weight:900;color:#1F2937" id="pending-reviewing-date">—</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="approvePendingReport()"
+          style="background:linear-gradient(135deg,#10B981,#047857);color:#fff;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(16,185,129,.4)">
+          ✅ APPROVE
+        </button>
+        <button onclick="rejectPendingReport()"
+          style="background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(239,68,68,.4)">
+          ❌ REJECT
+        </button>
+      </div>
     </div>
-    <div style="display:flex;gap:8px">
-      <button onclick="approvePendingReport()"
-        style="background:linear-gradient(135deg,#10B981,#047857);color:#fff;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(16,185,129,.4)">
-        ✅ APPROVE
-      </button>
-      <button onclick="rejectPendingReport()"
-        style="background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(239,68,68,.4)">
-        ❌ REJECT
-      </button>
+    <!-- Summary of loaded pending report -->
+    <div id="pending-report-summary" style="display:none;background:#fff;border:1.5px solid #FDE68A;border-radius:12px;padding:13px 15px">
+      <div style="font-size:11px;font-weight:900;color:#92400E;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Report summary</div>
+      <div id="pending-summary-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
-  </div>
-  <!-- Summary of loaded pending report -->
-  <div id="pending-report-summary" style="display:none;margin-top:12px;background:#fff;border:1.5px solid #FDE68A;border-radius:12px;padding:14px 16px">
-    <div style="font-size:11px;font-weight:900;color:#92400E;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Report summary</div>
-    <div id="pending-summary-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
   </div>
 </div>
+<!-- ═══════════════════════════════════════════════════════
+     PARENT REVIEW — HEADER BANNER WITH LIVE POINT CHIPS
+════════════════════════════════════════════════════════ -->
 <div style="background:linear-gradient(135deg,#1E1B4B,#4F46E5,#7C3AED);border-radius:var(--rad);padding:20px 22px;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
   <div style="font-size:48px">👩‍👧‍👦</div>
   <div style="flex:1">
-    <div style="font-size:20px;font-weight:900;margin-bottom:4px">Mamma &amp; Papa's Review</div>
-    <div style="font-size:12px;opacity:.85;line-height:1.6">Review Vaanya's daily work across all sections, award or adjust points, then APPROVE or REJECT the report.</div>
+    <div style="font-size:20px;font-weight:900;margin-bottom:4px">Parent's Review</div>
+    <div style="font-size:12px;opacity:.85;line-height:1.6">Tap any section below to expand and review · Award marks · Approve or Reject to save points to bank.</div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <div class="pts-chip" style="background:rgba(255,255,255,.15)"><div class="pts-chip-num" id="pr-daily-pts">0</div><div class="pts-chip-lbl">Daily report</div></div>
@@ -1791,197 +1864,277 @@ tr:hover td{background:#FAFBFF}
   </div>
 </div>
 
-<!-- Points bars -->
-<div class="sec" style="border-color:var(--pm)">
-  <div class="sh"><div class="si" style="background:var(--pl);color:var(--p)">📊</div>Points earned across all sections today</div>
-  <div id="parent-breakdown-bars"></div>
-</div>
-
-<!-- Parent Sudoku Unlock -->
-<div class="sec" id="parent-sudoku-sec" style="border-color:#818CF8;background:linear-gradient(135deg,#EEF2FF,#fff)">
-  <div class="sh">
-    <div class="si" style="background:#EEF2FF;color:#3730A3">🔢</div>
-    Sudoku — Parent Override
-    <span id="sudoku-freeze-badge" style="margin-left:auto;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;border:1px solid #A5B4FC;background:#EEF2FF;color:#3730A3">Checking status…</span>
+<!-- ═══════════════════════════════════════════
+     SECTION 1 — DAILY REPORT
+════════════════════════════════════════════ -->
+<div class="pr-acc-sec" id="pr-acc-1">
+  <div class="pr-acc-header" onclick="prToggle('pr-acc-1')">
+    <div class="pr-acc-icon" style="background:#F3EFFE;color:#7C3AED">📋</div>
+    <div class="pr-acc-title">Daily Report</div>
+    <span class="pr-acc-pts" style="background:#F3EFFE;color:#6D28D9" id="pr-acc-pts-1">0 pts</span>
+    <span class="pr-acc-chevron">▼</span>
   </div>
-  <div id="parent-sudoku-status" style="font-size:13px;color:#4B5563;font-weight:700;margin-bottom:12px;line-height:1.6">
-    Loading…
-  </div>
-  <!-- Unlock button — only shown when frozen -->
-  <div id="parent-sudoku-unlock-wrap" style="display:none">
-    <div style="background:#FFF7ED;border:1.5px solid #FCD34D;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#92400E;font-weight:700;line-height:1.6">
-      ⚠️ This gives Vaanya <b>one more attempt</b> today. The sudoku will lock again automatically when she presses Check.
-      Previous pts are reset so she can earn the full score on the fresh attempt.
+  <div class="pr-acc-body">
+    <div id="parent-breakdown-bars"></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:8px;padding:7px 11px;background:var(--bg);border-radius:8px">
+      📌 Points auto-calculated from Vaanya's daily entries across all sub-sections.
     </div>
-    <button onclick="parentUnlockSudoku()"
-      style="width:100%;background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff;border:none;
-        border-radius:14px;padding:14px 18px;font-size:14px;font-weight:900;cursor:pointer;
-        font-family:'Nunito',sans-serif;box-shadow:0 4px 14px rgba(79,70,229,.4);letter-spacing:.03em">
-      🔓 Unlock Sudoku — Give One More Attempt
-    </button>
-  </div>
-  <!-- Already unlocked notice -->
-  <div id="parent-sudoku-unlocked-notice" style="display:none;background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:12px;padding:12px 16px;font-size:13px;font-weight:800;color:#065F46">
-    ✅ Sudoku is currently unlocked — Vaanya can attempt it now. It will lock automatically when she checks.
-  </div>
-  <!-- Already open (not yet attempted) notice -->
-  <div id="parent-sudoku-open-notice" style="display:none;background:#EFF6FF;border:1.5px solid #93C5FD;border-radius:12px;padding:12px 16px;font-size:13px;font-weight:800;color:#1E3A8A">
-    📖 Sudoku has not been attempted yet today — Vaanya can access it freely.
   </div>
 </div>
 
-<!-- Shloka reflection — from child -->
-<div class="sec" style="border-color:#6EE7B7;background:linear-gradient(135deg,#F0FDF4,#fff)">
-  <div class="sh"><div class="si" style="background:#ECFDF5;color:#065F46">🕉️</div>
-    Vaanya's Shloka Reflection
-    <span style="margin-left:auto;font-size:10px;font-weight:800;color:#10B981;background:#ECFDF5;padding:3px 10px;border-radius:10px;border:1px solid #6EE7B7">Award +25 pts after she recites it to you!</span>
+<!-- ═══════════════════════════════════════════
+     SECTION 2 — BRAIN LAB
+════════════════════════════════════════════ -->
+<div class="pr-acc-sec" id="pr-acc-2">
+  <div class="pr-acc-header" onclick="prToggle('pr-acc-2')">
+    <div class="pr-acc-icon" style="background:#EFF6FF;color:#2563EB">🧠</div>
+    <div class="pr-acc-title">Brain Lab</div>
+    <span class="pr-acc-pts" style="background:#EFF6FF;color:#1D4ED8" id="pr-acc-pts-2">0 pts</span>
+    <span class="pr-acc-chevron">▼</span>
   </div>
-  <div id="parent-shloka-display" style="margin-bottom:10px;font-size:12px;color:#6B7280;font-style:italic">
-    No shloka reflection filled yet.
-  </div>
-  <div style="margin-bottom:8px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#065F46">
-    💭 How she will apply this shloka in her life:
-  </div>
-    <div style="background:#fff;border-radius:16px;border:2px solid #FCD34D;overflow:hidden;margin-bottom:14px"><div style="background:linear-gradient(135deg,#78350F,#92400E);padding:10px 16px;display:flex;align-items:center;gap:8px"><div style="font-size:18px">🕉️</div><div><div style="font-size:13px;font-weight:900;color:#fff">Shloka Mastery Approval</div><div style="font-size:10px;color:rgba(255,255,255,.8)">Ask Vaanya to recite · Approve if correct · 25 pts</div></div></div><div id="parent-shloka-approval-section" style="padding:12px 16px"><div style="font-size:12px;color:#9CA3AF;text-align:center;padding:12px">No shlokas awaiting approval right now.</div></div></div>
+  <div class="pr-acc-body">
+    <!-- Brain sub-section breakdown -->
+    <div id="pr-brain-breakdown" style="margin-bottom:14px"></div>
 
-  <!-- Shloka Management — mastered + relearning list with parent controls -->
-  <div style="background:#fff;border-radius:16px;border:2px solid #A7F3D0;overflow:hidden;margin-bottom:14px">
-    <div style="background:linear-gradient(135deg,#065F46,#059669);padding:10px 16px;display:flex;align-items:center;gap:8px;cursor:pointer" onclick="document.getElementById('parent-shloka-mgmt-body').style.display=document.getElementById('parent-shloka-mgmt-body').style.display==='none'?'block':'none'">
-      <div style="font-size:18px">📚</div>
-      <div style="flex:1"><div style="font-size:13px;font-weight:900;color:#fff">Shloka Status Manager</div><div style="font-size:10px;color:rgba(255,255,255,.8)">Move mastered shlokas to Relearning · Re-Master relearning ones</div></div>
-      <div style="font-size:12px;color:#fff">▼</div>
-    </div>
-    <div id="parent-shloka-mgmt-body" style="padding:12px 16px;display:block">
-      <div id="parent-shloka-mgmt-content"><div style="font-size:12px;color:#9CA3AF;text-align:center;padding:8px">Loading...</div></div>
-    </div>
-  </div>
-  <div id="parent-shloka-reflect"
-    style="background:#F0FDF4;border:1.5px solid #A7F3D0;border-radius:12px;
-      padding:12px 16px;font-size:13px;color:#064E3B;font-weight:600;line-height:1.7;
-      min-height:60px;font-style:italic">
-    — not filled yet —
-  </div>
-  <!-- Parent shloka points dropdown -->
-  <div style="margin-top:14px;background:linear-gradient(135deg,#ECFDF5,#EFF6FF);
-    border:1.5px solid #6EE7B7;border-radius:14px;padding:14px 16px">
-    <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;
-      color:#065F46;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-      🎯 Award Shloka Points (max 25 pts)
-      <span style="flex:1;height:1px;background:linear-gradient(90deg,#6EE7B7,transparent)"></span>
-    </div>
-    <select id="shloka-pts-award" onchange="calcDayPts();if(parentUnlocked)renderParentShlokaApproval();"
-      style="width:100%;padding:11px 14px;font-size:13px;font-weight:800;
-        border:1.5px solid #A7F3D0;border-radius:12px;background:#fff;color:#064E3B;
-        font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:8px">
-      <option value="0">— Select your assessment —</option>
-      <option value="25">🌟 Mastered (25 pts) — Recited fluently with correct pronunciation</option>
-      <option value="10">📖 Developing (10 pts) — Partially learnt, needs more practice</option>
-      <option value="0">🔄 Not Yet Ready (0 pts) — Requires further preparation</option>
-    </select>
-    <div id="shloka-pts-result" style="font-size:12px;font-weight:800;color:#10B981;min-height:18px"></div>
-  </div>
-  <div id="shloka-done" style="display:none"></div>
-</div>
-
-<!-- Creative image from child -->
-<div class="sec" style="border-color:#DDD6FE;background:linear-gradient(135deg,#F5F3FF,#fff)">
-  <div class="sh"><div class="si" style="background:#F5F3FF;color:#5B21B6">🎨</div>
-    Vaanya's Creative Work Today
-    <span style="margin-left:auto;font-size:10px;font-weight:800;color:#7C3AED;background:#F5F3FF;padding:3px 10px;border-radius:10px;border:1px solid #DDD6FE">Award pts in your rating below!</span>
-  </div>
-  <div id="parent-creative-activity" style="font-size:12px;color:#6B7280;margin-bottom:10px;font-style:italic">
-    No activity selected yet.
-  </div>
-  <div id="parent-creative-desc-wrap" style="display:none;margin-bottom:12px">
-    <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#5B21B6;margin-bottom:6px">What she created:</div>
-    <div id="parent-creative-desc" style="background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:12px;
-      padding:12px 16px;font-size:13px;color:#3B0764;font-weight:600;line-height:1.7;font-style:italic"></div>
-  </div>
-  <div id="parent-creative-img-wrap" style="display:none;text-align:center">
-    <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#5B21B6;margin-bottom:8px">📷 Photo of her creative work:</div>
-    <img id="parent-creative-img" style="max-width:100%;border-radius:16px;
-      border:3px solid #8B5CF6;box-shadow:0 8px 28px rgba(124,58,237,.25)">
-  </div>
-  <div id="parent-creative-no-img" style="background:#F5F3FF;border:2px dashed #DDD6FE;
-    border-radius:12px;padding:20px;text-align:center;margin-top:8px">
-    <div style="font-size:28px;margin-bottom:6px">📷</div>
-    <div style="font-size:12px;font-weight:700;color:#8B5CF6">No photo uploaded yet by Vaanya</div>
-  </div>
-
-  <!-- Parent creative points dropdown -->
-  <div style="margin-top:14px;background:linear-gradient(135deg,#F5F3FF,#EFF6FF);
-    border:1.5px solid #DDD6FE;border-radius:14px;padding:14px 16px">
-    <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;
-      color:#5B21B6;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-      🎨 Award Creative Points (max 20 pts)
-      <span style="flex:1;height:1px;background:linear-gradient(90deg,#DDD6FE,transparent)"></span>
-    </div>
-    <select id="creative-pts-award" onchange="calcDayPts()"
-      style="width:100%;padding:11px 14px;font-size:13px;font-weight:800;
-        border:1.5px solid #DDD6FE;border-radius:12px;background:#fff;color:#3B0764;
-        font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:8px">
-      <option value="0">— Select your assessment —</option>
-      <option value="20">🌟 Exceptional (20 pts) — Outstanding creativity and effort</option>
-      <option value="15">✅ Proficient (15 pts) — Good effort with clear creative thought</option>
-      <option value="10">📝 Satisfactory (10 pts) — Completed with basic engagement</option>
-      <option value="0">🔄 Incomplete (0 pts) — Not completed or insufficient effort</option>
-    </select>
-    <div id="creative-pts-result" style="font-size:12px;font-weight:800;color:#7C3AED;min-height:18px"></div>
-  </div>
-</div>
-
-<!-- Rating dropdown -->
-<div class="sec" style="border-color:var(--am)">
-  <div class="sh"><div class="si" style="background:var(--al);color:var(--ad)">⭐</div>Mamma &amp; Papa's performance rating for today</div>
-  <div class="fl">How did Vaanya perform today overall?</div>
-  <select id="parent-rating" onchange="calcParentRating()" style="font-size:13px;font-weight:800;margin-bottom:12px;padding:10px">
-    <option value="0">Select today's rating...</option>
-    <option value="-100">😟 Below Average — needs to do much better (−100 pts)</option>
-    <option value="-50">😐 Average — can improve (−50 pts)</option>
-    <option value="0">🙂 Satisfactory — okay for today (no change)</option>
-    <option value="25">😊 Good — well done! (+25 pts)</option>
-    <option value="50">😄 Excellent — great effort! (+50 pts)</option>
-    <option value="80">🌟 Extraordinary — outstanding! (+80 pts)</option>
-  </select>
-  <div id="parent-rating-result" style="margin-bottom:14px;font-size:14px;font-weight:800;padding:10px;border-radius:var(--rads)"></div>
-  <div class="fl">Mamma &amp; Papa's comments on today's performance</div>
-  <textarea id="parent-comment" placeholder="Write your thoughts here... e.g. 'Proud of you for completing all homework! Tomorrow focus on shloka practice...'" style="min-height:80px;margin-bottom:4px" oninput="calcDayPts()"></textarea>
-  <div style="font-size:10px;color:var(--muted)">Your thoughts help Vaanya grow 💛</div>
-</div>
-
-<!-- Approve / Reject -->
-<div class="sec" style="border-color:var(--gm)">
-  <div class="sh"><div class="si" style="background:var(--gl);color:var(--gd)">✅</div>Approve or Reject Today's Report</div>
-  <!-- parent-pending-section hidden permanently — tab is PIN-gated at entry -->
-  <div id="parent-pending-section" style="display:none!important"></div>
-  <div id="parent-action-section">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <button onclick="approveReport()"
-        style="background:linear-gradient(135deg,#10B981,#047857);color:#fff;border:none;
-          border-radius:var(--rad);padding:22px;font-family:'Nunito',sans-serif;
-          font-size:22px;font-weight:900;cursor:pointer;transition:all .2s;
-          box-shadow:0 6px 20px rgba(16,185,129,.45);letter-spacing:.04em">
-        ✅ APPROVE
-      </button>
-      <button onclick="rejectReport()"
-        style="background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;border:none;
-          border-radius:var(--rad);padding:22px;font-family:'Nunito',sans-serif;
-          font-size:22px;font-weight:900;cursor:pointer;transition:all .2s;
-          box-shadow:0 6px 20px rgba(239,68,68,.45);letter-spacing:.04em">
-        ❌ REJECT
-      </button>
-    </div>
-  </div>
-  <div id="approved-section" style="display:none;margin-top:12px">
-    <div class="approved-banner">
-      <div style="font-size:44px">✅</div>
-      <div>
-        <div style="font-size:16px;font-weight:900">Report Approved!</div>
-        <div style="font-size:13px;opacity:.9" id="approved-msg">Points awarded!</div>
-        <div style="font-size:11px;opacity:.7;margin-top:3px" id="approved-time"></div>
+    <!-- Sudoku Parent Override — full functionality preserved, embedded here -->
+    <div style="background:linear-gradient(135deg,#EEF2FF,#fff);border:2px solid #818CF8;border-radius:14px;padding:14px 16px;margin-top:6px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="width:30px;height:30px;background:#EEF2FF;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🔢</div>
+        <div style="flex:1;font-size:13px;font-weight:900;color:#3730A3">Sudoku — Parent Override</div>
+        <span id="sudoku-freeze-badge" style="font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;border:1px solid #A5B4FC;background:#EEF2FF;color:#3730A3">Checking status…</span>
+      </div>
+      <div id="parent-sudoku-status" style="font-size:13px;color:#4B5563;font-weight:700;margin-bottom:10px;line-height:1.6">Loading…</div>
+      <!-- Unlock button — only shown when frozen -->
+      <div id="parent-sudoku-unlock-wrap" style="display:none">
+        <div style="background:#FFF7ED;border:1.5px solid #FCD34D;border-radius:12px;padding:11px 14px;margin-bottom:10px;font-size:12px;color:#92400E;font-weight:700;line-height:1.6">
+          ⚠️ This gives Vaanya <b>one more attempt</b> today. The sudoku will lock again automatically when she presses Check. Previous pts are reset so she can earn the full score on the fresh attempt.
+        </div>
+        <button onclick="parentUnlockSudoku()"
+          style="width:100%;background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff;border:none;
+            border-radius:12px;padding:13px 18px;font-size:14px;font-weight:900;cursor:pointer;
+            font-family:'Nunito',sans-serif;box-shadow:0 4px 14px rgba(79,70,229,.4);letter-spacing:.03em">
+          🔓 Unlock Sudoku — Give One More Attempt
+        </button>
+      </div>
+      <!-- Already unlocked notice -->
+      <div id="parent-sudoku-unlocked-notice" style="display:none;background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:12px;padding:11px 14px;font-size:13px;font-weight:800;color:#065F46">
+        ✅ Sudoku is currently unlocked — Vaanya can attempt it now. It will lock automatically when she checks.
+      </div>
+      <!-- Already open (not yet attempted) notice -->
+      <div id="parent-sudoku-open-notice" style="display:none;background:#EFF6FF;border:1.5px solid #93C5FD;border-radius:12px;padding:11px 14px;font-size:13px;font-weight:800;color:#1E3A8A">
+        📖 Sudoku has not been attempted yet today — Vaanya can access it freely.
       </div>
     </div>
-    <div id="ai-comment-box" style="display:none;margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 3 — GEETA: THE SOUL WORK
+════════════════════════════════════════════ -->
+<div class="pr-acc-sec" id="pr-acc-3">
+  <div class="pr-acc-header" onclick="prToggle('pr-acc-3')">
+    <div class="pr-acc-icon" style="background:#ECFDF5;color:#047857">🕉️</div>
+    <div class="pr-acc-title">Geeta — The Soul Work</div>
+    <span class="pr-acc-pts" style="background:#ECFDF5;color:#065F46" id="pr-acc-pts-3">0 pts</span>
+    <span class="pr-acc-chevron">▼</span>
+  </div>
+  <div class="pr-acc-body">
+    <!-- Shloka display from child -->
+    <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#065F46;margin-bottom:5px">Today's Shloka:</div>
+    <div id="parent-shloka-display" style="margin-bottom:10px;font-size:12px;color:#6B7280;font-style:italic;background:#F0FDF4;border:1.5px solid #A7F3D0;border-radius:10px;padding:10px 13px">
+      No shloka reflection filled yet.
+    </div>
+    <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#065F46;margin-bottom:5px">💭 How she will apply this shloka in her life:</div>
+    <div id="parent-shloka-reflect"
+      style="background:#F0FDF4;border:1.5px solid #A7F3D0;border-radius:12px;
+        padding:12px 16px;font-size:13px;color:#064E3B;font-weight:600;line-height:1.7;
+        min-height:56px;font-style:italic;margin-bottom:14px">
+      — not filled yet —
+    </div>
+
+    <!-- Shloka Mastery Approval card — full functionality preserved -->
+    <div style="background:#fff;border-radius:16px;border:2px solid #FCD34D;overflow:hidden;margin-bottom:12px">
+      <div style="background:linear-gradient(135deg,#78350F,#92400E);padding:10px 16px;display:flex;align-items:center;gap:8px">
+        <div style="font-size:18px">🕉️</div>
+        <div>
+          <div style="font-size:13px;font-weight:900;color:#fff">Shloka Mastery Approval</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.8)">Ask Vaanya to recite · Approve if correct · 25 pts</div>
+        </div>
+      </div>
+      <div id="parent-shloka-approval-section" style="padding:12px 16px">
+        <div style="font-size:12px;color:#9CA3AF;text-align:center;padding:12px">No shlokas awaiting approval right now.</div>
+      </div>
+    </div>
+
+    <!-- Shloka Status Manager — full functionality preserved -->
+    <div style="background:#fff;border-radius:16px;border:2px solid #A7F3D0;overflow:hidden;margin-bottom:12px">
+      <div style="background:linear-gradient(135deg,#065F46,#059669);padding:10px 16px;display:flex;align-items:center;gap:8px;cursor:pointer"
+        onclick="document.getElementById('parent-shloka-mgmt-body').style.display=document.getElementById('parent-shloka-mgmt-body').style.display==='none'?'block':'none'">
+        <div style="font-size:18px">📚</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:900;color:#fff">Shloka Status Manager</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.8)">Move mastered shlokas to Relearning · Re-Master relearning ones</div>
+        </div>
+        <div style="font-size:12px;color:#fff">▼</div>
+      </div>
+      <div id="parent-shloka-mgmt-body" style="padding:12px 16px;display:block">
+        <div id="parent-shloka-mgmt-content"><div style="font-size:12px;color:#9CA3AF;text-align:center;padding:8px">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- Award Shloka Points -->
+    <div style="background:linear-gradient(135deg,#ECFDF5,#EFF6FF);border:1.5px solid #6EE7B7;border-radius:14px;padding:14px 16px">
+      <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#065F46;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        🎯 Award Shloka Points (max 25 pts)
+        <span style="flex:1;height:1px;background:linear-gradient(90deg,#6EE7B7,transparent)"></span>
+      </div>
+      <select id="shloka-pts-award" onchange="calcDayPts();if(parentUnlocked)renderParentShlokaApproval();prUpdateBadges();"
+        style="width:100%;padding:11px 14px;font-size:13px;font-weight:800;
+          border:1.5px solid #A7F3D0;border-radius:12px;background:#fff;color:#064E3B;
+          font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:8px">
+        <option value="0">— Select your assessment —</option>
+        <option value="25">🌟 Mastered (25 pts) — Recited fluently with correct pronunciation</option>
+        <option value="10">📖 Developing (10 pts) — Partially learnt, needs more practice</option>
+        <option value="0">🔄 Not Yet Ready (0 pts) — Requires further preparation</option>
+      </select>
+      <div id="shloka-pts-result" style="font-size:12px;font-weight:800;color:#10B981;min-height:18px"></div>
+    </div>
+    <div id="shloka-done" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 4 — CREATIVE MOMENTS
+════════════════════════════════════════════ -->
+<div class="pr-acc-sec" id="pr-acc-4">
+  <div class="pr-acc-header" onclick="prToggle('pr-acc-4')">
+    <div class="pr-acc-icon" style="background:#FDF2F8;color:#9D174D">🎨</div>
+    <div class="pr-acc-title">Creative Moments</div>
+    <span class="pr-acc-pts" style="background:#FDF2F8;color:#9D174D" id="pr-acc-pts-4">0 pts</span>
+    <span class="pr-acc-chevron">▼</span>
+  </div>
+  <div class="pr-acc-body">
+    <!-- Creative activity info from child -->
+    <div id="parent-creative-activity" style="font-size:13px;color:#6B7280;margin-bottom:10px;font-style:italic">
+      No activity selected yet.
+    </div>
+    <div id="parent-creative-desc-wrap" style="display:none;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#5B21B6;margin-bottom:6px">What she created:</div>
+      <div id="parent-creative-desc" style="background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:12px;
+        padding:12px 16px;font-size:13px;color:#3B0764;font-weight:600;line-height:1.7;font-style:italic"></div>
+    </div>
+    <div id="parent-creative-img-wrap" style="display:none;text-align:center;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#5B21B6;margin-bottom:8px">📷 Photo of her creative work:</div>
+      <img id="parent-creative-img" style="max-width:100%;border-radius:16px;border:3px solid #8B5CF6;box-shadow:0 8px 28px rgba(124,58,237,.25)">
+    </div>
+    <div id="parent-creative-no-img" style="background:#F5F3FF;border:2px dashed #DDD6FE;
+      border-radius:12px;padding:20px;text-align:center;margin-bottom:12px">
+      <div style="font-size:28px;margin-bottom:6px">📷</div>
+      <div style="font-size:12px;font-weight:700;color:#8B5CF6">No photo uploaded yet by Vaanya</div>
+    </div>
+
+    <!-- Award Creative Points -->
+    <div style="background:linear-gradient(135deg,#F5F3FF,#EFF6FF);border:1.5px solid #DDD6FE;border-radius:14px;padding:14px 16px">
+      <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#5B21B6;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        🎨 Award Creative Points (max 20 pts)
+        <span style="flex:1;height:1px;background:linear-gradient(90deg,#DDD6FE,transparent)"></span>
+      </div>
+      <select id="creative-pts-award" onchange="calcDayPts();prUpdateBadges();"
+        style="width:100%;padding:11px 14px;font-size:13px;font-weight:800;
+          border:1.5px solid #DDD6FE;border-radius:12px;background:#fff;color:#3B0764;
+          font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:8px">
+        <option value="0">— Select your assessment —</option>
+        <option value="20">🌟 Exceptional (20 pts) — Outstanding creativity and effort</option>
+        <option value="15">✅ Proficient (15 pts) — Good effort with clear creative thought</option>
+        <option value="10">📝 Satisfactory (10 pts) — Completed with basic engagement</option>
+        <option value="0">🔄 Incomplete (0 pts) — Not completed or insufficient effort</option>
+      </select>
+      <div id="creative-pts-result" style="font-size:12px;font-weight:800;color:#7C3AED;min-height:18px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 5 — MY WORDBOOK
+════════════════════════════════════════════ -->
+<div class="pr-acc-sec" id="pr-acc-5">
+  <div class="pr-acc-header" onclick="prToggle('pr-acc-5')">
+    <div class="pr-acc-icon" style="background:#F5F3FF;color:#6D28D9">📖</div>
+    <div class="pr-acc-title">My Wordbook</div>
+    <span class="pr-acc-pts" style="background:#F5F3FF;color:#5B21B6" id="pr-acc-pts-5">0 pts</span>
+    <span class="pr-acc-chevron">▼</span>
+  </div>
+  <div class="pr-acc-body">
+    <div id="pr-wordbook-summary">
+      <div style="font-size:12px;color:var(--muted);font-style:italic">Loading wordbook data…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 6 — PARENTS REVIEW & FINAL DECISION
+════════════════════════════════════════════ -->
+<div class="pr-acc-sec" id="pr-acc-6">
+  <div class="pr-acc-header" onclick="prToggle('pr-acc-6')">
+    <div class="pr-acc-icon" style="background:#FFFBEB;color:#D97706">⭐</div>
+    <div class="pr-acc-title">Parents Review &amp; Final Decision</div>
+    <span class="pr-acc-pts" style="background:#FFFBEB;color:#B45309" id="pr-acc-pts-6">Rate &amp; Decide</span>
+    <span class="pr-acc-chevron">▼</span>
+  </div>
+  <div class="pr-acc-body">
+    <!-- Combined overall progress bar -->
+    <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px">Overall progress — all sections combined</div>
+    <div class="pr-overall-bar-wrap">
+      <div class="pr-overall-bar" id="pr-overall-bar" style="width:0%"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span style="font-size:11px;font-weight:800;color:var(--muted)" id="pr-overall-label">0 / 0 pts</span>
+      <span style="font-size:13px;font-weight:900;color:#7C3AED" id="pr-overall-pct">0%</span>
+    </div>
+
+    <!-- Rating dropdown — preserved exactly -->
+    <div class="fl">How did Vaanya perform today overall?</div>
+    <select id="parent-rating" onchange="calcParentRating();prUpdateBadges();" style="font-size:13px;font-weight:800;margin-bottom:12px;padding:10px">
+      <option value="0">Select today's rating...</option>
+      <option value="-100">😟 Below Average — needs to do much better (−100 pts)</option>
+      <option value="-50">😐 Average — can improve (−50 pts)</option>
+      <option value="0">🙂 Satisfactory — okay for today (no change)</option>
+      <option value="25">😊 Good — well done! (+25 pts)</option>
+      <option value="50">😄 Excellent — great effort! (+50 pts)</option>
+      <option value="80">🌟 Extraordinary — outstanding! (+80 pts)</option>
+    </select>
+    <div id="parent-rating-result" style="margin-bottom:14px;font-size:14px;font-weight:800;padding:10px;border-radius:var(--rads)"></div>
+
+    <!-- Comment box — preserved exactly -->
+    <div class="fl">Mamma &amp; Papa's comments on today's performance</div>
+    <textarea id="parent-comment" placeholder="Write your thoughts here... e.g. 'Proud of you for completing all homework! Tomorrow focus on shloka practice...'" style="min-height:80px;margin-bottom:4px" oninput="calcDayPts()"></textarea>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:16px">Your thoughts help Vaanya grow 💛</div>
+
+    <!-- Info note -->
+    <div style="font-size:11px;font-weight:700;color:var(--muted);padding:9px 13px;background:var(--bg);border-radius:9px;line-height:1.6;margin-bottom:14px">
+      ✅ <b>APPROVE</b> saves all points to Vaanya's bank &nbsp;·&nbsp; ❌ <b>REJECT</b> erases the report and sends Vaanya back to fill it again.
+    </div>
+
+    <!-- parent-pending-section hidden permanently — tab is PIN-gated at entry -->
+    <div id="parent-pending-section" style="display:none!important"></div>
+
+    <div id="parent-action-section">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <button onclick="approveReport()" class="pr-approve-btn">✅ APPROVE</button>
+        <button onclick="rejectReport()" class="pr-reject-btn">❌ REJECT</button>
+      </div>
+    </div>
+    <div id="approved-section" style="display:none;margin-top:12px">
+      <div class="approved-banner">
+        <div style="font-size:44px">✅</div>
+        <div>
+          <div style="font-size:16px;font-weight:900">Report Approved!</div>
+          <div style="font-size:13px;opacity:.9" id="approved-msg">Points awarded!</div>
+          <div style="font-size:11px;opacity:.7;margin-top:3px" id="approved-time"></div>
+        </div>
+      </div>
+      <div id="ai-comment-box" style="display:none;margin-top:12px"></div>
+    </div>
   </div>
 </div>
 
@@ -3048,11 +3201,77 @@ function getStarVal(id){
   let m=0;el.querySelectorAll('.star.on').forEach(s=>m=Math.max(m,parseInt(s.dataset.v)));return m;
 }
 
+// ── Dropdown-based creative selection ──────────────────────────────────────
+const _CREATIVE_MAP = {
+  draw:    {icon:'🎨',title:'Drawing / Painting',       desc:'Draw anything you imagine — nature, a story scene, your favourite character.',bar:'linear-gradient(90deg,#F59E0B,#EF4444)'},
+  poem:    {icon:'✍️', title:'Write a Poem',             desc:'Write a short poem in Hindi or English about anything you love.',bar:'linear-gradient(90deg,#8B5CF6,#EC4899)'},
+  story:   {icon:'📖',title:'Write a Story or Paragraph',desc:'Write a short story (5–10 sentences) — make up characters and an adventure!',bar:'linear-gradient(90deg,#3B82F6,#06B6D4)'},
+  craft:   {icon:'✂️', title:'Paper Craft / Origami',    desc:'Make something with paper — origami, a card, a collage.',bar:'linear-gradient(90deg,#10B981,#059669)'},
+  mandala: {icon:'🌸',title:'Mandala Art',               desc:'Create a beautiful mandala or rangoli pattern on paper using colours.',bar:'linear-gradient(90deg,#EC4899,#8B5CF6)'},
+  journal: {icon:'📔',title:'Diary / Gratitude Journal', desc:'Write 3 things you are grateful for today and one happy memory from this week.',bar:'linear-gradient(90deg,#F97316,#F59E0B)'},
+};
+
+function onCreativeSelect(val){
+  const card   = document.getElementById('creative-activity-card');
+  const detail = document.getElementById('creative-detail');
+  const sel    = document.getElementById('creative-activity-select');
+  if(!val){
+    if(card)  card.style.display='none';
+    if(detail)detail.style.display='none';
+    creativeChosen=null; calcDayPts(); return;
+  }
+  const opt = _CREATIVE_MAP[val];
+  if(!opt) return;
+  creativeChosen = opt.title;
+
+  // Populate the activity card
+  const iconEl  = document.getElementById('creative-card-icon');
+  const titleEl = document.getElementById('creative-card-title');
+  const descEl  = document.getElementById('creative-card-desc');
+  const barEl   = document.getElementById('creative-card-bar');
+  if(iconEl)  iconEl.textContent = opt.icon;
+  if(titleEl) titleEl.textContent = opt.title;
+  if(descEl)  descEl.textContent = opt.desc;
+  if(barEl)   barEl.style.background = opt.bar;
+
+  // Update textarea placeholder to match activity
+  const ta = document.getElementById('creative-desc');
+  const placeholders = {
+    draw:    'Describe your drawing or painting — what did you draw and what inspired you?',
+    poem:    'Write your poem here, or describe what your poem is about...',
+    story:   'Write your story or paragraph here — let your imagination run wild!',
+    craft:   'Describe what you made — what paper craft or origami did you create?',
+    mandala: 'Describe your mandala or rangoli — what colours and patterns did you use?',
+    journal: 'Write your 3 gratitude points and a happy memory from this week...',
+  };
+  if(ta) ta.placeholder = placeholders[val] || 'Describe your work in detail...';
+
+  // Show card + detail section
+  if(card)  card.style.display='block';
+  if(detail)detail.style.display='block';
+
+  // Update dropdown border to match activity bar colour
+  if(sel) sel.style.borderColor = '#8B5CF6';
+
+  calcDayPts();
+}
+
 function buildCreativeOptions(){
+  // No tile grid to build — dropdown is in HTML.
+  // Restore saved selection if creativeChosen is already set (e.g. loading a draft)
+  const sel = document.getElementById('creative-activity-select');
+  if(!sel) return;
+  if(creativeChosen){
+    // Find the matching key
+    const key = Object.keys(_CREATIVE_MAP).find(k => _CREATIVE_MAP[k].title === creativeChosen);
+    if(key){ sel.value = key; onCreativeSelect(key); }
+  }
+  // Legacy: keep creative-options hidden div in sync so old JS refs don't break
   const c=document.getElementById('creative-options');if(!c)return;
   c.innerHTML='';
   CREATIVE_OPTIONS.forEach(opt=>{
     const div=document.createElement('div');div.className='creative-option';
+    div.style.display='none'; // hidden — purely for backward compat
     div.innerHTML=`<div class="co-icon">${opt.icon}</div>
       <div class="co-title">${opt.title}</div>
       <div class="co-desc">${opt.desc}</div>
@@ -4901,33 +5120,122 @@ function renderParentTab(){
   const el3=document.getElementById('pr-soul-pts');if(el3)el3.textContent=soulPts;
   const el4=document.getElementById('pr-total-pts');if(el4)el4.textContent=pts;
 
-  // Render section bars
-  const bars=document.getElementById('parent-breakdown-bars');if(!bars)return;
-  const sections=[
-    {label:'📝 Daily Report',pts:dailyPts,max:430,col:'#8B5CF6',detail:`TT: ${ttVal} · Study: ${ssPtsP} · Test: ${testPts} · Odda: ${oddaPts} · Gym: ${gymPts} · Screen: ${screenPts}`},
-    {label:'🧠 Brain Lab',pts:brPts,max:55,col:'#3B82F6',detail:'Puzzles, Sudoku, Riddles completed today'},
-    {label:'🕉️ Geeta & Creative',pts:soulPts,max:45,col:'#7C3AED',detail:`Shloka: ${shlokaPts} · Creative: ${crPts}`},
-    {label:'⭐ Parent Rating',pts:parentRating,max:80,col:parentRating>=0?'#10B981':'#EF4444',detail:parentRating>=0?`+${parentRating} pts bonus from Parents Review`:`${parentRating} pts deducted by Parents Review`},
-  ];
-  bars.innerHTML=sections.map(s=>{
-    const pct=s.max>0?Math.min(100,Math.max(0,Math.round(s.pts/s.max*100))):0;
-    const displayPts=s.pts>=0?'+'+s.pts:s.pts;
-    return `<div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="font-size:13px;font-weight:900;color:${s.col}">${s.label}</span>
-        <span style="font-size:16px;font-weight:900;color:${s.col}">${displayPts} pts</span>
+  // ── Section 1: Daily Report accordion body & badge ──
+  const bars=document.getElementById('parent-breakdown-bars');
+  if(bars){
+    const dailyAreas=[
+      {label:'⏰ Tuition Time',pts:ttVal},
+      {label:'📚 Self Study (Subjects)',pts:ssPtsP},
+      {label:'📝 Test / Exam',pts:testPts},
+      {label:'💻 Odda (Coding)',pts:oddaPts},
+      {label:'🏋️ Gym / Exercise',pts:gymPts},
+      {label:'📱 Screen & Reading',pts:screenPts},
+    ];
+    const dailyPct=Math.min(100,Math.round(dailyPts/430*100));
+    bars.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <span style="font-size:11px;font-weight:800;color:var(--muted)">Daily total progress</span>
+        <span style="font-size:13px;font-weight:900;color:#7C3AED">${dailyPts} / 430 pts</span>
       </div>
-      <div style="background:#F0F4FF;border-radius:6px;height:14px;overflow:hidden">
-        <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,${s.col}80,${s.col});border-radius:6px;transition:width .5s"></div>
+      <div class="pr-section-bar-wrap"><div class="pr-section-bar" style="width:${dailyPct}%;background:linear-gradient(90deg,#8B5CF6,#6D28D9)"></div></div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:12px">${dailyPct}% of daily maximum</div>
+      ${dailyAreas.map(a=>`
+        <div class="pr-area-row">
+          <span class="pr-area-lbl">${a.label}</span>
+          <span class="pr-area-pts" style="color:#8B5CF6">+${a.pts} pts</span>
+        </div>`).join('')}`;
+  }
+  const b1=document.getElementById('pr-acc-pts-1');if(b1)b1.textContent=dailyPts+' pts';
+
+  // ── Section 2: Brain Lab accordion body & badge ──
+  const brainBd=document.getElementById('pr-brain-breakdown');
+  if(brainBd){
+    const brainMax=55;
+    const brainPct=Math.min(100,Math.round(brPts/brainMax*100));
+    const brainAreas=[
+      {label:'🔢 Sudoku',pts:sudokuPts,max:10},
+      {label:'🧩 Logic',pts:logicPtsTotal,max:10},
+      {label:'➕ Maths Sprint',pts:mathsPtsToday,max:10},
+      {label:'🎯 Riddles',pts:riddlePtsTotal,max:10},
+      {label:'📋 Worksheets',pts:worksheetPts,max:15},
+    ];
+    brainBd.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <span style="font-size:11px;font-weight:800;color:var(--muted)">Brain Lab total</span>
+        <span style="font-size:13px;font-weight:900;color:#2563EB">${brPts} / ${brainMax} pts</span>
       </div>
-      <div style="font-size:10px;color:var(--muted);margin-top:3px">${s.detail}</div>
-    </div>`;
-  }).join('');
+      <div class="pr-section-bar-wrap"><div class="pr-section-bar" style="width:${brainPct}%;background:linear-gradient(90deg,#3B82F6,#1D4ED8)"></div></div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px">${brainPct}% of maximum</div>
+      <div class="pr-brain-grid">
+        ${brainAreas.map(a=>{
+          const pct=a.max>0?Math.min(100,Math.round(a.pts/a.max*100)):0;
+          return `<div class="pr-brain-card">
+            <div class="pr-brain-sub-title">${a.label}</div>
+            <div class="pr-brain-sub-pts">${a.pts}<span style="font-size:11px;color:var(--muted);font-weight:700"> / ${a.max}</span></div>
+            <div class="pr-brain-mini-bar"><div class="pr-brain-mini-fill" style="width:${pct}%"></div></div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+  const b2=document.getElementById('pr-acc-pts-2');if(b2)b2.textContent=brPts+' pts';
+
+  // ── Section 3: Geeta badge ──
+  const b3=document.getElementById('pr-acc-pts-3');if(b3)b3.textContent=soulPts+' pts';
+
+  // ── Section 4: Creative badge ──
+  const crPtsAward=parseInt(document.getElementById('creative-pts-award')?.value||0);
+  const b4=document.getElementById('pr-acc-pts-4');if(b4)b4.textContent=crPtsAward+' pts';
+
+  // ── Section 5: Wordbook summary ──
+  const wbWrap=document.getElementById('pr-wordbook-summary');
+  if(wbWrap){
+    const today=new Date(Date.now()+5.5*60*60000).toISOString().split('T')[0];
+    const todayWords=(typeof wbWords!=='undefined'?wbWords:[]).filter(w=>w.date_added===today);
+    const wbPts=todayWords.length*10;
+    const b5=document.getElementById('pr-acc-pts-5');
+    if(b5)b5.textContent=wbPts+' pts · '+todayWords.length+' word'+(todayWords.length!==1?'s':'');
+    if(todayWords.length>0){
+      wbWrap.innerHTML=`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+          <span style="font-size:11px;font-weight:800;color:var(--muted)">Words added today</span>
+          <span style="font-size:13px;font-weight:900;color:#6D28D9">${todayWords.length} word${todayWords.length!==1?'s':''} · +${wbPts} pts</span>
+        </div>
+        <div class="pr-section-bar-wrap"><div class="pr-section-bar" style="width:${Math.min(100,todayWords.length*33)}%;background:linear-gradient(90deg,#8B5CF6,#6D28D9)"></div></div>
+        <div style="font-size:10px;color:#6D28D9;font-weight:800;margin-bottom:10px">+10 pts per word with meaning &amp; sentence</div>
+        <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:7px">New words added today:</div>
+        <div class="pr-words-pills">${todayWords.map(w=>`<span class="pr-word-pill">✨ ${w.word}</span>`).join('')}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:9px;padding:6px 10px;background:var(--bg);border-radius:8px">👁 Full meanings and sentences are visible in the Wordbook tab</div>`;
+    } else {
+      wbWrap.innerHTML=`<div style="font-size:12px;color:var(--muted);font-style:italic;padding:8px 0">No new words added to the Wordbook today.</div>`;
+      const b5e=document.getElementById('pr-acc-pts-5');if(b5e)b5e.textContent='0 pts';
+    }
+  }
+
+  // ── Section 6: Overall progress bar ──
+  const totalMax=430+55+45+80;
+  const overallPct=totalMax>0?Math.min(100,Math.round(pts/totalMax*100)):0;
+  const ob=document.getElementById('pr-overall-bar');if(ob)ob.style.width=overallPct+'%';
+  const ol=document.getElementById('pr-overall-label');if(ol)ol.textContent=pts+' / '+totalMax+' pts';
+  const op=document.getElementById('pr-overall-pct');if(op)op.textContent=overallPct+'%';
+
   // Refresh sudoku unlock panel every time parent tab renders
   refreshParentSudokuPanel();
   // Refresh shloka approval panel — shows inprogress shlokas from any day
   renderParentShlokaApproval();
   renderParentShlokaMgmt();
+}
+
+// ── Helper: update accordion badge points live (called from dropdowns) ──
+function prUpdateBadges(){
+  if(!parentUnlocked) return;
+  renderParentTab();
+}
+
+// ── Helper: toggle accordion sections ──
+function prToggle(id){
+  const sec=document.getElementById(id);
+  if(!sec) return;
+  sec.classList.toggle('pr-open');
 }
 
 // ════════════════════════════════════════════
@@ -6972,7 +7280,13 @@ function loadDraftDay(d){
     creativeChosen=d.creativeChosen;
     document.querySelectorAll('.creative-option').forEach(el=>
       el.classList.toggle('chosen', el.dataset.val===creativeChosen));
-    const cd=document.getElementById('creative-detail');if(cd)cd.style.display='block';
+    const sel=document.getElementById('creative-activity-select');
+    if(sel&&typeof _CREATIVE_MAP!=='undefined'){
+      const key=Object.keys(_CREATIVE_MAP).find(k=>_CREATIVE_MAP[k].title===creativeChosen);
+      if(key){ sel.value=key; onCreativeSelect(key); }
+    } else {
+      const cd=document.getElementById('creative-detail');if(cd)cd.style.display='block';
+    }
   }
 
   // ── Parent award dropdowns ────────────────────────────────────
@@ -7085,8 +7399,14 @@ function renderPendingQueue(){
     sec.style.display = 'none';
     return;
   }
+  // Show the accordion and auto-open it so parents see it immediately
   sec.style.display = 'block';
-  if(badge) badge.textContent = pending.length + ' pending';
+  if(!sec.classList.contains('pr-open')) sec.classList.add('pr-open');
+  if(badge){
+    badge.textContent = pending.length + ' pending';
+    // Pulse the badge amber when there are reports waiting
+    badge.style.background = '#F59E0B';
+  }
 
   if(cards){
     cards.innerHTML = pending.map(d => {
