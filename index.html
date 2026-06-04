@@ -2535,11 +2535,14 @@ async function loadFromSupabase() {
       .select('*')
       .order('date', { ascending: false });
     if (!e1 && days) {
-      savedDays = days.map(d => {
+      const mapped = days.map(d => {
         const fullData = d.full_data ? (() => { try{ return JSON.parse(d.full_data); }catch(e){ return {}; } })() : {};
-        // Remove 'approved' from fullData before spreading —
-        // the database column must always win over stale full_data value
-        const { approved: _ignored, ...safeFullData } = fullData;
+        // Remove 'approved' AND 'pts' from fullData before spreading — the
+        // dedicated database columns are always the source of truth and must
+        // win over any stale value sitting inside the full_data JSON blob.
+        const { approved: _ig1, pts: _ig2, ...safeFullData } = fullData;
+        const ap = d.approved === true || d.approved === 'true';
+        if(ap){ try{ sessionStorage.removeItem(_sessionKey(d.date)); }catch(e){} }
         return {
           date: d.date,
           pts: d.pts || 0,
@@ -2549,11 +2552,59 @@ async function loadFromSupabase() {
           odda: d.odda_done === true || d.odda_done === 'true',
           parentComment: d.notes || '',
           parentRating: d.parent_rating || 0,
-          approved: (()=>{ const ap=d.approved===true||d.approved==='true'; if(ap){ try{sessionStorage.removeItem('vaanya_session_'+d.date);}catch(e){} } return ap; })(),
+          approved: ap,
           savedAt: d.saved_at,
-          ...safeFullData  // spread full_data EXCEPT approved
+          ...safeFullData  // spread full_data EXCEPT approved & pts
         };
       });
+
+      // ── Collapse any duplicate rows that share the same date ──────────────
+      // Older saves could leave more than one row per date. Keep a SINGLE
+      // record per date, preferring an APPROVED row, then the most recently
+      // saved one. This is what keeps an approved report approved (and its
+      // points banked) after a page refresh.
+      const byDate = {};
+      mapped.forEach(r => {
+        const prev = byDate[r.date];
+        if(!prev){ byDate[r.date] = r; return; }
+        if(r.approved && !prev.approved){ byDate[r.date] = r; return; }
+        if(!r.approved && prev.approved){ return; }
+        const tNew = r.savedAt ? new Date(r.savedAt).getTime() : 0;
+        const tOld = prev.savedAt ? new Date(prev.savedAt).getTime() : 0;
+        if(tNew >= tOld) byDate[r.date] = r;
+      });
+      savedDays = Object.values(byDate);
+
+      // ── Merge the local backup as a safety net ────────────────────────────
+      // If a day was approved/saved locally but never reached the cloud (a
+      // network hiccup, RLS error, etc.), keep showing it so points are never lost on
+      // refresh — and quietly push the corrected state back up to the cloud.
+      try{
+        const localBackup = JSON.parse(localStorage.getItem('vaanya_days')||'[]');
+        if(Array.isArray(localBackup)){
+          localBackup.forEach(ld => {
+            if(!ld || !ld.date) return;
+            const cloud = byDate[ld.date];
+            // Only treat a local-only day as a failed-sync within a short recent
+            // window (3 days). This protects a just-approved today/yesterday whose
+            // cloud write failed, without ever resurrecting an old day that was
+            // deliberately rejected/deleted elsewhere.
+            const ageDays = (Date.now() - new Date(ld.date+'T12:00:00').getTime()) / 86400000;
+            if(!cloud){
+              if(ageDays <= 3) savedDays.push(ld);      // cloud has nothing — restore local
+            } else if(ld.approved && !cloud.approved){
+              const idx = savedDays.findIndex(x=>x.date===ld.date);
+              const fixed = {...cloud, ...ld, approved:true};
+              if(idx>=0) savedDays[idx] = fixed;
+              try{ saveToSupabase(fixed); }catch(e){} // re-push the approval to cloud
+            }
+          });
+        }
+      }catch(e){ console.warn('Local backup merge skipped', e); }
+
+      savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
+      // Refresh the local backup with the reconciled truth
+      try{ localStorage.setItem('vaanya_days', JSON.stringify(savedDays)); }catch(e){}
     }
     // Load spend history
     const { data: spend, error: e2 } = await _supabase
@@ -2623,9 +2674,18 @@ async function saveToSupabase(data) {
       full_data: JSON.stringify(safeData).substring(0, 30000)
     };
 
+    // Guarantee EXACTLY ONE row per date, regardless of how the table's
+    // primary key / unique constraints are configured. A plain upsert() with
+    // no conflict target was inserting a brand-new row on every save (including
+    // the 60-second auto-save), so after approval the old "pending" copy still
+    // lived in the table — which is what made approved reports re-appear as
+    // pending and made banked points seem to vanish on refresh.
+    try{ await _supabase.from('daily_reports').delete().eq('date', row.date); }
+    catch(delErr){ console.warn('Pre-save cleanup failed (continuing):', delErr); }
+
     const { error } = await _supabase
       .from('daily_reports')
-      .upsert(row);
+      .insert(row);
 
     if (error) {
       console.error('Supabase error:', error);
@@ -2708,8 +2768,8 @@ function genLogicPuzzles(){
   if(checkBtn){checkBtn.disabled=true;checkBtn.style.opacity='.4';checkBtn.style.cursor='not-allowed';}
   var questions=_lrQuestions();
   var setIdx=_lrDaySet();
-  var istNow=new Date(Date.now()+5.5*60*60*1000);
-  var dayLabel=istNow.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+  var istDateStr=new Date(Date.now()+5.5*60*60*1000).toISOString().split('T')[0];
+  var dayLabel=new Date(istDateStr+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
   if(badge&&questions.length)badge.textContent='Set '+(setIdx+1)+'/30 · '+dayLabel+' · '+questions[0].cat;
   var container=document.getElementById('logic-puzzles');
   if(!container)return;
@@ -3082,7 +3142,10 @@ function setTodayDate(){
   const todayIST=istNow.toISOString().split('T')[0];
   const el=document.getElementById('rpt-date');
   el.min=todayIST; el.max=todayIST; el.value=todayIST; el.dataset.prev=todayIST;
-  document.getElementById('today-pill').textContent=new Date(istNow).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+  // Format the header pill from the already-correct IST date string. Using a
+  // noon anchor avoids the double timezone shift that previously pushed the
+  // displayed date one day ahead (e.g. showing 5 Jun while it was 4 Jun).
+  document.getElementById('today-pill').textContent=new Date(todayIST+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
 }
 
 // ── Homework list — fix #5: subject + checkbox + pts badge + study notes textbox
@@ -4866,6 +4929,9 @@ async function saveDraftAndGoBrainLab(){
 
   // Save to Supabase as draft (approved=false — no bank credit)
   const ok = await saveToSupabase(data);
+  // Always keep a local backup so the child's work survives a refresh even if
+  // the cloud write fails for any reason.
+  try{ localStorage.setItem('vaanya_days', JSON.stringify(savedDays)); }catch(e){}
   updateTopBar();
   if(ok){
     toast('💾 Draft saved! Appears in History as Pending. Going to Brain Lab...');
@@ -4886,6 +4952,8 @@ async function saveDraftOnly(){
   else { savedDays.unshift(data); }
   savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
   const ok = await saveToSupabase(data);
+  // Local backup — guarantees the in-progress report survives a refresh.
+  try{ localStorage.setItem('vaanya_days', JSON.stringify(savedDays)); }catch(e){}
   updateTopBar();
   if(ok){
     toast('💾 Draft saved for '+fmtDate(date)+'! ('+pts+' pts · Pending approval)');
@@ -4907,7 +4975,7 @@ function updateTopBar(){
   const dbg=document.getElementById('bank-debug');
   if(dbg){
     const approvedCount=savedDays.filter(d=>d.approved).length;
-    dbg.textContent=`✅ ${approvedCount} approved day(s) · ${earned} pts earned · ${totalSpent} pts spent · ${avail} pts available`;
+    dbg.textContent=`✅ ${approvedCount} approved day(s) · ${earned} earned − ${totalSpent} spent = ${avail} in bank`;
   }
 }
 
@@ -5021,7 +5089,11 @@ async function approveReport(){
   else savedDays.unshift(data);
   savedDays.sort((a,b)=>new Date(b.date)-new Date(a.date));
   localStorage.setItem('vaanya_days',JSON.stringify(savedDays));
-  await saveToSupabase(data);
+  const _approveOk = await saveToSupabase(data);
+  // Re-write the local backup AFTER the save so the approved state is always
+  // captured locally — if the cloud write failed, the load-time merge will
+  // automatically re-push this approval on the next refresh.
+  try{ localStorage.setItem('vaanya_days', JSON.stringify(savedDays)); }catch(e){}
 
   // Show approved banner
   const actions=document.getElementById('parent-action-section');
@@ -5041,6 +5113,9 @@ async function approveReport(){
   populateResetDatePicker();
   showPop('✅','Report Approved! 🎉','Vaanya your report has been approved! You earned '+pts+' points today! ⭐ Keep it up!');
   toast('Report approved! +'+pts+' points saved! Report is now locked.');
+  if(!_approveOk){
+    toast('⚠️ Cloud sync is slow right now — your approval is saved on this device and will sync automatically.');
+  }
   // Note: saveToSupabase already called above — no second call needed
 
   // Streak celebration
@@ -5063,6 +5138,11 @@ async function rejectReport(){
     }catch(e){ console.error('Delete error:', e); }
     // Remove from local savedDays array too
     savedDays = savedDays.filter(d => d.date !== date);
+    // Keep the local backup in sync so the rejected day is not resurrected by
+    // the load-time merge.
+    try{ localStorage.setItem('vaanya_days', JSON.stringify(savedDays)); }catch(e){}
+    // Also drop any lingering session snapshot for this date.
+    try{ _sessionClearDate(date); }catch(e){}
   }
 
   // 2. Clear the form completely
@@ -5798,10 +5878,20 @@ function renderGraphs(){
   renderParentComments(days);
 }
 
+// Canonical "today's points" — the SAME number shown in the header's
+// TODAY'S PTS chip, so the Progress cups and the overlay can never disagree
+// with the top bar. Prefers today's saved/approved record, then the live form.
+function todaysPoints(){
+  const t = new Date(Date.now()+5.5*60*60*1000).toISOString().split('T')[0];
+  const rec = savedDays.find(d => d.date === t);
+  if(rec) return parseInt(rec.pts)||0;
+  const live = document.getElementById('day-pts-live');
+  return live ? (parseInt(live.textContent)||0) : 0;
+}
+
 function renderCups(days){
   const grid=document.getElementById('cups-grid');if(!grid)return;
-  const latestDay=days[days.length-1];
-  const todayPts=latestDay?(latestDay.pts||0):0;
+  const todayPts=todaysPoints();
   const todayCup=getDayCup(todayPts);
   const nextCup=CUPS.find(cu=>cu.threshold>todayPts);
 
@@ -5940,8 +6030,7 @@ function cupSoundAndOverlay(idOrCup){
 }
 
 function showCupOverlay(id){
-  const latestDay=[...savedDays].filter(d=>d.approved).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
-  const pts = latestDay?.pts||0;
+  const pts = todaysPoints();
   const cup = CUPS.find(c=>c.id===id);
   const overlay=document.getElementById('rank-overlay');
   const box=document.getElementById('rank-overlay-box');
@@ -8658,6 +8747,7 @@ function _sessionStartAutoSave(){
       const idx = savedDays.findIndex(d => d.date === date);
       if(idx >= 0) savedDays[idx] = {...savedDays[idx], ...data};
       else savedDays.unshift(data);
+      try{ localStorage.setItem('vaanya_days', JSON.stringify(savedDays)); }catch(e){}
       // Flash indicator
       const bar = document.getElementById('sync-status');
       if(bar){
@@ -9346,7 +9436,7 @@ function ttGetSchedule(){
 }
 
 // ── Get current hour (0-23) ────────────────────────────────────
-const TT_TEST_MODE = true; // ⚠️ TEST MODE ON — set to false for live production
+const TT_TEST_MODE = false; // LIVE — time-based locking active (set true to unlock all blocks for testing)
 function ttNowHour(){
   return new Date().getHours() + new Date().getMinutes()/60;
 }
