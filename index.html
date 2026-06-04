@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vaanya's Performance Report 🏆</title>
+<title>Vaanya's Schedule & Scoreboard 🏆</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -688,7 +688,7 @@ tr:hover td{background:#FAFBFF}
     <div class="av-photo-badge">🌈 AURORA STAR</div>
   </div>
   <div class="tb-info" style="position:relative;z-index:10">
-    <div class="aurora-title">VAANYA'S PERFORMANCE REPORT 🏆</div>
+    <div class="aurora-title">VAANYA'S SCHEDULE & SCOREBOARD 🏆</div>
     <div class="aurora-sub">Class 6 · DPS Noida · CBSE 2026–27</div>
     <div class="aurora-xp-wrap" style="margin-top:8px"><div class="aurora-xp-fill" id="xp-bar" style="width:0%"></div></div>
     <div style="font-size:12px;color:#047857;margin-top:4px;font-weight:800" id="xp-lbl">0 pts earned today</div>
@@ -719,17 +719,88 @@ tr:hover td{background:#FAFBFF}
   <button class="nb t7" onclick="showTab('creative',this)">🎨 Creative Moments</button>
   <button class="nb t3" onclick="showTab('wordbook',this)">📖 My WordBook</button>
   <button class="nb t4" id="btn-parent-tab" onclick="showParentTabWithPin(this)">👨‍👩‍👧 Parents Review</button>
-  <button class="nb t1" onclick="showTab('rewards',this)">🎁 Rewards</button>
-  <button class="nb t2" onclick="showTab('spend',this)">🛒 Spend</button>
+  <button class="nb t1" onclick="showTab('rewards',this);renderRewards();">🏆 Rewards</button>
   <button class="nb t5" onclick="showTab('history',this)">📅 History</button>
   <button class="nb t6" onclick="showTab('graphs',this)">📈 Progress</button>
   <button class="nb t7" onclick="showTab('gallery',this);loadCreativeGallery()">🖼️ My Gallery</button>
 </div>
 
 <!-- ═══════════════════════════════════════
-     TAB: DAILY REPORT
+     TAB: DAILY REPORT — TIMETABLE VIEW
 ═══════════════════════════════════════ -->
 <div class="tab active" id="tab-report">
+
+<style>
+/* ── TIMETABLE BLOCK STYLES ── */
+.tt-day-banner{border-radius:16px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.tt-mode-toggle{font-size:11px;font-weight:900;padding:6px 14px;border-radius:20px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .18s}
+.tt-holiday-banner{background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FCD34D;border-radius:12px;padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tt-blocks{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.tt-block{border-radius:16px;border:2px solid #E5E7EB;background:#fff;overflow:hidden;transition:all .25s}
+.tt-block.state-current{border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.tt-block.state-done{border-color:#10B981;background:#F0FDF4}
+
+/* LOCKED (upcoming) — header clickable to expand/view, but activities not interactive */
+.tt-block.state-locked{opacity:.75}
+.tt-block.state-locked .tt-block-hdr{cursor:pointer}
+.tt-block.state-locked .tt-act{opacity:.6;pointer-events:none;cursor:default}
+.tt-block.state-locked .tt-mark-done-btn{display:none!important}
+.tt-block.state-locked .tt-act-cb{display:none}
+.tt-block.state-locked .tt-act-name{color:#6B7280}
+.tt-block.state-locked .tt-act-pts{color:#9CA3AF}
+
+/* PAST (completed window, not marked done) — viewable, not editable */
+.tt-block.state-past .tt-block-hdr{cursor:pointer}
+.tt-block.state-past .tt-act{opacity:.65;pointer-events:none;cursor:default}
+.tt-block.state-past .tt-mark-done-btn{display:none!important}
+.tt-block.state-past .tt-act-cb{display:none}
+
+/* DONE — viewable summary only */
+.tt-block.state-done .tt-act{pointer-events:none;cursor:default}
+.tt-block.state-done .tt-mark-done-btn{display:none!important}
+.tt-block.state-break{border-color:#E5E7EB;background:#FAFAFA}
+.tt-block-hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none}
+.tt-block-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tt-block-meta{flex:1;min-width:0}
+.tt-block-time{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#6B7280;margin-bottom:1px}
+.tt-block-name{font-size:14px;font-weight:900;color:#1E1B4B}
+.tt-block-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tt-pts-badge{font-size:12px;font-weight:900;padding:4px 12px;border-radius:20px;background:#F3F4F6;color:#6B7280;white-space:nowrap}
+.tt-status-badge{font-size:10px;font-weight:900;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em}
+.tt-chevron{font-size:12px;color:#9CA3AF;transition:transform .2s}
+.tt-block.open .tt-chevron{transform:rotate(180deg)}
+.tt-block-body{display:none;padding:4px 16px 16px;border-top:1.5px solid #F3F4F6}
+.tt-block.open .tt-block-body{display:block}
+/* Activity checkboxes inside blocks */
+.tt-activities{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.tt-act{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:10px;border:1.5px solid #E5E7EB;background:#FAFAFA;cursor:pointer;transition:all .15s;user-select:none}
+.tt-act:hover{border-color:#93C5FD;background:#EFF6FF}
+.tt-act.checked{border-color:#10B981;background:#ECFDF5}
+.tt-act.parent-pending{border-color:#FCD34D;background:#FFFBEB;cursor:default}
+.tt-act.linked{border-color:#C4B5FD;background:#F5F3FF;cursor:pointer}
+.tt-act-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.tt-act-cb{width:20px;height:20px;border-radius:6px;border:2px solid #D1D5DB;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s}
+.tt-act.checked .tt-act-cb{background:#10B981;border-color:#10B981;color:#fff}
+.tt-act.parent-pending .tt-act-cb{background:#FCD34D;border-color:#F59E0B;color:#fff}
+.tt-act-name{font-size:12px;font-weight:800;color:#1E1B4B}
+.tt-act-sub{font-size:10px;color:#6B7280;margin-top:1px}
+.tt-act-pts{font-size:12px;font-weight:900;white-space:nowrap;flex-shrink:0}
+.tt-block-pts-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:9px 12px;border-radius:10px;background:#F9FAFB;border:1.5px solid #E5E7EB}
+.tt-mark-done-btn{width:100%;margin-top:10px;padding:11px;border-radius:12px;border:none;font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;cursor:pointer;transition:all .18s}
+.tt-mark-done-btn.primary{background:linear-gradient(135deg,#3B82F6,#1D4ED8);color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.35)}
+.tt-mark-done-btn.done{background:linear-gradient(135deg,#10B981,#047857);color:#fff}
+.tt-current-indicator{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:#3B82F6;margin-bottom:10px}
+.tt-current-dot{width:8px;height:8px;border-radius:50%;background:#3B82F6;animation:ttPulse 1.5s ease-in-out infinite}
+@keyframes ttPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+/* Self-study checkboxes */
+.tt-ss-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.tt-ss-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;border:1.5px solid #E5E7EB;cursor:pointer;background:#FAFAFA;transition:all .15s}
+.tt-ss-item:hover{border-color:#86EFAC;background:#ECFDF5}
+.tt-ss-item.checked{border-color:#10B981;background:#ECFDF5}
+.tt-ss-cb{width:18px;height:18px;border-radius:5px;border:2px solid #D1D5DB;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px}
+.tt-ss-item.checked .tt-ss-cb{background:#10B981;border-color:#10B981;color:#fff}
+</style>
+
 <div class="locked-banner" id="locked-banner">
   <span style="font-size:24px">🔒</span>
   <div>
@@ -737,56 +808,59 @@ tr:hover td{background:#FAFBFF}
     <div style="font-size:11px;font-weight:600;color:#047857;margin-top:2px" id="locked-date-msg"></div>
   </div>
 </div>
+
 <div class="page-layout">
 
-<!-- ═══════ LEFT SIDE PANEL — Quote with full author photo ═══════ -->
+<!-- ═══════ LEFT SIDE PANEL — Clock + Date + Schedule Tabs ═══════ -->
 <div class="side-panel" id="left-panel">
 
-  <div id="quote-panel" style="
-    flex:1;
-    border-radius:20px;
-    box-shadow:0 4px 24px rgba(0,0,0,.12);
-    overflow:hidden;
-    width:100%;
-    display:flex;
-    flex-direction:column;
-    position:relative;
-    border:2px solid #E0E7FF;
-    min-height:0">
-
-    <!-- Full-width author photo — fills top portion of card -->
-    <div id="qL-photo" style="
-      width:100%;
-      flex:1;
-      min-height:0;
-      overflow:hidden;
-      position:relative;
-      background:#EEF2FF;
-      display:flex;align-items:center;justify-content:center;font-size:48px">
-      <!-- Photo injected by JS -->
-    </div>
-
-    <!-- Colour accent bar under photo -->
-    <div id="qL-accent" style="height:5px;background:linear-gradient(90deg,#FF6B35,#F7931E);flex-shrink:0"></div>
-
-    <!-- Quote text section -->
-    <div id="qL-bottom" style="background:#fff;padding:14px 14px 12px;flex-shrink:0">
-      <!-- Author name + tag -->
-      <div style="margin-bottom:8px">
-        <div id="qL-author" style="font-size:12px;font-weight:900;color:#4F46E5;letter-spacing:.02em">Swami Vivekananda</div>
-        <div id="qL-tag" style="font-size:9px;font-weight:700;color:#A5B4FC;text-transform:uppercase;letter-spacing:.08em;margin-top:1px">Rise up!</div>
-      </div>
-      <!-- Decorative quote mark -->
-      <div style="font-size:28px;color:#E0E7FF;font-family:Georgia,serif;line-height:.8;margin-bottom:4px">&ldquo;</div>
-      <!-- Quote text -->
-      <div id="qL-text" style="font-size:11px;font-weight:800;color:#1E1B4B;line-height:1.75;font-style:italic">
-        Arise, awake and do not stop until the goal is reached.
-      </div>
-    </div>
-
+  <!-- 1. LIVE CLOCK -->
+  <div style="background:linear-gradient(135deg,#1E1B4B,#312E81);border-radius:18px;padding:18px 14px 14px;text-align:center;width:100%">
+    <div style="font-size:9px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:rgba(165,180,252,.7);margin-bottom:6px">⏰ Current Time</div>
+    <div id="tt-clock-display" style="font-size:42px;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,#A5B4FC,#C4B5FD,#FCD34D);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;font-family:'Nunito',sans-serif">00:00</div>
+    <div id="tt-clock-ampm" style="font-size:14px;font-weight:900;color:rgba(196,181,253,.9);margin-top:4px;letter-spacing:.05em">AM</div>
   </div>
 
-  <!-- hidden IDs for JS compat -->
+  <!-- 2. DAY + DATE -->
+  <div id="lp-date-card" style="background:#fff;border:2px solid #E5E7EB;border-radius:16px;padding:14px 14px;width:100%;text-align:center">
+    <div id="lp-day-name" style="font-size:18px;font-weight:900;color:#1E1B4B;margin-bottom:4px">Monday</div>
+    <input type="date" id="rpt-date" onchange="onDateChange();ttInitDay()"
+      style="width:100%;font-size:13px;font-weight:800;padding:8px 10px;border-radius:10px;
+        border:1.5px solid #E5E7EB;background:#F9FAFB;color:#1E1B4B;cursor:pointer;
+        text-align:center;box-sizing:border-box;font-family:'Nunito',sans-serif">
+    <div id="lp-date-note" style="font-size:10px;font-weight:700;color:#6B7280;margin-top:8px;line-height:1.5;padding:5px 8px;background:#F3F4F6;border-radius:8px"></div>
+  </div>
+
+  <!-- 3. SCHEDULE TABS -->
+  <div style="background:#fff;border:2px solid #E5E7EB;border-radius:16px;padding:12px;width:100%">
+    <div style="font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#6B7280;margin-bottom:10px;text-align:center">📅 Schedule</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button id="lp-tab-weekday" onclick="lp_setSchedule('weekday')"
+        style="width:100%;padding:11px 12px;border-radius:12px;font-family:'Nunito',sans-serif;
+          font-size:12px;font-weight:900;cursor:pointer;border:2px solid transparent;
+          transition:all .18s;text-align:left;display:flex;align-items:center;gap:9px">
+        <span style="font-size:18px">🏫</span>
+        <div>
+          <div style="font-size:12px;font-weight:900">Weekday Schedule</div>
+          <div style="font-size:10px;font-weight:700;opacity:.75;margin-top:1px">Mon – Fri · from 3:00 PM</div>
+        </div>
+      </button>
+      <button id="lp-tab-holiday" onclick="lp_setSchedule('holiday')"
+        style="width:100%;padding:11px 12px;border-radius:12px;font-family:'Nunito',sans-serif;
+          font-size:12px;font-weight:900;cursor:pointer;border:2px solid transparent;
+          transition:all .18s;text-align:left;display:flex;align-items:center;gap:9px">
+        <span style="font-size:18px">☀️</span>
+        <div>
+          <div style="font-size:12px;font-weight:900">Holiday Schedule</div>
+          <div style="font-size:10px;font-weight:700;opacity:.75;margin-top:1px">Sat · Sun · Holidays · from 7:00 AM</div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- hidden compat IDs -->
+  <div id="tt-mini-schedule" style="display:none"></div>
+  <div id="tt-schedule-title" style="display:none"></div>
   <span id="qL-icon" style="display:none">🌱</span>
   <span id="qR-icon" style="display:none">✨</span>
   <span id="qR-text" style="display:none"></span>
@@ -799,305 +873,80 @@ tr:hover td{background:#FAFBFF}
   <span id="sp-lvl-n" style="display:none">1</span>
   <span id="sp-lvl-t" style="display:none">Beginner</span>
   <span id="sp-lvl-s" style="display:none">0 total pts</span>
-
-</div><!-- end left panel -->
+  <div style="display:none">
+    <div id="quote-panel"><div id="qL-photo"></div><div id="qL-accent"></div>
+    <div id="qL-bottom"><div id="qL-author"></div><div id="qL-tag"></div><div id="qL-text"></div></div></div>
+  </div>
+</div>
 
 <!-- ═══════ MAIN CONTENT ═══════ -->
 <div class="main-content">
 
-<!-- DAY OVERVIEW — mood removed, kept date + timetable + school -->
-<div class="divlbl" id="sec-daily">Day overview</div>
-<div class="sec" style="border-color:var(--pm);background:linear-gradient(135deg,#FAFAFF,var(--pl))">
-  <div class="sh"><div class="si" style="background:var(--pl);color:var(--p)">📅</div>Today's overview</div>
-  <div class="g3">
-    <div>
-      <div class="fl">Date</div>
-      <input type="date" id="rpt-date" onchange="onDateChange()">
-    </div>
-    <div>
-      <div class="fl">Timetable followed? <span style="color:var(--a)">(up to +15 pts)</span></div>
-      <select id="rpt-tt" onchange="calcDayPts()">
-        <option value="0">Select...</option>
-        <option value="15">✅ Fully followed! (+15)</option>
-        <option value="10">🟡 Mostly (+10)</option>
-        <option value="5">🔶 A bit (+5)</option>
-        <option value="0">❌ Not followed (+0)</option>
-      </select>
-    </div>
-
-  </div>
-  <!-- Live points from overview -->
-  <div class="sec-pts-row" id="overview-pts-row">
-    <span class="sec-pts-label">⭐ Day overview points earned</span>
-    <span class="sec-pts-val" id="overview-pts">0 pts</span>
-  </div>
+<!-- Top banner removed — day/date/schedule now in left panel -->
+<!-- Hidden compat elements for existing JS references -->
+<div style="display:none">
+  <div id="tt-day-banner"><div id="tt-day-icon"></div><div id="tt-day-label"></div><div id="tt-day-title"></div><div id="tt-day-sub"></div><button id="tt-holiday-btn"></button></div>
+  <div id="tt-holiday-notice"><button onclick="ttToggleHoliday()"></button></div>
 </div>
 
-<!-- HOMEWORK & SELF STUDY -->
-<div class="divlbl">Homework &amp; self study</div>
-<div class="sec" style="border-color:var(--gm)">
-  <div class="sh">
-    <div class="si" style="background:var(--gl);color:var(--g)">📚</div>
-    Homework &amp; self study today
-    <span class="ptag">10 pts per subject ✓</span>
+<!-- Hidden compat fields used by existing JS -->
+<div style="display:none">
+  <select id="rpt-tt" onchange="calcDayPts()">
+    <option value="0">0</option><option value="15">15</option><option value="10">10</option><option value="5">5</option>
+  </select>
+  <div id="overview-pts-row"><span id="overview-pts">0 pts</span></div>
+  <div id="monday-test-sec" style="display:none">
+    <select id="test-subj" onchange="showTestChapters()"><option value="">Select subject...</option><option value="Maths">Maths</option><option value="English">English</option><option value="Hindi">Hindi</option><option value="Science">Science</option><option value="Social Science">Social Science</option><option value="Sanskrit">Sanskrit</option><option value="Computer Sc.">Computer Sc.</option></select>
+    <div id="test-chapters-box" style="display:none">
+      <select id="test-chapter"></select>
+    </div>
+    <input type="number" id="test-marks" min="0" max="100" value="0" oninput="calcTestPts()">
+    <input type="number" id="test-total" min="1" max="100" value="100" oninput="calcTestPts()">
+    <div id="test-result"></div>
+    <div id="test-pts-row"><span id="test-pts-display">0 pts</span></div>
   </div>
+  <div id="odda-pts-row"><span id="odda-pts-display">0 pts</span></div>
+  <div id="gym-pts-row"><span id="gym-pts-display">0 pts</span></div>
+  <div id="screen-pts-row"><span id="screen-pts-display">0 pts</span></div>
+  <div id="ss-pts-row"><span id="ss-pts-display">0 pts</span></div>
   <div id="ss-list"></div>
-  <!-- Progress bar -->
-  <div style="margin-top:10px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <span style="font-size:11px;font-weight:800;color:var(--gd)">Progress</span>
-      <span id="ss-pct" style="font-size:11px;font-weight:800;color:var(--gd)">0 / 8 subjects</span>
-    </div>
-    <div class="prog"><div class="prog-fill" id="ss-prog" style="width:0%;background:linear-gradient(90deg,var(--g),var(--t))"></div></div>
+  <div id="ss-pct"></div>
+  <div id="ss-prog"></div>
+  <select id="gym-today" onchange="calcDayPts()"><option value="0">0</option><option value="5">5</option><option value="10">10</option><option value="7">7</option></select>
+  <div id="gym-pts-msg"></div>
+  <div id="gym-time"><div class="pill"></div><div class="pill"></div></div>
+  <div id="odda-att"><div class="pill"></div><div class="pill"></div></div>
+  <div id="odda-time"><div class="pill"></div><div class="pill"></div></div>
+  <div id="odda-assign"><div class="pill"></div><div class="pill"></div></div>
+  <input type="text" id="odda-subj">
+  <div id="odda-assign-detail" style="display:none"><input id="odda-correct" type="number"><input id="odda-total-q" type="number"><div id="odda-assign-result"></div></div>
+  <div id="screen-check"><div class="pill"></div><div class="pill"></div></div>
+  <select id="skill-did" onchange="handleSkillSelect()"><option value="">n</option><option value="yes">yes</option><option value="no">no</option></select>
+  <div id="skill-yes-box" style="display:none"><textarea id="skill-desc"></textarea><select id="skill-pts-select" onchange="handleSkillPtsSelect()"><option value="">r</option><option value="5">5</option><option value="10">10</option></select><div id="skill-pts-final"></div></div>
+  <div id="skill-no-msg" style="display:none"></div>
+  <select id="book-type" onchange="showWordBoxes();calcDayPts()"><option value="0">0</option><option value="yes">yes</option><option value="no">no</option></select>
+  <div id="word-boxes" style="display:none">
+    <input type="text" id="word1" oninput="calcWordPts();checkWordSaved()"><input type="text" id="mean1" oninput="calcWordPts();checkWordSaved()"><input type="text" id="exam1" oninput="checkWordSaved()">
+    <input type="text" id="word2" oninput="calcWordPts();checkWordSaved()"><input type="text" id="mean2" oninput="calcWordPts();checkWordSaved()"><input type="text" id="exam2" oninput="checkWordSaved()">
+    <input type="text" id="word3" oninput="calcWordPts();checkWordSaved()"><input type="text" id="mean3" oninput="calcWordPts();checkWordSaved()"><input type="text" id="exam3" oninput="checkWordSaved()">
+    <div id="save-wordbook-wrap" style="display:none"><button onclick="saveWordsToWordBook()" id="save-wordbook-btn"><span id="save-wordbook-label">Save</span></button><div id="save-wordbook-status"></div></div>
+    <div id="word-pts-msg"></div>
   </div>
-  <div class="sec-pts-row" id="ss-pts-row" style="margin-top:10px">
-    <span class="sec-pts-label">📚 Self study points earned today</span>
-    <span class="sec-pts-val" id="ss-pts-display">0 pts</span>
-  </div>
+  <select id="free-act" onchange="calcDayPts()"><option value="0">0</option></select>
+  <div id="free-act-msg"></div>
+  <div id="rpt-school" style="display:none"></div>
+  <select id="rpt-school-sel" style="display:none"></select>
 </div>
 
-<!-- TESTS & ASSESSMENTS -->
-<div id="monday-test-sec">
-  <div class="divlbl">Monday / Weekly Test</div>
-  <div class="sec" style="border-color:var(--pkm)">
-    <div class="sh">
-      <div class="si" style="background:var(--pkl);color:var(--pk)">📝</div>
-      Monday / Weekly Test
-      <span class="ptag">Up to 50 pts based on %</span>
-    </div>
-    <div class="g3">
-      <div>
-        <div class="fl">Subject tested today</div>
-        <select id="test-subj" onchange="showTestChapters()">
-          <option value="">Select subject...</option>
-          <option value="Maths">📐 Maths</option>
-          <option value="English">📖 English</option>
-          <option value="Hindi">📚 Hindi</option>
-          <option value="Science">🔬 Science</option>
-          <option value="Social Science">🌍 Social Science</option>
-          <option value="Sanskrit">🕉️ Sanskrit</option>
-          <option value="Computer Sc.">💻 Computer Sc.</option>
-        </select>
-        <div id="test-chapters-box" style="display:none;margin-top:10px">
-          <div class="fl">Chapters / Topics in the test</div>
-          <textarea id="test-chapters" placeholder="e.g. Chapter 4 – Fractions, Chapter 5 – Decimals..." style="min-height:60px"></textarea>
-        </div>
-        <div class="fl mt10">Marks got / Total marks</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-          <input type="number" id="test-got" min="0" max="200" placeholder="Got" oninput="calcScore()" style="text-align:center;font-size:16px;font-weight:900">
-          <span style="font-size:18px;font-weight:900;color:var(--muted)">/</span>
-          <input type="number" id="test-tot" min="1" max="200" placeholder="Total" oninput="calcScore()" style="text-align:center;font-size:16px;font-weight:900">
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
-        <div style="font-size:42px;font-weight:900;color:var(--pk)" id="test-pct">–</div>
-        <div id="test-grade" style="text-align:center"></div>
-      </div>
-      <div>
-        <div style="background:var(--gl);border-radius:var(--rads);padding:12px;text-align:center">
-          <div style="font-size:11px;font-weight:800;color:var(--gd);margin-bottom:4px">POINTS AWARDED</div>
-          <div style="font-size:28px;font-weight:900;color:var(--gd)" id="test-pts-display">0 pts</div>
-          <div style="font-size:10px;color:var(--gd);margin-top:3px">90%+ = 50 · 75–89% = 40 · 60–74% = 25 · &lt;60% = 10</div>
-        </div>
-      </div>
-    </div>
-  </div>
+<!-- SECTION LABEL -->
+<div id="sec-daily" style="font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#6B7280;margin-bottom:8px">Today's timetable</div>
+
+<!-- TIME BLOCKS CONTAINER -->
+<div class="tt-blocks" id="tt-blocks-container">
+  <div style="text-align:center;padding:24px;color:#6B7280;font-size:13px;font-weight:700">⏳ Loading your timetable...</div>
 </div>
 
-<!-- ODDA ONLINE CLASS -->
-<div class="divlbl">Odda online class · 7–8 pm</div>
-<div class="sec" style="border-color:var(--pm)">
-  <div class="sh">
-    <div class="si" style="background:var(--pl);color:var(--p)">💻</div>
-    Odda class today
-    <span class="must-badge">Mandatory — −15 pts if missed!</span>
-    <span class="ptag">Max 25 pts · late/miss penalties apply</span>
-  </div>
-  <div>
-      <div class="fl">Did I attend today?</div>
-      <div class="pills" id="odda-att">
-        <div class="pill" onclick="toggleExDeselect(this,'odda-att','pg');calcDayPts()">✅ Yes, attended! (+10)</div>
-        <div class="pill" onclick="toggleExDeselect(this,'odda-att','pr');calcDayPts()">❌ Missed (−15)</div>
-      </div>
-      <div class="fl mt10">Did I join on time?</div>
-      <div class="pills" id="odda-time">
-        <div class="pill" onclick="toggleExDeselect(this,'odda-time','pg');calcDayPts()">⏰ Joined on time! (+5)</div>
-        <div class="pill" onclick="toggleExDeselect(this,'odda-time','pr');calcDayPts()">🐢 Slightly late (−10)</div>
-      </div>
-      <div class="fl mt10">Subject covered</div>
-      <input type="text" id="odda-subj" placeholder="e.g. Maths — fractions, decimals">
-      <div class="fl mt10">Odda assignment completed?</div>
-      <div class="pills" id="odda-assign">
-        <div class="pill" onclick="toggleExDeselect(this,'odda-assign','pg');showOddaAssign(this.classList.contains('pg'));calcDayPts()">✅ Yes, completed!</div>
-        <div class="pill" onclick="toggleExDeselect(this,'odda-assign','pr');showOddaAssign(false);calcDayPts()">❌ Incomplete</div>
-      </div>
-      <div id="odda-assign-detail" style="display:none;margin-top:10px;background:var(--gl);border-radius:10px;padding:10px;border:1.5px solid var(--gm)">
-        <div class="fl" style="color:var(--gd)">Marks obtained / Total marks</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
-          <input type="number" id="odda-correct" min="0" max="100" placeholder="Got" oninput="calcOddaAssign()" style="text-align:center;font-size:16px;font-weight:900;width:80px">
-          <span style="font-size:18px;font-weight:900;color:var(--muted)">/</span>
-          <input type="number" id="odda-total-q" min="1" max="100" placeholder="Total" oninput="calcOddaAssign()" style="text-align:center;font-size:16px;font-weight:900;width:80px">
-        </div>
-        <div id="odda-assign-result" style="margin-top:8px;font-size:12px;font-weight:800"></div>
-      </div>
-  </div>
-  <div class="sec-pts-row" id="odda-pts-row">
-    <span class="sec-pts-label">💻 Odda points earned today</span>
-    <span class="sec-pts-val" id="odda-pts-display">0 pts</span>
-  </div>
-</div>
-
-<!-- PHYSICAL ACTIVITY -->
-<div class="divlbl">Physical activity</div>
-<div class="sec" style="border-color:var(--am)">
-  <div class="sh">
-    <div class="si" style="background:var(--al);color:var(--a)">🤸</div>
-    Physical activity today
-    <span class="ptag">Up to 10 pts</span>
-  </div>
-  <div>
-    <div class="fl">What activity did I do today?</div>
-    <select id="gym-today" onchange="calcDayPts()" style="margin-top:4px">
-      <option value="0">Select activity...</option>
-      <option value="5">🤸 Gymnastics (+5 pts)</option>
-      <option value="10">💃 Kathak (+10 pts)</option>
-      <option value="5">🥋 Taekwondo (+5 pts)</option>
-      <option value="7">👧 Playing with Kinnu (+7 pts)</option>
-      <option value="0">💤 Rest day (0 pts)</option>
-    </select>
-    <div class="fl mt10">Did I join on time?</div>
-    <div class="pills" id="gym-time">
-      <div class="pill" onclick="toggleExDeselect(this,'gym-time','pg');calcDayPts()">✅ Joined on time! (+5)</div>
-      <div class="pill" onclick="toggleExDeselect(this,'gym-time','pr');calcDayPts()">🐢 Slightly late (−10)</div>
-    </div>
-    <div id="gym-pts-msg" style="margin-top:6px;font-size:11px;font-weight:800"></div>
-  </div>
-  <div class="sec-pts-row" id="gym-pts-row">
-    <span class="sec-pts-label">🤸 Activity points earned today</span>
-    <span class="sec-pts-val" id="gym-pts-display">0 pts</span>
-  </div>
-</div>
-
-<!-- SCREEN TIME -->
-<div class="divlbl">Screen time & free time</div>
-<div class="sec" style="border-color:var(--pkm)">
-  <div class="sh">
-    <div class="si" style="background:var(--pkl);color:var(--pk)">📺</div>
-    Screen & free time balance
-    <span class="ptag">Up to 40 pts</span>
-  </div>
-
-  <!-- Screen time: 10 pts within limits -->
-  <div style="background:var(--pkl);border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--pkm)">
-    <div class="fl" style="color:var(--pkd);margin-bottom:6px">📺 Screen time today <span style="font-size:10px;color:var(--pkd)">(limit: 30 mins)</span></div>
-    <div class="pills" id="screen-check">
-      <div class="pill" onclick="toggleExDeselect(this,'screen-check','pg');calcDayPts()">✅ 30 mins or less (+10)</div>
-      <div class="pill" onclick="toggleExDeselect(this,'screen-check','pr');calcDayPts()">❌ More than 30 mins (−10)</div>
-    </div>
-
-  </div>
-
-  <!-- Skill builder: self-assessed -->
-  <div style="background:#EFF6FF;border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--bm)">
-    <div class="fl" style="color:var(--bd);margin-bottom:6px">🎯 Skill builder activity today <span style="font-size:10px;color:var(--bd)">(up to +10 pts)</span></div>
-    <select id="skill-did" onchange="handleSkillSelect()" style="margin-bottom:8px">
-      <option value="">Did I do a skill activity today?</option>
-      <option value="yes">✅ Yes, I did!</option>
-      <option value="no">❌ No, not today</option>
-    </select>
-    <div id="skill-yes-box" style="display:none">
-      <div class="fl" style="color:var(--bd);margin-bottom:4px">What did I learn or practise?</div>
-      <textarea id="skill-desc" placeholder="e.g. I practised sketching faces, I learnt origami, I solved a puzzle..." style="min-height:52px;border-color:var(--bm)"></textarea>
-      <div class="fl" style="color:var(--bd);margin-top:8px;margin-bottom:4px">How well did I do?</div>
-      <select id="skill-pts-select" onchange="handleSkillPtsSelect()" style="margin-bottom:6px">
-        <option value="">Rate my effort...</option>
-        <option value="5">👍 Good — I tried my best (+5 pts)</option>
-        <option value="10">🌟 Excellent — I did really well! (+10 pts)</option>
-      </select>
-      <div id="skill-pts-final" style="display:none;margin-top:4px"></div>
-    </div>
-    <div id="skill-no-msg" style="display:none;margin-top:6px;font-size:12px;font-weight:800;color:var(--rd)">😔 No skill activity today. Try something creative tomorrow!</div>
-  </div>
-
-  <!-- Reading: Yes/No + 3 new words with meanings + examples (+10 pts when all 3 filled) -->
-  <div style="background:#ECFDF5;border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--gm)">
-    <div class="fl" style="color:var(--gd);margin-bottom:6px">📚 Reading today <span style="font-size:10px;color:var(--gd)">(+10 pts when all 3 words filled)</span></div>
-    <select id="book-type" onchange="showWordBoxes();calcDayPts()" style="margin-bottom:8px">
-      <option value="0">Did I read today?</option>
-      <option value="yes">✅ Yes, I did!</option>
-      <option value="no">❌ No, not today</option>
-    </select>
-    <div id="word-boxes" style="display:none;margin-top:6px">
-      <div class="fl" style="color:var(--gd);margin-bottom:8px;font-size:11px;font-weight:800">📝 Write 3 new words — word, meaning and an example sentence:</div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-
-        <!-- Word 1 -->
-        <div style="background:#fff;border-radius:10px;border:1.5px solid var(--gm);padding:9px 10px">
-          <div style="font-size:9px;font-weight:900;color:var(--gd);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Word 1</div>
-          <div style="display:flex;gap:6px;margin-bottom:5px">
-            <input type="text" id="word1" placeholder="e.g. perseverance" style="flex:1;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
-            <input type="text" id="mean1" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
-          </div>
-          <input type="text" id="exam1" placeholder="Example sentence (required to save)" style="width:100%;box-sizing:border-box;border-color:var(--gm);font-size:11px" oninput="checkWordSaved()">
-        </div>
-
-        <!-- Word 2 -->
-        <div style="background:#fff;border-radius:10px;border:1.5px solid var(--gm);padding:9px 10px">
-          <div style="font-size:9px;font-weight:900;color:var(--gd);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Word 2</div>
-          <div style="display:flex;gap:6px;margin-bottom:5px">
-            <input type="text" id="word2" placeholder="e.g. luminous" style="flex:1;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
-            <input type="text" id="mean2" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
-          </div>
-          <input type="text" id="exam2" placeholder="Example sentence (required to save)" style="width:100%;box-sizing:border-box;border-color:var(--gm);font-size:11px" oninput="checkWordSaved()">
-        </div>
-
-        <!-- Word 3 -->
-        <div style="background:#fff;border-radius:10px;border:1.5px solid var(--gm);padding:9px 10px">
-          <div style="font-size:9px;font-weight:900;color:var(--gd);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Word 3</div>
-          <div style="display:flex;gap:6px;margin-bottom:5px">
-            <input type="text" id="word3" placeholder="e.g. ephemeral" style="flex:1;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
-            <input type="text" id="mean3" placeholder="Meaning" style="flex:2;min-width:0;border-color:var(--gm);font-size:12px" oninput="calcWordPts();checkWordSaved()">
-          </div>
-          <input type="text" id="exam3" placeholder="Example sentence (required to save)" style="width:100%;box-sizing:border-box;border-color:var(--gm);font-size:11px" oninput="checkWordSaved()">
-        </div>
-
-      </div>
-
-      <!-- Save to WordBook button -->
-      <div id="save-wordbook-wrap" style="margin-top:12px;display:none">
-        <button onclick="saveWordsToWordBook()" id="save-wordbook-btn"
-          style="width:100%;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;
-          border-radius:12px;padding:12px 16px;font-size:13px;font-weight:900;cursor:pointer;
-          font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(16,185,129,.3);
-          display:flex;align-items:center;justify-content:center;gap:8px">
-          <span>📖</span><span id="save-wordbook-label">Save to My WordBook</span>
-        </button>
-        <div id="save-wordbook-status" style="margin-top:6px;font-size:11px;font-weight:700;color:var(--gd);text-align:center"></div>
-      </div>
-
-      <div id="word-pts-msg" style="margin-top:8px;font-size:12px;font-weight:800;color:var(--gd)"></div>
-    </div>
-  </div>
-
-  <!-- Free time: dropdown with points -->
-  <div style="background:var(--al);border-radius:var(--rads);padding:12px;margin-bottom:10px;border:1.5px solid var(--am)">
-    <div class="fl" style="color:var(--ad);margin-bottom:6px">🎮 Free time activity <span style="font-size:10px;color:var(--ad)">(varies)</span></div>
-    <select id="free-act" onchange="calcDayPts()">
-      <option value="0">What did I do in free time?</option>
-      <option value="-10">😴 Timepass / wasted time (−10 pts)</option>
-      <option value="10">👧 Played with Kinnu (+10 pts)</option>
-      <option value="10">🧹 Cleaned room / almirah (+10 pts)</option>
-    </select>
-    <div id="free-act-msg" style="margin-top:6px;font-size:11px;font-weight:800"></div>
-  </div>
-
-  <div class="sec-pts-row" id="screen-pts-row">
-    <span class="sec-pts-label">📺 Screen & free time points earned</span>
-    <span class="sec-pts-val" id="screen-pts-display">0 pts</span>
-  </div>
-</div>
-
-<!-- REFLECTION -->
+<!-- SAVE BUTTON -->
 <div class="btn-row">
   <button class="btn btn-o" onclick="clearDay()">🗑️ Clear</button>
   <button class="btn btn-p" onclick="saveDraftOnly()">💾 Save Report</button>
@@ -1107,223 +956,172 @@ tr:hover td{background:#FAFBFF}
 
 <!-- ═══════ RIGHT SIDE PANEL ═══════ -->
 <div class="side-panel" id="right-panel">
-
 <div id="live-pts-panel" style="background:#EAFBF9;border-radius:22px;box-shadow:0 8px 32px rgba(4,93,86,.18);padding:0 0 14px;width:100%;box-sizing:border-box;border:2px solid #B2DFDB;overflow:hidden;flex:1;display:flex;flex-direction:column">
-
-  <!-- Deep teal header -->
   <div style="background:#045D56;border-radius:20px 20px 0 0;padding:18px 14px 16px;text-align:center;position:relative;overflow:hidden">
     <div style="position:absolute;top:-20px;right:-10px;width:80px;height:80px;background:radial-gradient(circle,rgba(0,191,166,.35),transparent 70%);pointer-events:none"></div>
-    <div style="position:absolute;bottom:-10px;left:-10px;width:60px;height:60px;background:radial-gradient(circle,rgba(255,193,7,.25),transparent 70%);pointer-events:none"></div>
-
-    <div style="font-size:8px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:rgba(0,191,166,.9);margin-bottom:8px">&#x26A1; LIVE SCORE</div>
-
+    <div style="font-size:8px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:rgba(0,191,166,.9);margin-bottom:8px">⚡ LIVE SCORE</div>
     <div id="lpp-total" style="font-size:54px;font-weight:900;line-height:1;letter-spacing:-2px;background:linear-gradient(135deg,#00BFA6,#FFC107);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;transition:all .3s">0</div>
-
     <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.55);margin-top:3px">pts &nbsp;/&nbsp; <span id="lpp-max" style="color:#FFC107;font-weight:800">0</span> max</div>
-
-    <!-- SVG ring -->
     <div style="margin:10px auto 0;width:68px;height:68px;position:relative">
       <svg width="68" height="68" viewBox="0 0 68 68" style="transform:rotate(-90deg)">
         <circle cx="34" cy="34" r="28" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="6"/>
         <circle id="lpp-ring" cx="34" cy="34" r="28" fill="none" stroke="url(#ttGrad)" stroke-width="6" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="175.9" style="transition:stroke-dashoffset .5s ease"/>
         <defs><linearGradient id="ttGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00BFA6"/><stop offset="100%" stop-color="#FFC107"/></linearGradient></defs>
       </svg>
-      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-        <span id="lpp-pct" style="font-size:11px;font-weight:900;color:#00BFA6">0%</span>
-      </div>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span id="lpp-pct" style="font-size:11px;font-weight:900;color:#00BFA6">0%</span></div>
     </div>
-
-    <div id="lpp-grade" style="font-size:11px;font-weight:800;color:rgba(0,191,166,.9);margin-top:8px">Fill the report &#x270F;&#xFE0F;</div>
+    <div id="lpp-grade" style="font-size:11px;font-weight:800;color:rgba(0,191,166,.9);margin-top:8px">Fill the report ✏️</div>
   </div>
-
   <div style="padding:12px 12px 0;flex:1;display:flex;flex-direction:column">
-
-    <!-- Daily Report -->
     <div style="margin-bottom:7px">
       <div onclick="lppToggle('daily')" style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #B2DFDB;border-radius:13px;padding:9px 12px;cursor:pointer" onmouseover="this.style.background='#E0F7F5'" onmouseout="this.style.background='#fff'">
-        <div style="display:flex;align-items:center;gap:7px">
-          <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#00BFA6,#00897B);display:flex;align-items:center;justify-content:center;font-size:13px">&#x1F4CB;</div>
-          <span style="font-size:10px;font-weight:900;color:#072227">Daily Report</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:5px">
-          <span id="lpp-daily" style="font-size:18px;font-weight:900;color:#045D56">0</span>
-          <span id="lpp-daily-max" style="font-size:9px;color:#80CBC4">/0</span>
-          <span id="lpp-daily-arr" style="font-size:10px;color:#00897B">&#x25BC;</span>
-        </div>
+        <div style="display:flex;align-items:center;gap:7px"><div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#00BFA6,#00897B);display:flex;align-items:center;justify-content:center;font-size:13px">📋</div><span style="font-size:10px;font-weight:900;color:#072227">Daily Report</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><span id="lpp-daily" style="font-size:18px;font-weight:900;color:#045D56">0</span><span id="lpp-daily-max" style="font-size:9px;color:#80CBC4">/0</span><span id="lpp-daily-arr" style="font-size:10px;color:#00897B">▼</span></div>
       </div>
       <div id="lpp-daily-detail" style="display:none;flex-direction:column;gap:2px;padding:5px 2px 2px">
-        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB" onmouseover="this.style.background='#B2DFDB'" onmouseout="this.style.background='#E0F7F5'"><span style="font-size:9px;color:#00695C">&#x1F4C5; Timetable</span><span id="lpp-d-tt" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
-        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB" onmouseover="this.style.background='#B2DFDB'" onmouseout="this.style.background='#E0F7F5'"><span style="font-size:9px;color:#00695C">&#x1F4DA; Self Study</span><span id="lpp-d-ss" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
-        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB" onmouseover="this.style.background='#B2DFDB'" onmouseout="this.style.background='#E0F7F5'"><span style="font-size:9px;color:#00695C">&#x1F4DD; Test</span><span id="lpp-d-test" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
-        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB" onmouseover="this.style.background='#B2DFDB'" onmouseout="this.style.background='#E0F7F5'"><span style="font-size:9px;color:#00695C">&#x1F4BB; Odda</span><span id="lpp-d-odda" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
-        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB" onmouseover="this.style.background='#B2DFDB'" onmouseout="this.style.background='#E0F7F5'"><span style="font-size:9px;color:#00695C">&#x1F938; Gym</span><span id="lpp-d-gym" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
-        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB" onmouseover="this.style.background='#B2DFDB'" onmouseout="this.style.background='#E0F7F5'"><span style="font-size:9px;color:#00695C">&#x1F4FA; Screen &amp; Free</span><span id="lpp-d-screen" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
+        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB"><span style="font-size:9px;color:#00695C">📅 Timetable</span><span id="lpp-d-tt" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
+        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB"><span style="font-size:9px;color:#00695C">📚 Self Study</span><span id="lpp-d-ss" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
+        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB"><span style="font-size:9px;color:#00695C">📝 Test</span><span id="lpp-d-test" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
+        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB"><span style="font-size:9px;color:#00695C">💻 Odda</span><span id="lpp-d-odda" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
+        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB"><span style="font-size:9px;color:#00695C">🤸 Gym</span><span id="lpp-d-gym" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
+        <div onclick="lppScroll('sec-daily')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB"><span style="font-size:9px;color:#00695C">📺 Screen &amp; Free</span><span id="lpp-d-screen" style="font-size:11px;font-weight:900;color:#045D56">0</span></div>
       </div>
     </div>
-
-    <!-- Brain Lab -->
     <div style="margin-bottom:7px">
       <div onclick="lppToggle('brain')" style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #FFF9C4;border-radius:13px;padding:9px 12px;cursor:pointer" onmouseover="this.style.background='#FFFDE7'" onmouseout="this.style.background='#fff'">
-        <div style="display:flex;align-items:center;gap:7px">
-          <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#FFC107,#FF8F00);display:flex;align-items:center;justify-content:center;font-size:13px">&#x1F9E0;</div>
-          <span style="font-size:10px;font-weight:900;color:#072227">Brain Lab</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:5px">
-          <span id="lpp-brain" style="font-size:18px;font-weight:900;color:#FF8F00">0</span>
-          <span id="lpp-brain-max" style="font-size:9px;color:#FFD54F">/0</span>
-          <span id="lpp-brain-arr" style="font-size:10px;color:#FFC107">&#x25BC;</span>
-        </div>
+        <div style="display:flex;align-items:center;gap:7px"><div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#FFC107,#FF8F00);display:flex;align-items:center;justify-content:center;font-size:13px">🧠</div><span style="font-size:10px;font-weight:900;color:#072227">Brain Lab</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><span id="lpp-brain" style="font-size:18px;font-weight:900;color:#FF8F00">0</span><span id="lpp-brain-max" style="font-size:9px;color:#FFD54F">/0</span><span id="lpp-brain-arr" style="font-size:10px;color:#FFC107">▼</span></div>
       </div>
       <div id="lpp-brain-detail" style="display:none;flex-direction:column;gap:2px;padding:5px 2px 2px">
-        <div onclick="lppScroll('sec-brain')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#FFFDE7;border:1px solid #FFF9C4" onmouseover="this.style.background='#FFF9C4'" onmouseout="this.style.background='#FFFDE7'"><span style="font-size:9px;color:#E65100">&#x1F522; Sudoku</span><span id="lpp-b-sudoku" style="font-size:11px;font-weight:900;color:#FF8F00">0</span></div>
-        <div onclick="lppScroll('sec-brain')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#FFFDE7;border:1px solid #FFF9C4" onmouseover="this.style.background='#FFF9C4'" onmouseout="this.style.background='#FFFDE7'"><span style="font-size:9px;color:#E65100">&#x1F9E9; Logic</span><span id="lpp-b-logic" style="font-size:11px;font-weight:900;color:#FF8F00">0</span></div>
-        <div onclick="lppScroll('sec-brain')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#FFFDE7;border:1px solid #FFF9C4" onmouseover="this.style.background='#FFF9C4'" onmouseout="this.style.background='#FFFDE7'"><span style="font-size:9px;color:#E65100">&#x1F3AD; Riddles</span><span id="lpp-b-riddles" style="font-size:11px;font-weight:900;color:#FF8F00">0</span></div>
-        <div onclick="lppScroll('sec-brain')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#FFFDE7;border:1px solid #FFF9C4" onmouseover="this.style.background='#FFF9C4'" onmouseout="this.style.background='#FFFDE7'"><span style="font-size:9px;color:#E65100">&#x26A1; Maths</span><span id="lpp-b-maths" style="font-size:11px;font-weight:900;color:#FF8F00">0</span></div>
+        <div onclick="lppScroll('sec-brain')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#FFFDE7;border:1px solid #FFF9C4"><span style="font-size:9px;color:#E65100">🔢 Sudoku</span><span id="lpp-b-sudoku" style="font-size:11px;font-weight:900;color:#FF8F00">0</span></div>
+        <div onclick="lppScroll('sec-brain')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#FFFDE7;border:1px solid #FFF9C4"><span style="font-size:9px;color:#E65100">🧩 Logic</span><span id="lpp-b-logic" style="font-size:11px;font-weight:900;color:#FF8F00">0</span></div>
+        <div onclick="lppScroll('sec-brain')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#FFFDE7;border:1px solid #FFF9C4"><span style="font-size:9px;color:#E65100">🎭 Riddles</span><span id="lpp-b-riddles" style="font-size:11px;font-weight:900;color:#FF8F00">0</span></div>
+        <div onclick="lppScroll('sec-brain')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#FFFDE7;border:1px solid #FFF9C4"><span style="font-size:9px;color:#E65100">⚡ Maths</span><span id="lpp-b-maths" style="font-size:11px;font-weight:900;color:#FF8F00">0</span></div>
       </div>
     </div>
-
-    <!-- Geeta & Creative -->
     <div style="margin-bottom:7px">
       <div onclick="lppToggle('geeta')" style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #B2DFDB;border-radius:13px;padding:9px 12px;cursor:pointer" onmouseover="this.style.background='#E0F7F5'" onmouseout="this.style.background='#fff'">
-        <div style="display:flex;align-items:center;gap:7px">
-          <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#00BFA6,#00695C);display:flex;align-items:center;justify-content:center;font-size:13px">&#x1F549;&#xFE0F;</div>
-          <span style="font-size:10px;font-weight:900;color:#072227">Geeta &amp; Creative</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:5px">
-          <span id="lpp-geeta" style="font-size:18px;font-weight:900;color:#00695C">0</span>
-          <span id="lpp-geeta-max" style="font-size:9px;color:#80CBC4">/0</span>
-          <span id="lpp-geeta-arr" style="font-size:10px;color:#00BFA6">&#x25BC;</span>
-        </div>
+        <div style="display:flex;align-items:center;gap:7px"><div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#00BFA6,#00695C);display:flex;align-items:center;justify-content:center;font-size:13px">🕉️</div><span style="font-size:10px;font-weight:900;color:#072227">Geeta &amp; Creative</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><span id="lpp-geeta" style="font-size:18px;font-weight:900;color:#00695C">0</span><span id="lpp-geeta-max" style="font-size:9px;color:#80CBC4">/0</span><span id="lpp-geeta-arr" style="font-size:10px;color:#00BFA6">▼</span></div>
       </div>
       <div id="lpp-geeta-detail" style="display:none;flex-direction:column;gap:2px;padding:5px 2px 2px">
-        <div onclick="lppScroll('sec-geeta')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB" onmouseover="this.style.background='#B2DFDB'" onmouseout="this.style.background='#E0F7F5'"><span style="font-size:9px;color:#00695C">&#x1F549;&#xFE0F; Shloka</span><span id="lpp-g-shloka" style="font-size:11px;font-weight:900;color:#00695C">0</span></div>
-        <div onclick="lppScroll('sec-geeta')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB" onmouseover="this.style.background='#B2DFDB'" onmouseout="this.style.background='#E0F7F5'"><span style="font-size:9px;color:#00695C">&#x1F3A8; Creative</span><span id="lpp-g-creative" style="font-size:11px;font-weight:900;color:#00695C">0</span></div>
+        <div onclick="lppScroll('sec-geeta')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB"><span style="font-size:9px;color:#00695C">🕉️ Shloka</span><span id="lpp-g-shloka" style="font-size:11px;font-weight:900;color:#00695C">0</span></div>
+        <div onclick="lppScroll('sec-geeta')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#E0F7F5;border:1px solid #B2DFDB"><span style="font-size:9px;color:#00695C">🎨 Creative</span><span id="lpp-g-creative" style="font-size:11px;font-weight:900;color:#00695C">0</span></div>
       </div>
     </div>
-
-    <!-- Parent Rating -->
-    <div style="margin-bottom:12px">
-      <div onclick="lppToggle('parent')" style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #B2DFDB;border-radius:13px;padding:9px 12px;cursor:pointer" onmouseover="this.style.background='#E0F7F5'" onmouseout="this.style.background='#fff'">
-        <div style="display:flex;align-items:center;gap:7px">
-          <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#FFC107,#FFB300);display:flex;align-items:center;justify-content:center;font-size:13px">&#x2B50;</div>
-          <span style="font-size:10px;font-weight:900;color:#072227">Parent Rating</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:5px">
-          <span id="lpp-parent" style="font-size:18px;font-weight:900;color:#FF8F00">0</span>
-          <span id="lpp-parent-max" style="font-size:9px;color:#FFD54F">/0</span>
-          <span id="lpp-parent-arr" style="font-size:10px;color:#FFC107">&#x25BC;</span>
-        </div>
-      </div>
-      <div id="lpp-parent-detail" style="display:none;flex-direction:column;gap:2px;padding:5px 2px 2px">
-        <div onclick="lppScroll('sec-parent')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-radius:8px;cursor:pointer;background:#FFFDE7;border:1px solid #FFF9C4" onmouseover="this.style.background='#FFF9C4'" onmouseout="this.style.background='#FFFDE7'"><span style="font-size:9px;color:#E65100">&#x2B50; Rating bonus</span><span id="lpp-p-rating" style="font-size:11px;font-weight:900;color:#FF8F00">0</span></div>
-      </div>
-    </div>
-
-    <div style="flex:1"></div><!-- spacer pushes total bar down -->
-    <!-- Total bar -->
-    <div style="background:linear-gradient(135deg,#045D56,#00897B);border-radius:13px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 14px rgba(4,93,86,.3)">
-      <span style="font-size:9px;font-weight:900;color:rgba(0,191,166,.9);text-transform:uppercase;letter-spacing:.12em">TOTAL TODAY</span>
-      <div style="display:flex;align-items:baseline;gap:5px">
-        <span id="lpp-total2" style="font-size:24px;font-weight:900;background:linear-gradient(90deg,#00BFA6,#FFC107);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">0</span>
-        <span style="font-size:9px;color:rgba(255,255,255,.5)">/ <span id="lpp-max2">0</span></span>
-      </div>
-    </div>
-
   </div>
 </div>
-
-  <span id="sp-mood" style="display:none">&#x1F634;</span>
-  <span id="sp-mood-lbl" style="display:none"></span>
-  <span id="sp-mood-sub" style="display:none"></span>
-  <span id="sp-mis-cnt" style="display:none">0/7</span>
-  <span id="sp-m-hw" style="display:none"></span>
-  <span id="sp-m-od" style="display:none"></span>
-  <span id="sp-m-gy" style="display:none"></span>
-  <span id="sp-m-sh" style="display:none"></span>
-  <span id="sp-m-cr" style="display:none"></span>
-  <span id="sp-m-br" style="display:none"></span>
-  <span id="sp-m-rf" style="display:none"></span>
-  <span id="sp-boss-fill" style="display:none"></span>
-  <span id="sp-boss-lbl" style="display:none"></span>
-
 </div><!-- end right panel -->
 
 </div><!-- end page-layout -->
 </div><!-- end tab-report -->
 
 <!-- ═══════════════════════════════════════
-     TAB: REWARDS
+     TAB: REWARDS (merged Rewards + Spend)
 ═══════════════════════════════════════ -->
 <div class="tab" id="tab-rewards">
-<div style="background:linear-gradient(135deg,#FF006E,#FB5607,#FFBE0B,#06D6A0);border-radius:22px;
-  padding:18px;margin-bottom:16px;color:#fff;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  border:3px solid rgba(255,255,255,.4);position:relative;overflow:hidden">
-  <div style="position:absolute;font-size:90px;right:-15px;top:-20px;opacity:.2;transform:rotate(15deg);pointer-events:none">🏆</div>
-  <div style="position:absolute;font-size:50px;left:8px;bottom:-14px;opacity:.25;animation:spin-slow 5s linear infinite;pointer-events:none">⭐</div>
-  <div style="font-size:42px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));position:relative">🏆</div>
-  <div class="tb-info" style="position:relative">
-    <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.2)" id="rwd-total-pts">0 points earned</div>
-    <div style="font-size:11px;color:rgba(255,255,255,.9);margin-top:2px;font-weight:800">Earn big · Save smart · Claim EPIC prizes! 🌟</div>
+<div id="tab-spend" style="display:none"></div><!-- compat: old spend tab id kept for JS refs -->
+
+<!-- REWARDS PAGE CSS -->
+<style>
+@keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(60px) rotate(720deg);opacity:0}}
+@keyframes pop-in{0%{transform:scale(.8);opacity:0}70%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+.rw-strip-row{display:flex;align-items:stretch;border-radius:16px;border:1.5px solid #F3F4F6;background:#fff;margin-bottom:8px;overflow:hidden;transition:all .2s;cursor:pointer}
+.rw-strip-row:hover{border-color:#E5E7EB;box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateY(-1px)}
+.rw-strip-row.used{opacity:.55}
+.rw-accent{width:5px;flex-shrink:0;align-self:stretch;border-radius:16px 0 0 16px}
+.rw-body{display:flex;align-items:center;gap:12px;padding:12px 14px;flex:1;min-width:0}
+.rw-icon{font-size:26px;width:34px;text-align:center;flex-shrink:0}
+.rw-info{flex:1;min-width:0}
+.rw-name{font-size:13px;font-weight:900;color:#1E1B4B;font-family:'Nunito',sans-serif}
+.rw-sub{font-size:10px;color:#6B7280;margin-top:2px;font-family:'Nunito',sans-serif}
+.rw-prog{height:4px;background:#F3F4F6;border-radius:2px;margin-top:5px;overflow:hidden}
+.rw-prog-fill{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.34,1.56,.64,1)}
+.rw-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;padding:12px 14px 12px 0;flex-shrink:0}
+.rw-pts{font-size:11px;font-weight:900;color:#6B7280;font-family:'Nunito',sans-serif}
+.rw-btn{font-size:11px;font-weight:900;padding:5px 14px;border-radius:20px;border:2px solid currentColor;background:transparent;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;white-space:nowrap}
+.rw-btn:hover:not(:disabled){filter:brightness(.9)}
+.rw-btn:disabled{opacity:.4;cursor:not-allowed}
+.rw-trophy{font-size:9px;background:#EFF6FF;color:#1D4ED8;border-radius:6px;padding:1px 6px;margin-left:5px;font-family:'Nunito',sans-serif;font-weight:900;vertical-align:middle}
+.rw-section-hdr{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+.rw-section-line{flex:1;height:2px;border-radius:2px}
+.confetti-dot{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;animation:confetti-fall .8s ease-out forwards}
+</style>
+
+<!-- CELEBRATION BANNER -->
+<div style="position:relative;border-radius:20px;overflow:hidden;margin-bottom:16px;padding:20px 20px 16px">
+  <div style="position:absolute;inset:0;background:linear-gradient(135deg,#FF006E,#FB5607,#FFBE0B,#06D6A0,#3A86FF,#8338EC);background-size:300% 300%;animation:auroraShift 6s ease infinite"></div>
+  <!-- Floating stars -->
+  <div style="position:absolute;font-size:28px;right:20px;top:10px;animation:spin-slow 4s linear infinite;opacity:.5;pointer-events:none">⭐</div>
+  <div style="position:absolute;font-size:18px;right:60px;top:30px;animation:spin-slow 6s linear infinite reverse;opacity:.4;pointer-events:none">✨</div>
+  <div style="position:absolute;font-size:24px;right:110px;top:8px;opacity:.35;pointer-events:none">🎊</div>
+  <div style="position:absolute;font-size:16px;left:200px;bottom:6px;opacity:.3;animation:wobble-icon 3s ease-in-out infinite;pointer-events:none">🎉</div>
+  <div style="position:relative;z-index:1;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div style="font-size:44px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))">🏆</div>
+    <div>
+      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.2);line-height:1.1" id="rwd-total-pts">0 points earned</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.92);font-weight:800;margin-top:3px">Every point is a trophy of your hard work! Keep shining! ⭐</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap">
+      <div style="background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.5);border-radius:14px;padding:8px 16px;text-align:center">
+        <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;line-height:1" id="rwd-avail">0</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.08em;font-weight:900;margin-top:2px">Available ✨</div>
+      </div>
+      <div style="background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.5);border-radius:14px;padding:8px 16px;text-align:center">
+        <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;line-height:1" id="rwd-days">0</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.08em;font-weight:900;margin-top:2px">Days saved 🌟</div>
+      </div>
+      <div style="background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.5);border-radius:14px;padding:8px 16px;text-align:center">
+        <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;line-height:1" id="rwd-streak">0🔥</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.08em;font-weight:900;margin-top:2px">Streak 🔥</div>
+      </div>
+    </div>
+    <!-- compat IDs -->
+    <span id="spend-avail" style="display:none">0</span>
+    <span id="streak-spend" style="display:none">0</span>
   </div>
-  <div class="tb-pts" style="position:relative">
-    <div style="background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);border-radius:14px;padding:7px 14px;text-align:center">
-      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.2)" id="rwd-avail">0</div>
-      <div style="font-size:9px;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.08em;font-weight:900">Available</div>
-    </div>
-    <div style="background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);border-radius:14px;padding:7px 14px;text-align:center">
-      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.2)" id="rwd-days">0</div>
-      <div style="font-size:9px;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.08em;font-weight:900">Days saved</div>
-    </div>
-    <div style="background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);border-radius:14px;padding:7px 14px;text-align:center">
-      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.2)" id="rwd-streak">0🔥</div>
-      <div style="font-size:9px;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.08em;font-weight:900">Streak</div>
-    </div>
-  </div>
-</div>
-<div id="reward-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:16px"></div>
-<div class="sec mt14">
-  <div class="sh"><div class="si" style="background:var(--al);color:var(--a)">📋</div>Points earning guide — every day</div>
-  <table><thead><tr><th>Activity</th><th>Points</th><th>Note</th></tr></thead>
-  <tbody id="earn-guide"></tbody></table>
-</div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     TAB: SPEND
-═══════════════════════════════════════ -->
-<div class="tab" id="tab-spend">
-<div style="background:linear-gradient(135deg,#3A86FF,#8338EC,#FF006E);border-radius:22px;
-  padding:18px;margin-bottom:14px;color:#fff;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  border:3px solid rgba(255,255,255,.4);position:relative;overflow:hidden">
-  <div style="position:absolute;font-size:80px;right:-10px;top:-10px;opacity:.22;transform:rotate(-10deg);pointer-events:none">🎮</div>
-  <div style="position:absolute;font-size:42px;left:10px;bottom:-10px;opacity:.28;animation:wobble-icon 2s ease-in-out infinite alternate;pointer-events:none">💫</div>
-  <div style="font-size:42px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));position:relative">🛒</div>
-  <div class="tb-info" style="position:relative">
-    <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.2)">Spend Your Points!</div>
-    <div style="font-size:11px;color:rgba(255,255,255,.9);margin-top:2px;font-weight:800">Daily treats · Tell Mamma or Papa first! 🎉</div>
-  </div>
-  <div class="tb-pts" style="position:relative">
-    <div style="background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);border-radius:14px;padding:7px 16px;text-align:center">
-      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.2)" id="spend-avail">0</div>
-      <div style="font-size:9px;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.08em;font-weight:900">Available pts</div>
-    </div>
-    <div style="background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);border-radius:14px;padding:7px 16px;text-align:center">
-      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.2)" id="streak-spend">0🔥</div>
-      <div style="font-size:9px;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.08em;font-weight:900">Streak</div>
-    </div>
-  </div>
-</div>
-<div style="background:linear-gradient(135deg,#FFF9C4,#FFE082);border:3px solid #FFB300;border-radius:16px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
-  <div style="font-size:26px;flex-shrink:0">💡</div>
-  <div style="font-size:12px;color:#5D4037;font-weight:800;line-height:1.7">
-    Each item costs points from your bank. Once used today it locks till tomorrow! Save big pts for the 🏆 Rewards tab!
-  </div>
-</div>
+<!-- ROTATING QUOTE (kept for motivation) -->
 <div id="spend-quote-bar" style="margin-bottom:14px"></div>
-<div id="spend-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:14px"></div>
-<div class="sec">
+
+<!-- TWO COLUMN LAYOUT -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+
+  <!-- ── LEFT: DAILY TREATS ── -->
+  <div style="padding-right:16px;border-right:1.5px solid #F3F4F6">
+    <div class="rw-section-hdr">
+      <span style="font-size:22px">🍬</span>
+      <span style="font-family:'Fredoka One',cursive;font-size:18px;color:#FB5607">Daily Treats</span>
+      <div class="rw-section-line" style="background:linear-gradient(90deg,#FB5607,transparent)"></div>
+    </div>
+    <div style="font-size:10px;color:#92400E;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:6px 10px;margin-bottom:10px;font-weight:800">
+      💡 Used today = locked till midnight · Tell Mamma or Papa first!
+    </div>
+    <div id="spend-grid"></div>
+  </div>
+
+  <!-- ── RIGHT: STAR REWARDS ── -->
+  <div style="padding-left:16px">
+    <div class="rw-section-hdr">
+      <span style="font-size:22px">🌟</span>
+      <span style="font-family:'Fredoka One',cursive;font-size:18px;color:#8338EC">Star Rewards</span>
+      <div class="rw-section-line" style="background:linear-gradient(90deg,#8338EC,transparent)"></div>
+    </div>
+    <div style="font-size:10px;color:#4C1D95;background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:10px;padding:6px 10px;margin-bottom:10px;font-weight:800">
+      💜 Save up · Claim · Trophy stays forever · Re-claim anytime!
+    </div>
+    <div id="reward-grid"></div>
+  </div>
+
+</div>
+
+<!-- SPENDING HISTORY -->
+<div class="sec mt14">
   <div class="sh" style="justify-content:space-between">
-    <div style="display:flex;align-items:center;gap:8px"><div class="si" style="background:var(--al);color:var(--a)">📜</div>My spending history</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="si" style="background:var(--al);color:var(--a)">📜</div>My spending history
+    </div>
     <button onclick="clearAllSpendHistory()" style="font-size:11px;font-weight:800;color:#B91C1C;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:8px;padding:5px 12px;cursor:pointer;font-family:'Nunito',sans-serif">🗑️ Clear all</button>
   </div>
   <div id="spend-hist-list"></div>
@@ -2521,6 +2319,12 @@ tr:hover td{background:#FAFBFF}
   <button class="cg-filter" onclick="cgSetFilter('craft',this)">✂️ Craft</button>
   <button class="cg-filter" onclick="cgSetFilter('mandala',this)">🌸 Mandala</button>
   <button class="cg-filter" onclick="cgSetFilter('journal',this)">📔 Journal</button>
+  <button class="cg-filter" onclick="cgSetFilter('moral_values',this)">📿 Moral Values</button>
+  <button class="cg-filter" onclick="cgSetFilter('proverb',this)">💬 Proverbs</button>
+  <button class="cg-filter" onclick="cgSetFilter('ai_notes',this)">🤖 AI Notes</button>
+  <button class="cg-filter" onclick="cgSetFilter('ayurvedic_notes',this)">🌿 Ayurvedic</button>
+  <button class="cg-filter" onclick="cgSetFilter('vedas_notes',this)">🕉️ Vedas</button>
+  <button class="cg-filter" onclick="cgSetFilter('interesting_facts',this)">🏛️ Interesting Facts</button>
 </div>
 
 <!-- DETAIL VIEW -->
@@ -2622,24 +2426,25 @@ function updateSS(){
 }
 
 const REWARDS=[
-  {pts:500, icon:'🎬',title:'Extra movie at home',       grad:'linear-gradient(135deg,#FF6B6B,#FF8E53)',bdr:'#FF4444',items:['Family movie of your choice!','Popcorn & snacks included!','Any day, any time!']},
-  {pts:600, icon:'🍽️',title:'Family dinner — your pick!', grad:'linear-gradient(135deg,#FF9A3C,#FF6B6B)',bdr:'#FF6B00',items:['Restaurant of your choice!','Place of your choice!','Full veto power! 🎉']},
-  {pts:800, icon:'📚',title:'New book of your choice',   grad:'linear-gradient(135deg,#06D6A0,#1B9AAA)',bdr:'#028A6A',items:['Fiction, comics, knowledge!','Any book you want!','Visit bookstore together!']},
-  {pts:1000,icon:'🍿',title:'Movie in a theatre!',       grad:'linear-gradient(135deg,#FFBE0B,#FB5607)',bdr:'#CC8800',items:['Big screen experience!','Popcorn + cold drink! 🎬','You pick the film!']},
-  {pts:1200,icon:'🎁',title:'Surprise gift from Parents!',grad:'linear-gradient(135deg,#FF006E,#8338EC)',bdr:'#C0004C',items:['Mystery wrapped gift!','Could be ANYTHING amazing! 🌟']},
-  {pts:1600,icon:'🎡',title:'Outing of your choice!',    grad:'linear-gradient(135deg,#8338EC,#3A86FF)',bdr:'#5500CC',items:['Go-carting, theme park!','Full day out!','Your choice, your day! 🎢']},
-  {pts:2000,icon:'🛍️',title:'Shopping spree!',           grad:'linear-gradient(135deg,#3A86FF,#06D6A0)',bdr:'#1A56CC',items:['Shop what you want!','Within budget by parents!','Your pick, your style! 💫']},
-  {pts:2500,icon:'🎉',title:'YES DAY!!',                 grad:'linear-gradient(135deg,#FFBE0B,#FF006E,#8338EC)',bdr:'#CC8800',items:['Vaanya says YES to EVERYTHING!','One magical day — YOU rule! 👑','The most epic reward ever! 🌟']},
+  {pts:400,  icon:'🎬', strip:'#FF6B6B', title:'A Movie at Home',                        items:['Family movie of your choice!','Popcorn & snacks included!','Any day, any time!']},
+  {pts:600,  icon:'📚', strip:'#06D6A0', title:'Buy a New Book of your choice',           items:['Any book you want — fiction, comics, knowledge!','Visit bookstore together!']},
+  {pts:800,  icon:'🌱', strip:'#FFBE0B', title:'1 Hour Do Not Disturb — anything you want', items:['No interruptions! 100% your time!','Read, draw, play, relax — you decide!','Parents will not disturb 🤐']},
+  {pts:1000, icon:'🍿', strip:'#FB5607', title:'Movie in a Theater with Parents',         items:['Big screen experience!','Popcorn + cold drink included!','You pick the film!']},
+  {pts:1200, icon:'🎁', strip:'#FF006E', title:'Surprise Gift by Parents',                items:['Mystery wrapped gift!','Could be ANYTHING amazing! 🌟']},
+  {pts:1500, icon:'🌟', strip:'#8338EC', title:'Half Yes Day',                            items:['Half a day — you decide everything!','Morning or afternoon — your call!','Mamma & Papa say YES to your ideas!']},
+  {pts:2700, icon:'👑', strip:'#FF006E', title:'Full Yes Day',                            items:['Vaanya rules for a FULL day!','One magical day — YOU decide EVERYTHING!','👑 The most epic reward EVER!']},
 ];
 
 const SPEND_ITEMS=[
-  {id:'sweets', icon:'🍬',  title:'Eat sweets today',      cost:50,  col:'#EC4899',grad:'linear-gradient(135deg,#FF006E,#FF6B6B)', desc:'Treat yourself to mithai, chocolate or sweets!'},
-  {id:'snack',  icon:'🍟',  title:'Snack of your choice',  cost:50,  col:'#06B6D4',grad:'linear-gradient(135deg,#06D6A0,#3A86FF)', desc:'Pick any snack you want from kitchen or shop!'},
-  {id:'game',   icon:'🎮',  title:'Play a game',           cost:70,  col:'#10B981',grad:'linear-gradient(135deg,#8338EC,#FF006E)', desc:'Play your favourite game — board, outdoor or video!'},
-  {id:'tv30',   icon:'📺',  title:'30 min extra TV',       cost:80,  col:'#3B82F6',grad:'linear-gradient(135deg,#3A86FF,#06D6A0)', desc:'Watch 30 extra minutes of TV or YouTube!'},
-  {id:'canteen',icon:'🏫',  title:'₹30 for canteen',       cost:100, col:'#F97316',grad:'linear-gradient(135deg,#FF9A3C,#FFBE0B)', desc:'Get ₹30 to spend at the school canteen!'},
-  {id:'buy50',  icon:'🛒',  title:'Buy something — ₹50',   cost:100, col:'#D97706',grad:'linear-gradient(135deg,#FF6B6B,#FFBE0B)', desc:'Buy any small item worth up to ₹50!'},
-  {id:'tv60',   icon:'📺✨',title:'1 hour screen time',    cost:200, col:'#8B5CF6',grad:'linear-gradient(135deg,#8338EC,#3A86FF)', desc:'A full extra hour of screen time today!'},
+  {id:'snack_s',  icon:'🍭', title:'Special Snack of Your Choice', cost:30,  col:'#EC4899', strip:'#FF006E', desc:'Any snack you want — your pick!'},
+  {id:'tv15',     icon:'📺', title:'Extra 15 Mins TV',             cost:40,  col:'#3B82F6', strip:'#3A86FF', desc:'15 extra minutes of TV or YouTube'},
+  {id:'choc',     icon:'🍫', title:'A Chocolate',                  cost:50,  col:'#D97706', strip:'#FFBE0B', desc:'Any chocolate of your choice!'},
+  {id:'tv30',     icon:'📺', title:'Extra 30 Mins TV',             cost:80,  col:'#0284C7', strip:'#06D6A0', desc:'30 extra minutes of TV or YouTube'},
+  {id:'game_par', icon:'🎮', title:'Play Game with Parents',       cost:90,  col:'#7C3AED', strip:'#8338EC', desc:'Board game or outdoor — parents play with you!'},
+  {id:'chess',    icon:'♟️', title:'Play Chess for 20 Mins',     cost:100, col:'#059669', strip:'#06D6A0', desc:'20 minutes of chess — sharpen your brain!'},
+  {id:'tv60',     icon:'📺', title:'1 Hour Screen Time',           cost:200, col:'#8B5CF6', strip:'#8338EC', desc:'A full extra hour of screen time today!'},
+  {id:'gift_s',   icon:'🎁', title:'Small Surprise Gift by Parents', cost:250, col:'#DB2777', strip:'#FF006E', desc:'A small surprise gift from Mamma or Papa!'},
+  {id:'date',     icon:'❤️', title:'Date with Mom or Dad',       cost:250, col:'#E11D48', strip:'#FB5607', desc:'Special 1-on-1 time — your choice of activity!'},
 ];
 
 const EARN_GUIDE=[
@@ -2734,7 +2539,7 @@ async function loadFromSupabase() {
           odda: d.odda_done === true || d.odda_done === 'true',
           parentComment: d.notes || '',
           parentRating: d.parent_rating || 0,
-          approved: d.approved === true || d.approved === 'true', // DB column is truth
+          approved: (()=>{ const ap=d.approved===true||d.approved==='true'; if(ap){ try{sessionStorage.removeItem('vaanya_session_'+d.date);}catch(e){} } return ap; })(),
           savedAt: d.saved_at,
           ...safeFullData  // spread full_data EXCEPT approved
         };
@@ -2942,7 +2747,8 @@ function checkLogicAnswers(){
   var pts=Math.round((correct/10)*15);
   logicPtsTotal=pts;
   brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal+mathsPtsToday+worksheetPts;
-  updateBrainDisplay();calcDayPts();
+  if(typeof ttSyncBrainLabPts==='function') ttSyncBrainLabPts();
+  updateBrainDisplay();if(typeof ttSyncBrainLabPts==='function') ttSyncBrainLabPts();calcDayPts();
   var scoreDiv=document.getElementById('logic-score-display');
   var scoreNum=document.getElementById('logic-score-num');
   var scoreMsg=document.getElementById('logic-score-msg');
@@ -2983,6 +2789,10 @@ function freezeLogic(){
 
 
 function showTab(id,btn){
+  // Show live score right panel only on daily report tab
+  const rp=document.getElementById('right-panel');
+  if(rp){ rp.style.display = (id==='report') ? '' : 'none'; }
+  _lppResponsive();
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
@@ -2990,7 +2800,6 @@ function showTab(id,btn){
   if(id==='brain'){} // worksheets load when Worksheets tab clicked
   if(id==='wordbook'){ wbWords=[]; wbLoad(); }
   if(id==='rewards'){renderRewards();setTimeout(showVaanyaMotivation,600);}
-  if(id==='spend')renderSpend();
   if(id==='history')renderHistory();
   if(id==='graphs')renderGraphs();
   if(id==='parent'){
@@ -3205,7 +3014,20 @@ function totalEarned(){
 })();
 
 function buildAll(){
+  // Clear stale admin-overridden spend/reward data when version changes
+  // Bump this version string whenever SPEND_ITEMS or REWARDS data changes
+  const DATA_VERSION = 'v2-2026-06-03';
+  if(localStorage.getItem('vaanya_data_version') !== DATA_VERSION){
+    localStorage.removeItem('vaanya_admin_spend_items');
+    localStorage.removeItem('vaanya_admin_rewards');
+    localStorage.setItem('vaanya_data_version', DATA_VERSION);
+  }
   // Reset all in-memory pts to 0 — will be restored from cloud/session after load
+  // Pre-fill today's date
+  const _todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+  const _rptDate = document.getElementById('rpt-date');
+  if(_rptDate && !_rptDate.value) _rptDate.value = _todayStr;
+  ttInitDay();
   brainPtsToday=0; sudokuPts=0; logicPtsTotal=0; riddlePtsTotal=0;
   mathsPtsToday=0; worksheetPts=0; aiSkillPts=0;
   // Reset parent-tab dropdowns explicitly (they live outside #tab-report)
@@ -3386,6 +3208,15 @@ function _buildNotepadPanel(key, opt){
   const placeholder = isPoem
     ? 'Write your poem here...\n\nEvery great poem starts with one honest line.\nLet your heart speak — in Hindi or English!'
     : 'Write your story here...\n\nOnce upon a time...\n\nLet your imagination take you on an adventure!';
+  const poemToolbar = isPoem
+    ? '<div style="display:flex;gap:6px;margin-bottom:10px;padding:7px 10px;background:#F5F3FF;border-radius:10px;border:1.5px solid #DDD6FE;align-items:center;flex-wrap:wrap">'
+      + '<span style="font-size:10px;font-weight:800;color:#7C3AED;margin-right:4px">Format:</span>'
+      + '<button onclick="cmFormatText(\'bold\')" style="width:30px;height:30px;border-radius:7px;border:1.5px solid #C4B5FD;background:#fff;font-weight:900;font-size:14px;cursor:pointer;font-family:Georgia,serif;color:#3B0764">B</button>'
+      + '<button onclick="cmFormatText(\'italic\')" style="width:30px;height:30px;border-radius:7px;border:1.5px solid #C4B5FD;background:#fff;font-size:14px;cursor:pointer;font-family:Georgia,serif;font-style:italic;color:#3B0764">I</button>'
+      + '<button onclick="cmFormatText(\'underline\')" style="width:30px;height:30px;border-radius:7px;border:1.5px solid #C4B5FD;background:#fff;font-size:14px;cursor:pointer;font-family:Georgia,serif;text-decoration:underline;color:#3B0764">U</button>'
+      + '<span style="font-size:10px;color:#9CA3AF;font-weight:700;margin-left:6px">Select text then tap</span>'
+      + '</div>'
+    : '';
 
   return `
 <div style="background:#fff;border:2px solid ${isPoem?'#DDD6FE':'#93C5FD'};border-radius:18px;overflow:hidden;margin-bottom:14px;box-shadow:0 4px 20px rgba(0,0,0,.06)">
@@ -3399,6 +3230,7 @@ function _buildNotepadPanel(key, opt){
     <div style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:5px 11px;font-size:11px;font-weight:800;color:#fff">Notepad \U0001f4dd</div>
   </div>
   <div style="padding:18px">
+    ${poemToolbar}
     <!-- Notepad -->
     <div style="${noteStyle}border-radius:14px;padding:6px 0;position:relative;overflow:hidden;margin-bottom:16px;box-shadow:inset 0 2px 6px rgba(0,0,0,.04)">
       <!-- Binding strip -->
@@ -3577,7 +3409,7 @@ async function saveCreativeWork(){
   if(!key||!opt){toast('Please choose an activity first!');return;}
 
   const date=document.getElementById('rpt-date')?.value;
-  if(!date){toast('Please set a date on the Daily Report tab first!');return;}
+  if(!date){toast('Please select a date to approve first!');return;}
 
   const btn=document.getElementById('cm-save-btn');
   const status=document.getElementById('cm-status');
@@ -4381,6 +4213,8 @@ function calcOddaAssign(){
 }
 
 function calcDayPts(){
+  // Brain lab sync is called directly from brain lab check functions — not from here
+  const ttPts = (typeof ttGetTotalPts==='function') ? ttGetTotalPts() : 0;
   let pts=0;
   let breakdown={};
 
@@ -4389,8 +4223,8 @@ function calcDayPts(){
   // Self-study pts — 10 per subject checked
   let ssPts=0;
   SS_SUBJECTS.forEach((_,i)=>{ if(document.getElementById('ss-'+i)?.checked) ssPts+=10; });
-  pts+=ttVal+ssPts;
-  breakdown.overview=ttVal+ssPts;
+  pts+=ttVal+ssPts+ttPts;
+  breakdown.overview=ttVal+ssPts+ttPts;
   breakdown.ss=ssPts; // separate ss so live panel can show timetable and study independently
   const ovEl=document.getElementById('overview-pts');
   if(ovEl)ovEl.textContent=ttVal+' pts'; // show only timetable pts in overview section
@@ -4513,13 +4347,9 @@ function calcDayPts(){
     // Parent has explicitly set a value — use it directly, no auto-calc
     shlokaPts=_lgPts;
   } else {
-    // Auto-calc from geetaProgress — only count today's activity
+    // Auto-calc: only mastered TODAY by parent adds pts. inprogress = 0 auto-pts.
     Object.values(geetaProgress||{}).forEach(function(v){
-      if(v.status==='mastered' && v.date===_loadedDate){
-        shlokaPts+=25; // mastered today
-      } else if((v.status==='inprogress'||v.status==='relearning') && (!v.date||v.date>=_loadedDate)){
-        shlokaPts+=10; // actively learning on or after today
-      }
+      if(v.status==='mastered' && v.date===_loadedDate){ shlokaPts+=25; }
     });
   }
   pts+=shlokaPts; breakdown.shloka=shlokaPts;
@@ -4822,9 +4652,10 @@ function toggleMobPtsPanel(){
 function _lppResponsive(){
   const pill=document.getElementById('mob-pts-pill');
   if(!pill) return;
-  // Show pill only when right panel is hidden (narrow screens)
+  // Show pill only on daily report tab AND on narrow screens
   const isMobile=window.innerWidth<900;
-  pill.style.display=isMobile?'flex':'none';
+  const reportActive=document.getElementById('tab-report')?.classList.contains('active');
+  pill.style.display=(isMobile&&reportActive)?'flex':'none';
 }
 window.addEventListener('resize',_lppResponsive);
 document.addEventListener('DOMContentLoaded',_lppResponsive);
@@ -4973,7 +4804,9 @@ function collectFormData(date, pts){
     savedRiddlePts:    riddlePtsTotal,
     savedWorksheetPts: worksheetPts,
     savedWsAnswered:   JSON.stringify(_wsAnswered||{}),
-    savedAt:new Date().toISOString()
+    savedAt:new Date().toISOString(),
+    // Timetable block states — which activities checked, pts per block
+    ttBlockStatesJSON: JSON.stringify(ttBlockStates||{})
   };
 }
 
@@ -5119,7 +4952,7 @@ function unlockParentActions(){
 }
 
 async function approveReport(){
-  const date=document.getElementById('rpt-date').value;
+  const date = (typeof _pendingReviewDate!=='undefined'&&_pendingReviewDate) ? _pendingReviewDate : document.getElementById('rpt-date').value;
   if(!date){toast("Please set today\'s date first!");return;}
   todayApproved=true;
 
@@ -5174,7 +5007,9 @@ async function approveReport(){
 
   updateTopBar();
   lockForm(date, pts);
-  _sessionClearDate(date); // approved — session no longer needed
+  _sessionClearDate(date); // approved — session must never override Supabase
+  const _rptEl=document.getElementById('rpt-date');
+  if(_rptEl && _rptEl.value!==date) _rptEl.value=date;
   populateResetDatePicker();
   showPop('✅','Report Approved! 🎉','Vaanya your report has been approved! You earned '+pts+' points today! ⭐ Keep it up!');
   toast('Report approved! +'+pts+' points saved! Report is now locked.');
@@ -5189,7 +5024,7 @@ async function approveReport(){
 }
 
 async function rejectReport(){
-  const date = document.getElementById('rpt-date')?.value;
+  const date = _pendingReviewDate || document.getElementById('rpt-date')?.value;
   if(!confirm('REJECT this report? This will completely erase all entries for '+(date||'today')+'. Vaanya will need to start fresh.')) return;
 
   // 1. Delete from Supabase (remove the draft entirely)
@@ -5252,36 +5087,112 @@ function showVaanyaMotivation(){
 // ════════════════════════════════════════════
 // REWARDS TAB
 // ════════════════════════════════════════════
+// ── Claimed rewards helpers ────────────────────────────────────
+function getClaimedRewards(){
+  try{ return JSON.parse(localStorage.getItem('vaanya_claimed_rewards')||'{}'); }
+  catch(e){ return {}; }
+}
+function markRewardClaimed(key, pts, title){
+  const claimed = getClaimedRewards();
+  if(!claimed[key]) claimed[key] = {count:0, history:[]};
+  claimed[key].count++;
+  claimed[key].lastClaimed = new Date().toISOString();
+  claimed[key].history.unshift({date:new Date().toLocaleDateString('en-IN'), pts, title});
+  localStorage.setItem('vaanya_claimed_rewards', JSON.stringify(claimed));
+}
+
+function claimReward(rewardIdx, pts){
+  const _rData=(()=>{try{return JSON.parse(localStorage.getItem('vaanya_admin_rewards')||'null')||REWARDS;}catch(e){return REWARDS;}})();
+  const _r=_rData.filter(x=>x.active!==false).sort((a,b)=>a.pts-b.pts)[rewardIdx]||{};
+  const title=_r.title||'Reward';
+  if(availablePts() < pts){ toast('Not enough points yet! Keep earning! 💪'); return; }
+  if(!confirm('Claim "'+title+'" for '+pts.toLocaleString()+' pts?\n\nTell Mamma or Papa!\nDeducts '+pts.toLocaleString()+' pts from your bank.')) return;
+  // Reuse spendPts mechanism to deduct pts + log to Supabase
+  const key = 'reward_'+rewardIdx;
+  totalSpent += pts;
+  const spendItem = {id:key, cost:pts, title, date:new Date().toISOString().split('T')[0]};
+  spendHist.unshift(spendItem);
+  localStorage.setItem('vaanya_spent_total', totalSpent);
+  localStorage.setItem('vaanya_spend_hist', JSON.stringify(spendHist));
+  saveSpendToSupabase(spendItem);
+  markRewardClaimed(key, pts, title);
+  updateTopBar();
+  showPop('🎉', 'Reward Claimed! 🌟', 'You claimed "'+title+'"! Tell Mamma & Papa to make it happen! 🏆');
+  renderRewards();
+  renderSpend();
+}
+
 function renderRewards(){
-  const avail=availablePts();const earned=totalEarned();
-  const el=document.getElementById('rwd-total-pts');if(el)el.textContent=earned.toLocaleString()+' total points earned';
-  const ea=document.getElementById('rwd-avail');if(ea)ea.textContent=avail.toLocaleString();
-  const ed=document.getElementById('rwd-days');if(ed)ed.textContent=savedDays.length;
-  const es=document.getElementById('rwd-streak');if(es)es.textContent=getStreak()+'🔥';
+  const avail=availablePts(); const earned=totalEarned();
+  const el=document.getElementById('rwd-total-pts'); if(el)el.textContent=earned.toLocaleString()+' total points earned';
+  const ea=document.getElementById('rwd-avail');     if(ea)ea.textContent=avail.toLocaleString();
+  const ed=document.getElementById('rwd-days');      if(ed)ed.textContent=savedDays.length;
+  const es=document.getElementById('rwd-streak');    if(es)es.textContent=getStreak()+'🔥';
+  // Keep spend-avail in sync for any legacy JS
+  const sa=document.getElementById('spend-avail');   if(sa)sa.textContent=avail;
 
   const rewardsData=(()=>{try{return JSON.parse(localStorage.getItem('vaanya_admin_rewards')||'null')||REWARDS;}catch(e){return REWARDS;}})();
-  const g=document.getElementById('reward-grid');if(!g)return;g.innerHTML='';
-  rewardsData.filter(r=>r.active!==false).sort((a,b)=>a.pts-b.pts).forEach(r=>{
-    // Unlock based on AVAILABLE bank pts (earned minus spent) — not total earned
-    const unlocked=avail>=r.pts;
-    const prog=Math.min(100,Math.round(avail/r.pts*100));
-    const grad=r.grad||('linear-gradient(135deg,'+r.col+','+r.col+'CC)');
+  const claimed = getClaimedRewards();
+  const g=document.getElementById('reward-grid'); if(!g)return; g.innerHTML='';
+
+  rewardsData.filter(r=>r.active!==false).sort((a,b)=>a.pts-b.pts).forEach((r,idx)=>{
+    const unlocked = avail>=r.pts;
+    const prog = Math.min(100,Math.round(avail/r.pts*100));
+    const grad = r.grad||('linear-gradient(135deg,'+r.col+','+r.col+'CC)');
+    const key = 'reward_'+idx;
+    const claimInfo = claimed[key];
+    const claimCount = claimInfo ? claimInfo.count : 0;
+
     const div=document.createElement('div');
-    div.className='rcard '+(unlocked?'unlocked':'locked');
-    div.style.cssText=`background:${grad}`;
-    div.innerHTML=`
-      <div class="rc-lock">${unlocked?'✅':'🔒'}</div>
-      <div class="rc-icon">${r.icon}</div>
-      <div class="rc-pts">${r.pts.toLocaleString()} pts needed</div>
-      <div class="rc-title">${r.title}</div>
-      <div class="rc-items">${(r.items||[]).map(i=>'• '+i).join('<br>')}</div>
-      <div class="rc-prog"><div class="rc-fill" style="width:0%"></div></div>
-      <div style="font-size:9px;color:rgba(255,255,255,.9);margin-top:3px;font-weight:900">${prog}% · ${Math.min(avail,r.pts).toLocaleString()}/${r.pts.toLocaleString()} bank pts</div>
-      ${unlocked?`<div class="rc-claim" style="color:${r.bdr||r.col}">🎉 CLAIM IT!</div>`:''}`;
+    div.className='';div.style.cssText='';
+
+    // Trophy badge if ever claimed
+    const trophyBadge = claimCount>0
+      ? '<div style="position:absolute;top:9px;left:11px;background:rgba(255,255,255,.9);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:900;color:#B45309">'
+        + '✅ Claimed '+(claimCount>1?claimCount+'x':'')+'</div>'
+      : '';
+
+    const strip = r.strip||r.bdr||'#8338EC';
+    let btnText, btnStyle, btnClick;
+    if(unlocked){
+      btnText = claimCount>0 ? '🔄 Claim again!' : '🎉 Claim it!';
+      btnStyle = 'color:'+strip+';border-color:'+strip;
+      btnClick = 'onclick="claimReward('+idx+','+r.pts+')"';
+    } else {
+      btnText = '🔒 '+(r.pts-avail).toLocaleString()+' more needed';
+      btnStyle = 'color:#9CA3AF;border-color:#E5E7EB;cursor:not-allowed';
+      btnClick = 'disabled';
+    }
+
+    const trophyHtml = claimCount>0
+      ? '<span class="rw-trophy">✅ '+( claimCount>1?'Claimed '+claimCount+'x':'Claimed')+'</span>'
+      : '';
+
+    div.className='rw-strip-row';
+    div.innerHTML=
+      '<div class="rw-accent" style="background:'+strip+'"></div>'+
+      '<div class="rw-body">'+
+        '<div class="rw-icon">'+r.icon+'</div>'+
+        '<div class="rw-info">'+
+          '<div class="rw-name">'+r.title+trophyHtml+'</div>'+
+          '<div class="rw-sub">'+r.pts.toLocaleString()+' pts'+(unlocked?' · you have '+avail.toLocaleString():' · need '+(r.pts-avail).toLocaleString()+' more')+'</div>'+
+          '<div class="rw-prog"><div class="rw-prog-fill" style="width:0%;background:'+strip+'" id="rfill-'+idx+'"></div></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="rw-right">'+
+        '<span class="rw-pts">'+r.pts.toLocaleString()+' pts</span>'+
+        '<button class="rw-btn" style="'+btnStyle+'" '+btnClick+'>'+btnText+'</button>'+
+      '</div>';
+
     g.appendChild(div);
-    // Animate progress bar after render
-    setTimeout(()=>{const f=div.querySelector('.rc-fill');if(f)f.style.width=prog+'%';},80);
+    setTimeout(()=>{
+      const f=document.getElementById('rfill-'+idx);
+      if(f) f.style.width=prog+'%';
+    },80);
   });
+
+  // Also render the spend grid and history now that they're on the same page
+  renderSpend();
 }
 
 // ════════════════════════════════════════════
@@ -5356,35 +5267,56 @@ function renderSpend(){
   const spendData=(()=>{try{return JSON.parse(localStorage.getItem('vaanya_admin_spend_items')||'null')||SPEND_ITEMS;}catch(e){return SPEND_ITEMS;}})();
   const usedToday=getUsedToday();
   const g=document.getElementById('spend-grid');if(!g)return;g.innerHTML='';
+
   spendData.filter(s=>s.active!==false).sort((a,b)=>a.cost-b.cost).forEach(item=>{
     const can=avail>=item.cost;
     const used=usedToday.includes(item.id);
-    const grad=item.grad||('linear-gradient(135deg,'+item.col+','+item.col+'BB)');
+    const strip=item.strip||item.col||'#8338EC';
     const div=document.createElement('div');
-    div.className='scard'+(used?' scard-used':'');
-    div.style.cssText=used
-      ?'background:linear-gradient(135deg,#6EE7B7,#34D399);border-color:rgba(255,255,255,.6);opacity:.82'
-      :`background:${grad}`;
-    const btnHtml=used
-      ?`<button class="sc-btn" disabled style="background:rgba(255,255,255,.2);border-style:dashed">✅ Used today — enjoy!</button>`
-      :`<button class="sc-btn" ${can?'':'disabled'}
-          onclick="spendPts('${item.id}',${item.cost},'${item.title}','${item.col}')">
-          ${can?'🛒 Spend '+item.cost+' pts':'🔒 Need '+(item.cost-avail)+' more'}</button>`;
-    div.innerHTML=`
-      <div class="sc-cost-badge">${item.cost} pts</div>
-      <span class="sc-icon">${item.icon}</span>
-      <div class="sc-title">${item.title}</div>
-      <div class="sc-desc">${item.desc}</div>
-      ${btnHtml}`;
-    g.appendChild(div);
-  });
+    div.className='rw-strip-row'+(used?' used':'');
+
+    let btnStyle, btnText, btnDisabled;
+    if(used){
+      btnStyle='color:#6B7280;border-color:#D1D5DB;cursor:not-allowed';
+      btnText='✅ Used today'; btnDisabled='disabled';
+    } else if(can){
+      btnStyle='color:'+strip+';border-color:'+strip;
+      btnText='🎁 Claim '+item.cost+' pts'; btnDisabled='';
+    } else {
+      btnStyle='color:#9CA3AF;border-color:#E5E7EB;cursor:not-allowed';
+      btnText='🔒 '+(item.cost-avail)+' more needed'; btnDisabled='disabled';
+    }
+
+    const _btn = document.createElement('button');
+    _btn.className='rw-btn';
+    _btn.setAttribute('style',btnStyle);
+    if(btnDisabled) _btn.disabled=true;
+    if(can&&!used) _btn.addEventListener('click',()=>spendPts(item.id,item.cost,item.title));
+    _btn.textContent=btnText;
+
+    div.innerHTML=
+      '<div class="rw-accent" style="background:'+strip+'"></div>'+
+      '<div class="rw-body">'+
+        '<div class="rw-icon">'+item.icon+'</div>'+
+        '<div class="rw-info">'+
+          '<div class="rw-name">'+item.title+'</div>'+
+          '<div class="rw-sub">'+(item.desc||'')+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="rw-right" id="rw-right-'+item.id+'">'+
+        '<span class="rw-pts">'+item.cost+' pts</span>'+
+      '</div>';
+    const _r=div.querySelector('.rw-right');
+    if(_r)_r.appendChild(_btn);
+    g.appendChild(div);  });
+
   const hl=document.getElementById('spend-hist-list');if(!hl)return;
   if(!spendHist.length){
-    hl.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px">🛒</div><div style="font-weight:800">No spending yet!</div><div style="font-size:11px;margin-top:4px">Earn points and treat yourself!</div></div>`;
+    hl.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px">🎁</div><div style="font-weight:800">No spending yet!</div><div style="font-size:11px;margin-top:4px">Earn points and treat yourself!</div></div>';
     return;
   }
   hl.innerHTML='<table><thead><tr><th>Date</th><th>Reward</th><th>Points spent</th></tr></thead><tbody>'+
-    spendHist.slice(0,20).map(s=>`<tr><td style="color:var(--muted);white-space:nowrap">${s.date}</td><td style="font-weight:700">${s.title}</td><td style="font-weight:900;color:var(--r)">−${s.cost} pts</td></tr>`).join('')+
+    spendHist.slice(0,20).map(s=>'<tr><td style="color:var(--muted);white-space:nowrap">'+s.date+'</td><td style="font-weight:700">'+s.title+'</td><td style="font-weight:900;color:var(--r)">−'+s.cost+' pts</td></tr>').join('')+
     '</tbody></table>';
 }
 
@@ -6340,9 +6272,10 @@ function checkSudoku(){
     const bonus={easy:0,medium:5,hard:10}[sudokuDifficulty]||0;
     sudokuPts=Math.max(sudokuPts,30+bonus);
     brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal+mathsPtsToday+worksheetPts;
+  if(typeof ttSyncBrainLabPts==='function') ttSyncBrainLabPts();
     msg.innerHTML=`<span style="color:#10B981;font-size:16px">🎉 PERFECT! +${30+bonus} pts!</span>`;
     toast('Sudoku solved! +'+(30+bonus)+' brain pts!');
-    updateBrainDisplay();calcDayPts();
+    updateBrainDisplay();if(typeof ttSyncBrainLabPts==='function') ttSyncBrainLabPts();calcDayPts();
   } else if(!allFilled){
     msg.innerHTML='<span style="color:#F97316">Some cells are empty — sudoku checked & locked now! 🔒</span>';
   } else {
@@ -6356,7 +6289,8 @@ function checkSudoku(){
 function revealSudokuHint(){
   sudokuPts=Math.max(0,sudokuPts-5);
   brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal+mathsPtsToday+worksheetPts;
-  updateBrainDisplay();calcDayPts();
+  if(typeof ttSyncBrainLabPts==='function') ttSyncBrainLabPts();
+  updateBrainDisplay();if(typeof ttSyncBrainLabPts==='function') ttSyncBrainLabPts();calcDayPts();
   for(let r=0;r<9;r++)for(let c=0;c<9;c++){
     if(sudokuGrid[r][c]===0){
       sudokuGrid[r][c]=sudokuSolution[r][c];
@@ -6399,9 +6333,10 @@ function checkRiddle(i,correct,hint){
   riddleAnswered.push(i);
   if(isRight){
     riddlePts+=10;riddlePtsTotal+=10;brainPtsToday=sudokuPts+logicPtsTotal+riddlePtsTotal+mathsPtsToday+worksheetPts;
+  if(typeof ttSyncBrainLabPts==='function') ttSyncBrainLabPts();
     document.getElementById('rid-result-'+i).innerHTML='<span style="color:#10B981;font-weight:800">🎉 Correct! +10 pts! Answer: '+correct+'</span>';
     toast('Riddle solved! +10 brain pts!');
-    updateBrainDisplay();calcDayPts();
+    updateBrainDisplay();if(typeof ttSyncBrainLabPts==='function') ttSyncBrainLabPts();calcDayPts();
   }else{
     document.getElementById('rid-result-'+i).innerHTML='<span style="color:#EF4444;font-weight:800">❌ Not quite! Answer: '+correct+'</span>';
   }
@@ -7432,7 +7367,8 @@ function onDateChange(){
   // Step 1: Save session for the PREVIOUS date (before we switch)
   const prevDate = el.dataset.prev;
   if(prevDate && prevDate !== date && !todayApproved){
-    _sessionSaveForDate(prevDate);
+    const _prev = savedDays.find(d => d.date === prevDate);
+    if(!_prev || !_prev.approved) _sessionSaveForDate(prevDate);
   }
 
   // Step 2: Clear the form (suppress flag prevents blank session save)
@@ -7666,6 +7602,21 @@ function loadDraftDay(d){
   if(typeof updateSS==='function') updateSS();
 
   // ── Creative ─────────────────────────────────────────────────
+  // Restore timetable block states
+  if(d.ttBlockStatesJSON){
+    try{ ttBlockStates = JSON.parse(d.ttBlockStatesJSON)||{}; }
+    catch(e){ ttBlockStates = {}; }
+    if(typeof TT_TEST_MODE !== 'undefined' && TT_TEST_MODE){
+      Object.keys(ttBlockStates).forEach(k=>{
+        if(ttBlockStates[k]) ttBlockStates[k].markedDone = false;
+      });
+    }
+    ttRender();
+    if(typeof ttRenderMiniSchedule==='function') ttRenderMiniSchedule();
+    // Sync brain lab pts after restoring state
+    setTimeout(()=>{ if(typeof ttSyncBrainLabPts==='function') ttSyncBrainLabPts(); }, 300);
+  }
+
   if(d.creativeChosen){
     creativeChosen=d.creativeChosen;
     document.querySelectorAll('.creative-option').forEach(el=>
@@ -8519,6 +8470,9 @@ function _sessionKey(date){ return 'vaanya_sess_' + date; }
 // Save snapshot using collectFormData so pills are always included
 function _sessionSaveForDate(date){
   if(!date || _suppressSession) return;
+  // Never save session for an approved report — DB is truth, session must not override
+  const _existingDay = savedDays.find(d => d.date === date);
+  if(_existingDay && _existingDay.approved) return;
   try {
     const pts = calcDayPts();
     const snap = collectFormData(date, pts);
@@ -9029,6 +8983,1219 @@ function _wsUpdateTotalDisplay(){
 // ════════════════════════════════════════════
 // INIT — load cloud data then build UI
 // ════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════
+// TIMETABLE ENGINE
+// ════════════════════════════════════════════════════════════════
+
+// State
+let ttIsHoliday = false;
+let ttBlockStates = {};   // blockId -> {pts, done, checkedActs}
+let ttClockInterval = null;
+
+// ── BLOCK DEFINITIONS ─────────────────────────────────────────
+const TT_WEEKDAY = [
+
+  // ── 6:00 AM – 3:00 PM — SCHOOL ──────────────────────────────
+  {
+    id:'wd-school', time:'6:00 AM – 3:00 PM', name:'School Time', icon:'🏫',
+    iconBg:'#EEF2FF', iconColor:'#4F46E5', color:'#4F46E5', lightBg:'#EEF2FF',
+    type:'locked-until-3pm', maxPts:0,
+    activities:[]
+  },
+
+  // ── 3:00 PM – 3:30 PM — LUNCH + SCREEN ──────────────────────
+  {
+    id:'wd-lunch', time:'3:00 PM – 3:30 PM', name:'Lunch & Screen Time', icon:'🍱',
+    iconBg:'#F9FAFB', iconColor:'#6B7280', color:'#6B7280', lightBg:'#F9FAFB',
+    type:'break', maxPts:0, unlockHour:15.0,
+    activities:[]
+  },
+
+  // ── 3:30 PM – 4:00 PM — BOOK READING + WORDBOOK ─────────────
+  {
+    id:'wd-reading', time:'3:30 PM – 4:00 PM', name:'Book Reading + New Words', icon:'📚',
+    iconBg:'#ECFDF5', iconColor:'#059669', color:'#059669', lightBg:'#ECFDF5',
+    type:'wordbook-inline', maxPts:10, unlockHour:15.5,
+    activities:[
+      {id:'wd-rd1', name:'Book Reading + Add 3 new words to Wordbook', pts:10, type:'wordbook', note:'10 pts when all 3 words are added with meaning & sentence'},
+    ]
+  },
+
+  // ── 4:00 PM – 6:00 PM — HOMEWORK + STUDY ────────────────────
+  {
+    id:'wd-study', time:'4:00 PM – 6:00 PM', name:'Homework & Self Study', icon:'✏️',
+    iconBg:'#EFF6FF', iconColor:'#2563EB', color:'#2563EB', lightBg:'#EFF6FF',
+    type:'normal', maxPts:62, unlockHour:16.0,
+    activities:[
+      {id:'wd-st1', name:'Homework',                      pts:0,  type:'self',   note:'No pts — must be done every day 📚'},
+      {id:'wd-st2', name:'Brain Lab — Maths Sprint',      pts:0,  type:'link',   tab:'brain', note:'→ Brain Lab · pts pulled from there'},
+      {id:'wd-st3', name:'Brain Lab — Logic',             pts:0,  type:'link',   tab:'brain', note:'→ Brain Lab · pts pulled from there'},
+      {id:'wd-st4', name:'Brain Lab — Sudoku',            pts:0,  type:'link',   tab:'brain', note:'→ Brain Lab · pts pulled from there'},
+      {id:'wd-st5', name:'Self Study',                    pts:7,  type:'self'},
+      {id:'wd-st6', name:'Olympiad Practice & Papers',    pts:0,  type:'pct-calc', maxCalcPts:15, note:'App calculates pts from % — max 15 pts'},
+      {id:'wd-ws1', name:'Worksheet 1',                   pts:0,  type:'pct-calc', maxCalcPts:10, note:'App calculates pts from % — max 10 pts'},
+      {id:'wd-ws2', name:'Worksheet 2',                   pts:0,  type:'pct-calc', maxCalcPts:10, note:'App calculates pts from % — max 10 pts'},
+    ]
+  },
+
+  // ── 6:00 PM – 6:45 PM — OUTDOOR ─────────────────────────────
+  {
+    id:'wd-outdoor', time:'6:00 PM – 6:45 PM', name:'Outdoor Playing with Kinnu', icon:'⚽',
+    iconBg:'#ECFDF5', iconColor:'#059669', color:'#059669', lightBg:'#ECFDF5',
+    type:'normal', maxPts:7, unlockHour:18.0,
+    activities:[
+      {id:'wd-ou1', name:'Outdoor playing with Kinnu', pts:7, type:'self'},
+    ]
+  },
+
+  // ── 6:50 PM – 8:00 PM — ODDA ────────────────────────────────
+  {
+    id:'wd-odda', time:'6:50 PM – 8:00 PM', name:'Odda Class + Dinner', icon:'💻',
+    iconBg:'#F3EFFE', iconColor:'#7C3AED', color:'#7C3AED', lightBg:'#F3EFFE',
+    type:'normal', maxPts:20, unlockHour:18.83,
+    activities:[
+      {id:'wd-od1', name:'Odda Class + Assignment',                        pts:10, type:'self'},
+      {id:'wd-od5', name:'Dinner',                                         pts:0,  type:'self', note:'No pts — nourish yourself! 🍽️'},
+      {id:'wd-od2', name:'No Odda — Read about AI and make notes',         pts:5,  type:'text-entry', entryKey:'ai_notes', saveTo:'gallery', galleryKey:'ai_notes', note:'Write your AI learning notes here'},
+      {id:'wd-od3', name:'No Odda — Read about Ayurvedic herbs + notes',   pts:5,  type:'text-entry', entryKey:'ayurvedic_notes', saveTo:'gallery', galleryKey:'ayurvedic_notes', note:'Write your Ayurvedic herbs notes here'},
+      {id:'wd-od4', name:'No Odda — Read about Vedas and make notes',      pts:5,  type:'text-entry', entryKey:'vedas_notes', saveTo:'gallery', galleryKey:'vedas_notes', note:'Write your Vedas learning notes here'},
+    ]
+  },
+
+  // ── 8:00 PM – 9:00 PM — EVENING ENRICHMENT ──────────────────
+  {
+    id:'wd-enrich', time:'8:00 PM – 9:00 PM', name:'Evening Enrichment', icon:'⭐',
+    iconBg:'#FDF2F8', iconColor:'#DB2777', color:'#DB2777', lightBg:'#FDF2F8',
+    type:'normal', maxPts:55, unlockHour:20.0,
+    activities:[
+      {id:'wd-e1', name:'Kathak class',                                         pts:10, type:'self'},
+      {id:'wd-e2', name:'Maths Practice — Solve 10 complex questions',          pts:0,  type:'pct-calc', maxCalcPts:15, note:'App calculates pts from % — max 15 pts'},
+      {id:'wd-e5', name:'Questionnaire — 10 Questions',                         pts:0,  type:'pct-calc', maxCalcPts:15, note:'App calculates pts from % — max 15 pts'},
+      {id:'wd-e3', name:'Odda class + make notes',                              pts:5,  type:'self'},
+      {id:'wd-e6', name:'Learn one FACT from Indian History and make notes',    pts:10, type:'text-entry', entryKey:'indian_history', saveTo:'gallery', galleryKey:'interesting_facts', note:'Write the historical fact and what you learned'},
+      {id:'wd-e4', name:'Any school activity / preparation',                    pts:0,  type:'self', note:'No pts — but important! ✅'},
+      {id:'wd-e7', name:'Creative Task',                                          pts:0,  type:'parent-select', maxCalcPts:20, note:'Parents award up to 20 pts on review · No points added from this page'},
+    ]
+  },
+
+  // ── 9:00 PM – 9:15 PM — VALUES & REFLECTION ─────────────────
+  {
+    id:'wd-values', time:'9:00 PM – 9:15 PM', name:'Values & Reflection', icon:'📿',
+    iconBg:'#F0FDF4', iconColor:'#065F46', color:'#065F46', lightBg:'#F0FDF4',
+    type:'normal', maxPts:10, unlockHour:21.0,
+    activities:[
+      {id:'wd-v1', name:'Read Moral Values Book — 1 chapter + explain', pts:5, type:'text-entry', entryKey:'moral_values', saveTo:'gallery', galleryKey:'moral_values', note:'Write what you learned from this chapter'},
+      {id:'wd-v2', name:'Solve questionnaire by parents',                pts:0, type:'pct-calc', maxCalcPts:10, note:'App calculates pts from % — max 10 pts'},
+    ]
+  },
+
+  // ── 9:15 PM – 9:30 PM — WIND-DOWN ───────────────────────────
+  {
+    id:'wd-wind', time:'9:15 PM – 9:30 PM', name:'Wind-Down Routine', icon:'🌙',
+    iconBg:'#F0F4FF', iconColor:'#4F46E5', color:'#4F46E5', lightBg:'#F0F4FF',
+    type:'normal', maxPts:27, unlockHour:21.25,
+    activities:[
+      {id:'wd-w1', name:'Shloka reciting to parents',  pts:0,  type:'parent', note:'⏳ Parents award pts on review'},
+      {id:'wd-w2', name:'Daily gratitude journal',     pts:5,  type:'self'},
+      {id:'wd-w3', name:'Everything done on time',     pts:7,  type:'self'},
+      {id:'wd-w4', name:'Night Routine completed',     pts:8,  type:'self'},
+    ]
+  },
+
+  // ── 9:30 PM — SLEEP ─────────────────────────────────────────
+  {
+    id:'wd-sleep', time:'9:30 PM', name:'Sleep', icon:'😴',
+    iconBg:'#F9FAFB', iconColor:'#6B7280', color:'#6B7280', lightBg:'#F9FAFB',
+    type:'break', maxPts:0, unlockHour:21.5,
+    activities:[]
+  },
+];
+
+const TT_WEEKEND = [
+
+  // ── 7:00 AM – 9:00 AM ───────────────────────────────────────
+  {
+    id:'we-morning', time:'7:00 AM – 9:00 AM', name:'Rise & Morning Routine', icon:'🌅',
+    iconBg:'#FFFBEB', iconColor:'#D97706', color:'#D97706', lightBg:'#FFFBEB',
+    type:'normal', maxPts:15, unlockHour:7,
+    activities:[
+      {id:'we-m1', name:'Rise on time',                           pts:5,  type:'self'},
+      {id:'we-m2', name:'Outdoor + RSS Shaka',                    pts:5,  type:'self'},
+      {id:'we-m3', name:'Get Ready',                              pts:0,  type:'self', note:'No pts — just do it! 💪'},
+    ]
+  },
+
+  // ── 9:00 AM – 10:00 AM ──────────────────────────────────────
+  {
+    id:'we-puja', time:'9:00 AM – 10:00 AM', name:'Morning Puja & Wellness', icon:'🪔',
+    iconBg:'#FFF7ED', iconColor:'#EA580C', color:'#EA580C', lightBg:'#FFF7ED',
+    type:'normal', maxPts:20, unlockHour:9,
+    activities:[
+      {id:'we-p1', name:'Puja + Mandir + Surya Jal Arpan + Yoga Asana', pts:10, type:'self'},
+      {id:'we-p2', name:'Set your Almirah',                              pts:5,  type:'self'},
+      {id:'we-p3', name:'Set your Room',                                 pts:5,  type:'self'},
+      {id:'we-p4', name:'Breakfast',                                     pts:0,  type:'self', note:'No pts — nourish yourself! 🍽️'},
+    ]
+  },
+
+  // ── 10:00 AM – 12:00 PM ─────────────────────────────────────
+  {
+    id:'we-maths', time:'10:00 AM – 12:00 PM', name:'Maths Deep Practice', icon:'📐',
+    iconBg:'#EFF6FF', iconColor:'#2563EB', color:'#2563EB', lightBg:'#EFF6FF',
+    type:'normal', maxPts:30, unlockHour:10,
+    activities:[
+      {id:'we-ma1', name:'Practice Maths',                pts:10, type:'self'},
+      {id:'we-ma2', name:'Maths Olympiad questions',      pts:0,  type:'pct-calc', maxCalcPts:10,  note:'App calculates pts from % — max 10 pts'},
+      {id:'we-ma3', name:'Brain Lab — Maths Sprint',      pts:0,  type:'link',   tab:'brain', note:'→ Brain Lab · pts pulled from there'},
+      {id:'we-ma4', name:'Brain Lab — Logic puzzles',     pts:0,  type:'link',   tab:'brain', note:'→ Brain Lab · pts pulled from there'},
+      {id:'we-ma5', name:'Complex maths practice',        pts:0,  type:'pct-calc', maxCalcPts:15,  note:'App calculates pts from % — max 15 pts'},
+    ]
+  },
+
+  // ── 12:00 PM – 12:30 PM — BREAK ─────────────────────────────
+  {
+    id:'we-break1', time:'12:00 PM – 12:30 PM', name:'Break', icon:'☕',
+    iconBg:'#F9FAFB', iconColor:'#6B7280', color:'#6B7280', lightBg:'#F9FAFB',
+    type:'break', maxPts:0, unlockHour:12, activities:[]
+  },
+
+  // ── 12:30 PM – 2:00 PM ──────────────────────────────────────
+  {
+    id:'we-study1', time:'12:30 PM – 2:00 PM', name:'Self Study Block', icon:'📖',
+    iconBg:'#F0FDF4', iconColor:'#059669', color:'#059669', lightBg:'#F0FDF4',
+    type:'normal', maxPts:80, unlockHour:12.5,
+    activities:[
+      {id:'we-ss1', name:'Self Study — Maths',   pts:10, type:'self'},
+      {id:'we-ss2', name:'Self Study — English', pts:10, type:'self'},
+      {id:'we-ss3', name:'Self Study — Science', pts:10, type:'self'},
+      {id:'we-ss4', name:'Self Study — Hindi',   pts:10, type:'self'},
+      {id:'we-ss5', name:'Self Study — SST',     pts:10, type:'self'},
+      {id:'we-ws1', name:'Worksheet 1',          pts:0,  type:'pct-calc', maxCalcPts:10, note:'App calculates pts from % — max 10 pts'},
+      {id:'we-ws2', name:'Worksheet 2',          pts:0,  type:'pct-calc', maxCalcPts:10, note:'App calculates pts from % — max 10 pts'},
+      {id:'we-ws3', name:'Worksheet 3',          pts:0,  type:'pct-calc', maxCalcPts:10, note:'App calculates pts from % — max 10 pts'},
+    ]
+  },
+
+  // ── 2:00 PM – 2:30 PM — BREAK + LUNCH ──────────────────────
+  {
+    id:'we-lunch', time:'2:00 PM – 2:30 PM', name:'Break + Lunch Time', icon:'🍱',
+    iconBg:'#F9FAFB', iconColor:'#6B7280', color:'#6B7280', lightBg:'#F9FAFB',
+    type:'break', maxPts:0, unlockHour:14.0, activities:[]
+  },
+
+  // ── 2:30 PM – 4:00 PM ───────────────────────────────────────
+  {
+    id:'we-papers', time:'2:30 PM – 4:00 PM', name:'Practice Papers & Writing', icon:'✍️',
+    iconBg:'#F5F3FF', iconColor:'#7C3AED', color:'#7C3AED', lightBg:'#F5F3FF',
+    type:'normal', maxPts:45, unlockHour:14.5,
+    activities:[
+      {id:'we-pp1', name:'Practice Papers — Any Subject',     pts:0, type:'pct-calc', maxCalcPts:10, note:'App calculates pts from % — max 10 pts'},
+      {id:'we-pp2', name:'Olympiad Papers solve',             pts:0, type:'pct-calc', maxCalcPts:15, note:'App calculates pts from % — max 15 pts'},
+      {id:'we-pp3', name:'English Paragraph / Story Writing', pts:0, type:'dropdown', options:[3,5,7,10], note:'Select points based on quality'},
+      {id:'we-pp4', name:'Spoken English & Debate Practice',  pts:0, type:'dropdown', options:[3,5,7,10], note:'Select points based on quality'},
+    ]
+  },
+
+  // ── 4:00 PM – 4:30 PM — BOOK READING + WORDBOOK ────────────
+  {
+    id:'we-reading', time:'4:00 PM – 4:30 PM', name:'Book Reading + New Words', icon:'📚',
+    iconBg:'#ECFDF5', iconColor:'#059669', color:'#059669', lightBg:'#ECFDF5',
+    type:'wordbook-inline', maxPts:10, unlockHour:16.0,
+    activities:[
+      {id:'we-rd1', name:'Book Reading + Add 3 new words to Wordbook', pts:10, type:'wordbook', note:'10 pts when all 3 words are added with meaning & sentence'},
+    ]
+  },
+
+  // ── 4:30 PM – 5:00 PM — SHLOKA & PROVERB ───────────────────
+  {
+    id:'we-shloka', time:'4:30 PM – 5:00 PM', name:'Shloka & Wisdom', icon:'🕉️',
+    iconBg:'#F0FDF4', iconColor:'#065F46', color:'#065F46', lightBg:'#F0FDF4',
+    type:'normal', maxPts:35, unlockHour:16.5,
+    activities:[
+      {id:'we-sh1', name:'Shloka learning & writing in copy',              pts:25, type:'parent', note:'⏳ Parents award pts on Parents Review · 25 pts for full mastery'},
+      {id:'we-sh2', name:'Learn a proverb by a famous writer',             pts:10, type:'text-entry', entryKey:'proverb', saveTo:'gallery', galleryKey:'proverb', note:'Write the proverb and what it means to you'},
+    ]
+  },
+
+  // ── 5:00 PM – 6:00 PM — BRAIN + FOCUS ──────────────────────
+  {
+    id:'we-brain', time:'5:00 PM – 6:00 PM', name:'Brain Lab + Focus Time', icon:'🧠',
+    iconBg:'#FFFBEB', iconColor:'#D97706', color:'#D97706', lightBg:'#FFFBEB',
+    type:'normal', maxPts:21, unlockHour:17,
+    activities:[
+      {id:'we-br1', name:'Brain Lab — Sudoku',                    pts:0,  type:'link', tab:'brain', note:'→ Brain Lab · pts pulled from there'},
+      {id:'we-br2', name:'Brain Lab — Riddles',                   pts:0,  type:'link', tab:'brain', note:'→ Brain Lab · pts pulled from there'},
+      {id:'we-br3', name:'Silence of 7 mins — Focus on thoughts', pts:7,  type:'self'},
+      {id:'we-br4', name:'Make Kinnu learn a new thing',           pts:7,  type:'self'},
+      {id:'we-br5', name:'Worksheet solve',                        pts:0,  type:'pct-calc', maxCalcPts:15, note:'App calculates pts from % — max 15 pts'},
+    ]
+  },
+
+  // ── 6:00 PM – 6:50 PM — OUTDOOR ─────────────────────────────
+  {
+    id:'we-outdoor', time:'6:00 PM – 6:50 PM', name:'Outdoor Playing', icon:'🌳',
+    iconBg:'#ECFDF5', iconColor:'#059669', color:'#059669', lightBg:'#ECFDF5',
+    type:'normal', maxPts:7, unlockHour:18.0,
+    activities:[
+      {id:'we-ou1', name:'Outdoor playing', pts:7, type:'self'},
+    ]
+  },
+
+  // ── 6:50 PM – 8:00 PM — ODDA ────────────────────────────────
+  {
+    id:'we-odda', time:'6:50 PM – 8:00 PM', name:'Odda Class + Dinner', icon:'💻',
+    iconBg:'#F3EFFE', iconColor:'#7C3AED', color:'#7C3AED', lightBg:'#F3EFFE',
+    type:'normal', maxPts:20, unlockHour:18.83,
+    activities:[
+      {id:'we-od1', name:'Odda Class + Assignment',                        pts:10, type:'self'},
+      {id:'we-od5', name:'Dinner',                                         pts:0,  type:'self', note:'No pts — nourish yourself!'},
+      {id:'we-od2', name:'No Odda — Read about AI and make notes',         pts:5,  type:'text-entry', entryKey:'ai_notes', saveTo:'gallery', galleryKey:'ai_notes', note:'Write your AI learning notes here'},
+      {id:'we-od3', name:'No Odda — Read about Ayurvedic herbs + notes',   pts:5,  type:'text-entry', entryKey:'ayurvedic_notes', saveTo:'gallery', galleryKey:'ayurvedic_notes', note:'Write your Ayurvedic herbs notes here'},
+      {id:'we-od4', name:'No Odda — Read about Vedas and make notes',      pts:5,  type:'text-entry', entryKey:'vedas_notes', saveTo:'gallery', galleryKey:'vedas_notes', note:'Write your Vedas learning notes here'},
+    ]
+  },
+
+  // ── 8:00 PM – 9:00 PM — EVENING ENRICHMENT ──────────────────
+  {
+    id:'we-enrich', time:'8:00 PM – 9:00 PM', name:'Evening Enrichment', icon:'⭐',
+    iconBg:'#FDF2F8', iconColor:'#DB2777', color:'#DB2777', lightBg:'#FDF2F8',
+    type:'normal', maxPts:25, unlockHour:20,
+    activities:[
+      {id:'we-en1', name:'Kathak class',                                      pts:10, type:'self'},
+      {id:'we-en2', name:'Maths Practice — Solve 10 complex questions',       pts:0,  type:'pct-calc', maxCalcPts:20, note:'App calculates pts from % — max 20 pts'},
+      {id:'we-en3', name:'Odda class + make notes',                           pts:5,  type:'self'},
+      {id:'we-en4', name:'Learn one FACT from Indian History and make notes',  pts:10, type:'text-entry', entryKey:'indian_history', saveTo:'gallery', galleryKey:'interesting_facts', note:'Write the historical fact and what you learned'},
+      {id:'we-en5', name:'Creative Task',                                         pts:0,  type:'parent-select', maxCalcPts:20, note:'Parents award up to 20 pts on review · No points added from this page'},
+    ]
+  },
+
+  // ── 9:00 PM – 9:15 PM — EVENING WIND DOWN ───────────────────
+  {
+    id:'we-values', time:'9:00 PM – 9:15 PM', name:'Values & Reflection', icon:'📿',
+    iconBg:'#F0FDF4', iconColor:'#065F46', color:'#065F46', lightBg:'#F0FDF4',
+    type:'normal', maxPts:10, unlockHour:21.0,
+    activities:[
+      {id:'we-v1', name:'Read Moral Values Book — 1 chapter + explain', pts:5, type:'text-entry', entryKey:'moral_values', saveTo:'gallery', galleryKey:'moral_values', note:'Write what you learned from this chapter'},
+      {id:'we-v2', name:'Solve questionnaire by parents',                pts:0, type:'pct-calc', maxCalcPts:10, note:'App calculates pts from % — max 10 pts'},
+    ]
+  },
+
+  // ── 9:15 PM – 9:30 PM — WIND-DOWN ──────────────────────────
+  {
+    id:'we-wind', time:'9:15 PM – 9:30 PM', name:'Wind-Down Routine', icon:'🌙',
+    iconBg:'#F0F4FF', iconColor:'#4F46E5', color:'#4F46E5', lightBg:'#F0F4FF',
+    type:'normal', maxPts:27, unlockHour:21.25,
+    activities:[
+      {id:'we-w1', name:'Shloka reciting to parents',  pts:0,  type:'parent', note:'⏳ Parents award pts on review'},
+      {id:'we-w2', name:'Daily gratitude journal',     pts:5,  type:'self'},
+      {id:'we-w3', name:'Everything done on time',     pts:7,  type:'self'},
+      {id:'we-w4', name:'Night Routine completed',     pts:8,  type:'self'},
+    ]
+  },
+
+  // ── 9:30 PM — SLEEP ─────────────────────────────────────────
+  {
+    id:'we-sleep', time:'9:30 PM', name:'Sleep', icon:'😴',
+    iconBg:'#F9FAFB', iconColor:'#6B7280', color:'#6B7280', lightBg:'#F9FAFB',
+    type:'break', maxPts:0, unlockHour:21,
+    activities:[]
+  },
+];
+
+// ── Get current schedule ───────────────────────────────────────
+function ttGetSchedule(){
+  const d = new Date();
+  const day = d.getDay(); // 0=Sun,6=Sat
+  const isWeekend = (day===0||day===6);
+  return (isWeekend || ttIsHoliday) ? TT_WEEKEND : TT_WEEKDAY;
+}
+
+// ── Get current hour (0-23) ────────────────────────────────────
+const TT_TEST_MODE = true; // ⚠️ TEST MODE ON — set to false for live production
+function ttNowHour(){
+  return new Date().getHours() + new Date().getMinutes()/60;
+}
+
+// ── Determine block state ──────────────────────────────────────
+function ttBlockState(block, nowH){
+  if(block.type==='locked-until-3pm') return 'done';
+  if(block.type==='break') return 'break';
+  const bState = ttBlockStates[block.id];
+  if(bState && bState.markedDone) return 'done';
+
+  // TEST MODE: every block is fully editable — no time restrictions
+  if(typeof TT_TEST_MODE !== 'undefined' && TT_TEST_MODE) return 'current';
+
+  const schedule = ttGetSchedule();
+  const thisIdx  = schedule.findIndex(b => b.id === block.id);
+  const unlockH  = block.unlockHour || 0;
+
+  // Find the NEXT non-break block's unlockHour to determine this block's end time
+  let endH = unlockH + 1.5; // default fallback
+  for(let i = thisIdx + 1; i < schedule.length; i++){
+    if(schedule[i].unlockHour !== undefined){
+      endH = schedule[i].unlockHour;
+      break;
+    }
+  }
+
+  if(nowH < unlockH)            return 'locked';
+  if(nowH >= unlockH && nowH < endH) return 'current';
+  return 'normal'; // past its window — unlocked but no longer active
+}
+
+// ── Toggle holiday mode ────────────────────────────────────────
+function ttToggleHoliday(){
+  ttIsHoliday = !ttIsHoliday;
+  lp_syncTabStyles();
+  ttRender();
+  calcDayPts();
+}
+
+// ── Left panel: set schedule tab ──────────────────────────────
+function lp_setSchedule(mode){
+  const d = new Date();
+  const day = d.getDay();
+  const isNaturalWeekend = (day===0||day===6);
+  const frozen = localStorage.getItem('tt_frozen_schedule');
+  const todayKey = new Date().toLocaleDateString('en-CA');
+  const frozenDate = localStorage.getItem('tt_frozen_date');
+  if(frozen && frozen !== mode && frozenDate === todayKey){
+    const msg = 'You already have activities on the '+(frozen==='holiday'?'Holiday':'Weekday')+' schedule today.\n\nSwitch anyway?';
+    if(!confirm(msg)) return;
+  }
+  if(mode==='holiday'){ if(!isNaturalWeekend) ttIsHoliday = true; }
+  else { ttIsHoliday = false; }
+  localStorage.setItem('tt_frozen_schedule', mode);
+  localStorage.setItem('tt_frozen_date', todayKey);
+  lp_syncTabStyles(); ttRender(); calcDayPts(); lp_updateDateCard();
+}
+
+function lp_restoreFrozenSchedule(){
+  const frozen = localStorage.getItem('tt_frozen_schedule');
+  const frozenDate = localStorage.getItem('tt_frozen_date');
+  const todayKey = new Date().toLocaleDateString('en-CA');
+  if(frozen && frozenDate === todayKey){
+    const d = new Date();
+    const isNaturalWeekend = (d.getDay()===0||d.getDay()===6);
+    if(frozen==='holiday' && !isNaturalWeekend) ttIsHoliday = true;
+    else if(frozen==='weekday') ttIsHoliday = false;
+    lp_syncTabStyles(); lp_updateDateCard();
+  }
+}
+
+// ── Style the two tabs based on active schedule ───────────────
+function lp_syncTabStyles(){
+  const d = new Date();
+  const isNaturalWeekend = (d.getDay()===0||d.getDay()===6);
+  const holidayActive = isNaturalWeekend || ttIsHoliday;
+
+  const wdBtn = document.getElementById('lp-tab-weekday');
+  const hlBtn = document.getElementById('lp-tab-holiday');
+  if(!wdBtn||!hlBtn) return;
+
+  if(holidayActive){
+    // Holiday active
+    wdBtn.style.background='#F9FAFB'; wdBtn.style.color='#6B7280'; wdBtn.style.borderColor='transparent';
+    hlBtn.style.background='linear-gradient(135deg,#FFF7ED,#FEF3C7)'; hlBtn.style.color='#92400E'; hlBtn.style.borderColor='#FCD34D';
+  } else {
+    // Weekday active
+    wdBtn.style.background='linear-gradient(135deg,#EFF6FF,#E0E7FF)'; wdBtn.style.color='#1E3A8A'; wdBtn.style.borderColor='#BFDBFE';
+    hlBtn.style.background='#F9FAFB'; hlBtn.style.color='#6B7280'; hlBtn.style.borderColor='transparent';
+  }
+}
+
+// ── Update the date card text ─────────────────────────────────
+function lp_updateDateCard(){
+  const d = new Date();
+  const day = d.getDay();
+  const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const isNaturalWeekend = (day===0||day===6);
+  const holidayActive = isNaturalWeekend || ttIsHoliday;
+
+  const dayEl  = document.getElementById('lp-day-name');
+  const noteEl = document.getElementById('lp-date-note');
+
+  if(dayEl) dayEl.textContent = dayNames[day];
+  if(noteEl){
+    if(holidayActive){
+      noteEl.textContent = '☀️ Holiday / Weekend schedule · Full day from 7:00 AM';
+      noteEl.style.color='#92400E'; noteEl.style.background='#FEF3C7';
+    } else {
+      noteEl.textContent = '🏫 School day · Timetable unlocks at 3:00 PM';
+      noteEl.style.color='#1E3A8A'; noteEl.style.background='#EFF6FF';
+    }
+  }
+}
+
+// ── Initialise day (called on date change too) ─────────────────
+function ttInitDay(){
+  const d = new Date();
+  const day = d.getDay();
+  const isWeekend = (day===0||day===6);
+  // On weekends, force holiday schedule automatically
+  if(isWeekend) ttIsHoliday = false; // natural weekend handled by lp_syncTabStyles logic
+
+  // Drive left panel
+  lp_restoreFrozenSchedule();
+  lp_updateDateCard();
+  lp_syncTabStyles();
+
+  ttRender();
+  // Sync brain pts into timetable on each render
+  if(typeof ttSyncBrainLabPts==='function') setTimeout(ttSyncBrainLabPts, 100);
+  // Refresh every minute
+  if(ttClockInterval) clearInterval(ttClockInterval);
+  ttClockInterval = setInterval(()=>{ttRender();ttUpdateClock();lp_updateDateCard();if(typeof ttSyncBrainLabPts==='function')ttSyncBrainLabPts();}, 60000);
+}
+
+// ── Toggle block open/close ────────────────────────────────────
+function ttToggleBlock(blockId){
+  const el = document.getElementById('ttb-'+blockId);
+  if(!el) return;
+  el.classList.toggle('open');
+}
+
+// ── Toggle activity checkbox ───────────────────────────────────
+function ttToggleAct(blockId, actId, pts, type){
+  if(type==='parent') return; // parents award, child just marks done
+  if(!ttBlockStates[blockId]) ttBlockStates[blockId]={pts:0,checkedActs:{},markedDone:false};
+  const state = ttBlockStates[blockId];
+  const wasChecked = state.checkedActs[actId]||false;
+  if(wasChecked){ state.checkedActs[actId]=false; if(type!=='parent') state.pts=Math.max(0,state.pts-pts); }
+  else           { state.checkedActs[actId]=true;  if(type!=='parent') state.pts+=pts; }
+  // Update checkbox visuals
+  const actEl = document.getElementById('ttact-'+actId);
+  if(actEl){
+    if(state.checkedActs[actId]){ actEl.classList.add('checked'); actEl.querySelector('.tt-act-cb').textContent='✓'; }
+    else                        { actEl.classList.remove('checked'); actEl.querySelector('.tt-act-cb').textContent=''; }
+  }
+  // Update block pts badge
+  ttUpdateBlockPts(blockId);
+  calcDayPts();
+}
+
+// ── Mark block as done ────────────────────────────────────────
+function ttMarkDone(blockId){
+  if(!ttBlockStates[blockId]) ttBlockStates[blockId]={pts:0,checkedActs:{},markedDone:false};
+  ttBlockStates[blockId].markedDone = true;
+  ttRender();
+  calcDayPts();
+}
+
+// ── Update pts badge on a block ────────────────────────────────
+function ttUpdateBlockPts(blockId){
+  const el = document.getElementById('ttpts-'+blockId);
+  const state = ttBlockStates[blockId];
+  if(el && state) el.textContent = state.pts + ' pts earned';
+}
+
+// ── Navigate to linked tab ─────────────────────────────────────
+function ttGoToTab(tabName){
+  const map={'brain':'brain','creative':'creative','geeta':'geeta','wordbook':'wordbook','book':'wordbook'};
+  const id = map[tabName]||tabName;
+  const btn = document.querySelector('.nb.t'+(id==='brain'?'1':id==='geeta'?'2':id==='creative'?'3':'4'));
+  // Use showTab directly
+  showTab(id, btn || document.querySelector('.nb'));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Main render function ───────────────────────────────────────
+let _ttFirstCurrentOpened = false; // reset each render
+function ttRender(){
+  _ttFirstCurrentOpened = false;
+  const container = document.getElementById('tt-blocks-container');
+  if(!container) return;
+  const schedule = ttGetSchedule();
+  const nowH = ttNowHour();
+  container.innerHTML = '';
+
+  // Test mode banner
+  if(typeof TT_TEST_MODE !== 'undefined' && TT_TEST_MODE){
+    const banner = document.createElement('div');
+    banner.innerHTML = `<div style="background:linear-gradient(135deg,#FEF3C7,#FFFBEB);border:2px solid #FCD34D;border-radius:12px;padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:18px">🧪</span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:900;color:#92400E">TEST MODE is ON — all blocks are unlocked</div>
+        <div style="font-size:10px;color:#78350F;margin-top:1px">Set <code>TT_TEST_MODE = false</code> in the code to restore live time-based locking</div>
+      </div>
+    </div>`;
+    container.appendChild(banner);
+  }
+
+  schedule.forEach(block => {
+    const state = ttBlockState(block, nowH);
+    const bState = ttBlockStates[block.id]||{pts:0,checkedActs:{},markedDone:false};
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'tt-block';
+    wrapper.id = 'ttb-'+block.id;
+    // In test mode only auto-open the first current block, not all
+    const isFirstCurrent = (state==='current' && !_ttFirstCurrentOpened);
+    if(state==='current'){
+      wrapper.classList.add('state-current');
+      if(isFirstCurrent){ wrapper.classList.add('open'); _ttFirstCurrentOpened=true; }
+    }
+    else if(state==='done') wrapper.classList.add('state-done');
+    else if(state==='locked')  wrapper.classList.add('state-locked');
+    else if(state==='normal')  wrapper.classList.add('state-past');
+    else if(state==='break') wrapper.classList.add('state-break');
+
+    // Status badge text
+    const statusMap = {current:'🔴 CURRENT',done:'✅ COMPLETED',locked:'👁 UPCOMING',normal:'👁 VIEW ONLY',break:'☕ BREAK'};
+    const statusColors = {current:'background:#DBEAFE;color:#1D4ED8',done:'background:#DCFCE7;color:#166534',locked:'background:#F3F4F6;color:#6B7280',normal:'background:#F3F4F6;color:#6B7280',break:'background:#F9FAFB;color:#9CA3AF'};
+
+    const earnedPts = bState.pts || 0;
+
+    wrapper.innerHTML = `
+      <div class="tt-block-hdr" onclick="ttToggleBlock('${block.id}')">
+        <div class="tt-block-icon" style="background:${block.iconBg}">${block.icon}</div>
+        <div class="tt-block-meta">
+          <div class="tt-block-time">${block.time}</div>
+          <div class="tt-block-name" style="color:${block.color}">${block.name}</div>
+        </div>
+        <div class="tt-block-right">
+          <span class="tt-status-badge" style="${statusColors[state]||statusColors.normal}">${statusMap[state]||'UPCOMING'}</span>
+          <span class="tt-chevron">▼</span>
+        </div>
+      </div>
+      <div class="tt-block-body" id="ttbody-${block.id}">
+        ${state==='current'?'<div class="tt-current-indicator"><span class="tt-current-dot"></span>You are here right now!</div>':''}
+        ${state==='locked'?'<div style="font-size:11px;font-weight:800;color:#6B7280;background:#F3F4F6;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style=\"font-size:14px\">🔒</span> This block is coming up later — you can see what\'s inside but it will unlock at the right time!</div>':''}
+        ${state==='normal'?'<div style="font-size:11px;font-weight:800;color:#6B7280;background:#F3F4F6;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style=\"font-size:14px\">⏰</span> This block\'s time has passed. Tap Mark Done above if you completed it.</div>':''}
+        ${block.type==='break'?'<div style="font-size:12px;color:#6B7280;padding:4px 0">Free time — relax, no tasks required.</div>':''}
+        ${block.activities && block.activities.length>0 ? `
+          <div class="tt-activities">
+            ${block.activities.map(act=>{
+              const isChecked = bState.checkedActs[act.id]||false;
+              const cls = act.type==='parent'?'parent-pending':act.type==='link'?'linked':act.type==='wordbook'?'linked':'';
+
+              // Special rendering: parent-select (child marks done, parent awards pts)
+              if(act.type==='parent-select'){
+                const isCheckedPs = bState.checkedActs[act.id]||false;
+                return `
+                  <div class="tt-act parent-pending ${isCheckedPs?'checked':''}" id="ttact-${act.id}"
+                    style="cursor:pointer" onclick="ttToggleAct('${block.id}','${act.id}',0,'parent-select')">
+                    <div class="tt-act-left">
+                      <div class="tt-act-cb">${isCheckedPs?'\u2713':''}</div>
+                      <div>
+                        <div class="tt-act-name">${act.name}</div>
+                        <div class="tt-act-sub">${act.note||''}</div>
+                      </div>
+                    </div>
+                    <div class="tt-act-pts" style="color:#F59E0B">
+                      ${isCheckedPs?'\u2713 Done · awaiting parent':'up to '+act.maxCalcPts+' pts \U0001f468\u200d\U0001f469\u200d\U0001f467'}
+                    </div>
+                  </div>`;
+              }
+
+              // Special rendering: text entry (moral values, proverbs)
+              if(act.type==='text-entry'){
+                const isCheckedTe = bState.checkedActs[act.id]||false;
+                const savedText   = (bState.textEntries && bState.textEntries[act.id]) || '';
+                return `
+                  <div class="tt-act ${isCheckedTe?'checked':''}" id="ttact-${act.id}"
+                    style="flex-direction:column;align-items:flex-start;gap:8px;cursor:default">
+                    <div style="display:flex;align-items:center;gap:10px;width:100%;cursor:pointer"
+                      onclick="ttToggleTextEntry('${block.id}','${act.id}',${act.pts})">
+                      <div class="tt-act-cb">${isCheckedTe?'\u2713':''}</div>
+                      <div style="flex:1">
+                        <div class="tt-act-name">${act.name}</div>
+                        <div class="tt-act-sub">${act.note||''}</div>
+                      </div>
+                      <div class="tt-act-pts" style="color:${block.color}">+${act.pts} pts</div>
+                    </div>
+                    <div id="te-panel-${act.id}" style="display:${isCheckedTe?'block':'none'};width:100%">
+                      <textarea id="te-text-${act.id}" rows="3"
+                        style="width:100%;background:#FFFBF0;border:1.5px solid #FDE68A;border-radius:10px;
+                          padding:10px 12px;font-size:13px;font-family:'Nunito',sans-serif;
+                          color:#1E1B4B;resize:none;outline:none;box-sizing:border-box;line-height:1.7"
+                        placeholder="${act.note||'Write your thoughts here...'}"
+                        onfocus="this.style.borderColor='#F59E0B'" onblur="this.style.borderColor='#FDE68A'"
+                        oninput="ttSaveTextEntry('${block.id}','${act.id}')"
+                        >${savedText}</textarea>
+                      <button id="te-save-btn-${act.id}"
+                        onclick="ttSaveTextEntryToGallery('${block.id}','${act.id}','${act.galleryKey||act.entryKey||act.id}','${act.name}')"
+                        style="margin-top:6px;padding:6px 16px;border-radius:8px;border:none;
+                          background:${block.color};color:#fff;font-size:11px;font-weight:900;
+                          cursor:pointer;font-family:'Nunito',sans-serif">
+                        Save to Gallery
+                      </button>
+                    </div>
+                  </div>`;
+              }
+
+              // Special rendering: points dropdown selector
+              if(act.type==='dropdown'){
+                const isCheckedDd = bState.checkedActs[act.id]||false;
+                const savedDdPts  = (bState.ddPts && bState.ddPts[act.id]) || 0;
+                const opts = (act.options||[3,5,7,10]).map(v =>
+                  `<button onclick="ttSelectDropdownPts('${block.id}','${act.id}',${v})"
+                    id="ddopt-${act.id}-${v}"
+                    style="padding:5px 12px;border-radius:8px;font-size:12px;font-weight:900;cursor:pointer;
+                      font-family:'Nunito',sans-serif;border:1.5px solid ${block.color}30;
+                      background:${savedDdPts===v?block.color:'#fff'};
+                      color:${savedDdPts===v?'#fff':block.color};transition:all .15s">
+                    ${v} pts
+                  </button>`
+                ).join('');
+                return `
+                  <div class="tt-act ${isCheckedDd?'checked':''}" id="ttact-${act.id}"
+                    style="flex-direction:column;align-items:flex-start;gap:6px;cursor:default">
+                    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                      <div>
+                        <div class="tt-act-name">${act.name}</div>
+                        <div class="tt-act-sub">${act.note||'Select points earned'}</div>
+                      </div>
+                      <div class="tt-act-pts" style="color:${block.color}" id="ttact-pts-${act.id}">
+                        ${savedDdPts>0?'+'+savedDdPts+' pts':'0 pts'}
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">${opts}</div>
+                  </div>`;
+              }
+
+              // Special rendering: percentage calculator
+              if(act.type==='pct-calc'){
+                const isCheckedPct = bState.checkedActs[act.id]||false;
+                return `<div class="tt-act ${isCheckedPct?'checked':''}" id="ttact-${act.id}"
+                  style="flex-direction:column;align-items:flex-start;gap:0;cursor:default;padding:0;border:none;background:transparent">
+                  <div style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:10px;border:1.5px solid #E5E7EB;background:${isCheckedPct?'#ECFDF5':'#FAFAFA'};cursor:pointer;box-sizing:border-box;transition:all .15s"
+                    onclick="ttTogglePctCalc('${block.id}','${act.id}')">
+                    <div class="tt-act-cb" style="display:flex">${isCheckedPct?'✓':''}</div>
+                    <div style="flex:1">
+                      <div class="tt-act-name">${act.name}</div>
+                      <div class="tt-act-sub">Tap to enter marks · auto-calculates pts · max ${act.maxCalcPts} pts</div>
+                    </div>
+                    <div class="tt-act-pts" style="color:${block.color}" id="ttact-pts-${act.id}">
+                      ${(bState.calcPts&&bState.calcPts[act.id])||0} pts
+                    </div>
+                  </div>
+                  <div id="pctcalc-${act.id}" style="display:${isCheckedPct?'block':'none'};width:100%;margin-top:6px">
+                    ${ttPctCalcHTML(act.id, act.maxCalcPts, block.color, bState)}
+                  </div>
+                </div>`;
+              }
+
+              // Special rendering: inline wordbook entry
+              if(act.type==='wordbook'){
+                return `<div class="tt-act linked" id="ttact-${act.id}" style="flex-direction:column;align-items:flex-start;gap:10px;cursor:default">
+                  <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                    <div>
+                      <div class="tt-act-name">📖 ${act.name}</div>
+                      <div class="tt-act-sub">${act.note||''}</div>
+                    </div>
+                    <div class="tt-act-pts" style="color:${block.color}">+${act.pts} pts 📖</div>
+                  </div>
+                  ${ttWordEntryHTML()}
+                </div>`;
+              }
+
+              // For brain-linked activities: read live pts from global variable
+              let displayPts = act.pts;
+              let displayChecked = isChecked;
+              if(act.type==='link' && typeof _TT_BRAIN_MAP!=='undefined' && _TT_BRAIN_MAP[act.id]){
+                displayPts = _TT_BRAIN_MAP[act.id]();
+                displayChecked = displayPts > 0;
+              }
+
+              return `
+                <div class="tt-act ${cls} ${displayChecked?'checked':''}" id="ttact-${act.id}"
+                  onclick="${act.type==='link'?`ttGoToTab('${act.tab||'brain'}')`:`ttToggleAct('${block.id}','${act.id}',${act.pts},'${act.type}')`}">
+                  <div class="tt-act-left">
+                    <div class="tt-act-cb">${displayChecked?'✓':''}</div>
+                    <div>
+                      <div class="tt-act-name">${act.name}</div>
+                      ${act.note?`<div class="tt-act-sub">${act.note}</div>`:''}
+                    </div>
+                  </div>
+                  <div class="tt-act-pts" style="color:${displayPts>0?block.color:'#9CA3AF'}" id="ttact-pts-${act.id}">+${displayPts} pts${act.type==='parent'?' 👨‍👩‍👧':act.type==='link'?' 🔗':''}</div>
+                </div>`;
+            }).join('')}
+          </div>
+          <div class="tt-block-pts-row" style="margin-top:10px">
+            <span style="font-size:11px;font-weight:800;color:#6B7280">Points earned this block</span>
+            <span style="font-size:14px;font-weight:900;color:${block.color}" id="ttpts-${block.id}">${earnedPts} pts</span>
+          </div>
+          ${(state==='current'||state==='normal') && state!=='break' && block.maxPts>0 ? `
+            <button class="tt-mark-done-btn ${bState.markedDone?'done':'primary'}" onclick="ttMarkDone('${block.id}')">
+              ${bState.markedDone?'✅ Block completed!':'✅ Mark this block as done'}
+            </button>`:''}`:''}
+      </div>`;
+    container.appendChild(wrapper);
+  });
+}
+
+// ── Collect timetable pts for calcDayPts ──────────────────────
+function ttGetTotalPts(){
+  // Only sum the ACTIVE schedule's blocks to prevent cross-contamination
+  const activeSchedule = ttGetSchedule();
+  const activeIds = new Set(activeSchedule.map(b=>b.id));
+  let total = 0;
+  Object.keys(ttBlockStates).forEach(id=>{
+    if(activeIds.has(id)) total += (ttBlockStates[id].pts||0);
+  });
+  return total;
+}
+
+// ── Override timetable select with full points on rpt-tt ──────
+function ttSyncRptTT(){
+  // Set rpt-tt to max value so existing calcDayPts adds the timetable bonus
+  const sel=document.getElementById('rpt-tt');
+  if(sel) sel.value='15';
+}
+
+
+// ── LIVE CLOCK ────────────────────────────────────────────────
+function ttUpdateClock(){
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  const mStr = m < 10 ? '0'+m : m;
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const el = document.getElementById('tt-clock-display');
+  const apEl = document.getElementById('tt-clock-ampm');
+  const dayEl = document.getElementById('tt-clock-day');
+  if(el) el.textContent = h12+':'+mStr;
+  if(apEl) apEl.textContent = ampm;
+  if(dayEl) dayEl.textContent = days[now.getDay()];
+}
+setInterval(ttUpdateClock, 1000);
+ttUpdateClock();
+
+// ── MINI SCHEDULE in left panel ───────────────────────────────
+function ttRenderMiniSchedule(){
+  const container = document.getElementById('tt-mini-schedule');
+  const titleEl   = document.getElementById('tt-schedule-title');
+  if(!container) return;
+  const schedule = ttGetSchedule();
+  const nowH = ttNowHour();
+  const isWE = ttGetSchedule() === TT_WEEKEND;
+  if(titleEl) titleEl.textContent = (isWE || ttIsHoliday) ? '☀️ Weekend Schedule' : '🏫 Weekday Schedule';
+
+  container.innerHTML = schedule.map(block => {
+    const state = ttBlockState(block, nowH);
+    const isCurrent = state === 'current';
+    const isDone    = state === 'done';
+    const isBreak   = state === 'break';
+    const bState    = ttBlockStates[block.id]||{};
+
+    let bg = '#FAFAFA', border = '#E5E7EB', textColor = '#6B7280';
+    if(isCurrent){ bg='#DBEAFE'; border='#3B82F6'; textColor='#1D4ED8'; }
+    else if(isDone){ bg='#DCFCE7'; border='#10B981'; textColor='#166534'; }
+    else if(isBreak){ bg='#F9FAFB'; border='#E5E7EB'; textColor='#9CA3AF'; }
+
+    const pts = bState.pts || 0;
+    const ptsText = (block.maxPts > 0 && pts > 0) ? ' · '+pts+' pts ✓' : '';
+
+    return `<div style="display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:9px;background:${bg};border:1.5px solid ${border};cursor:pointer;transition:all .15s"
+      onclick="ttToggleBlock('${block.id}');document.getElementById('ttb-${block.id}')?.scrollIntoView({behavior:'smooth',block:'center'})">
+      <span style="font-size:14px;line-height:1;flex-shrink:0">${block.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:9px;font-weight:900;color:${textColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${block.name}${isCurrent?' 🔴':isDone?' ✅':''}</div>
+        <div style="font-size:8px;color:${textColor};opacity:.8">${block.time}${ptsText}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Wordbook inline entry HTML (used inside Book Reading block) ──
+function ttWordEntryHTML(){
+  return `
+  <div style="width:100%;background:#F0FDF4;border-radius:12px;padding:14px;border:1.5px solid #A7F3D0">
+    <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#065F46;margin-bottom:10px">
+      📝 Write 3 new words — Word, Meaning and an Example Sentence:
+    </div>
+    ${[1,2,3].map(n=>`
+    <div style="margin-bottom:10px;background:#fff;border-radius:10px;padding:10px 12px;border:1.5px solid #D1FAE5">
+      <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#059669;margin-bottom:6px">Word ${n}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <input type="text" id="word${n}" placeholder="e.g. perseverance"
+          style="padding:7px 10px;border-radius:8px;border:1.5px solid #D1FAE5;font-size:12px;font-family:'Nunito',sans-serif;background:#F0FDF4;color:#065F46;outline:none;box-sizing:border-box"
+          oninput="calcWordPts();checkWordSaved()" onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#D1FAE5'">
+        <input type="text" id="mean${n}" placeholder="Meaning"
+          style="padding:7px 10px;border-radius:8px;border:1.5px solid #D1FAE5;font-size:12px;font-family:'Nunito',sans-serif;background:#F0FDF4;color:#065F46;outline:none;box-sizing:border-box"
+          oninput="calcWordPts();checkWordSaved()" onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#D1FAE5'">
+      </div>
+      <input type="text" id="exam${n}" placeholder="Example sentence (required to save)"
+        style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #D1FAE5;font-size:12px;font-family:'Nunito',sans-serif;background:#F0FDF4;color:#065F46;outline:none;box-sizing:border-box"
+        oninput="checkWordSaved()" onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#D1FAE5'">
+    </div>`).join('')}
+    <div id="save-wordbook-wrap" style="margin-top:4px">
+      <button id="save-wordbook-btn" onclick="saveWordsToWordBook()"
+        style="width:100%;padding:10px;border-radius:10px;border:none;
+          background:linear-gradient(135deg,#059669,#047857);color:#fff;
+          font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;
+          box-shadow:0 4px 12px rgba(5,150,105,.3)">
+        💾 Save to My Wordbook
+      </button>
+      <div id="save-wordbook-status" style="font-size:11px;font-weight:800;color:#059669;margin-top:6px;text-align:center;min-height:16px"></div>
+    </div>
+  </div>`;
+}
+
+// ── Percentage Calculator for Maths blocks ────────────────────
+function ttPctCalcHTML(actId, maxPts, color, bState){
+  const saved    = bState.calcPts && bState.calcPts[actId] ? bState.calcPts[actId] : 0;
+  const savedObt = bState.calcObt && bState.calcObt[actId] ? bState.calcObt[actId] : '';
+  const savedTot = bState.calcTot && bState.calcTot[actId] ? bState.calcTot[actId] : '';
+  const savedPct = savedObt && savedTot ? Math.round(savedObt/savedTot*100) : 0;
+
+  // Pre-build result bar if saved data exists
+  let savedResultHTML = '';
+  if(savedObt && savedTot && saved > 0){
+    const {grade, gradeColor} = _ttGradeInfo(savedPct);
+    savedResultHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;padding:4px 8px;background:#F0FDF4;border-radius:7px;border:1px solid #BBF7D0">
+        <span style="font-size:11px;font-weight:800;color:${gradeColor}">${savedPct}% — ${grade}</span>
+        <span style="font-size:12px;font-weight:900;color:${gradeColor}">+${saved} pts ✅</span>
+      </div>`;
+  }
+
+  return `
+  <div style="background:#F8FAFF;border:1px solid #BFDBFE;border-radius:9px;padding:8px 10px;margin-top:4px">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <span style="font-size:11px;font-weight:900;color:#2563EB">📊 Marks</span>
+      <input type="number" id="pct-obt-${actId}" min="0" placeholder="Obtained"
+        value="${savedObt}"
+        style="width:70px;padding:4px 7px;border-radius:6px;border:1.5px solid #BFDBFE;
+          font-size:12px;font-weight:800;color:#1E1B4B;background:#fff;
+          font-family:'Nunito',sans-serif;outline:none;text-align:center"
+        oninput="ttCalcPct('${actId}',${maxPts},'${color}')"
+        onfocus="this.style.borderColor='#3B82F6'" onblur="this.style.borderColor='#BFDBFE'">
+      <span style="font-size:11px;color:#6B7280;font-weight:700">/</span>
+      <input type="number" id="pct-tot-${actId}" min="1" placeholder="Total"
+        value="${savedTot}"
+        style="width:70px;padding:4px 7px;border-radius:6px;border:1.5px solid #BFDBFE;
+          font-size:12px;font-weight:800;color:#1E1B4B;background:#fff;
+          font-family:'Nunito',sans-serif;outline:none;text-align:center"
+        oninput="ttCalcPct('${actId}',${maxPts},'${color}')"
+        onfocus="this.style.borderColor='#3B82F6'" onblur="this.style.borderColor='#BFDBFE'">
+      <span style="font-size:10px;color:#9CA3AF;font-weight:700">max ${maxPts} pts</span>
+    </div>
+    <div id="pct-result-${actId}">${savedResultHTML}</div>
+  </div>`;
+}
+
+// ── Grade helper — shared by HTML builder and calc ─────────────
+function _ttGradeInfo(pct){
+  if(pct===100)  return {grade:'🌟 Perfect! Full marks!',  gradeColor:'#059669'};
+  if(pct>=90)    return {grade:'⭐ Excellent! 90%+',       gradeColor:'#0284C7'};
+  if(pct>=80)    return {grade:'👍 Very Good! 80%+',       gradeColor:'#2563EB'};
+  if(pct>=70)    return {grade:'📚 Good! 70%+',            gradeColor:'#7C3AED'};
+  if(pct>=60)    return {grade:'✏️ Fair 60%+',              gradeColor:'#D97706'};
+  if(pct>=40)    return {grade:'💪 Keep trying! 40%+',     gradeColor:'#EA580C'};
+  return              {grade:'🔄 Practice more!',           gradeColor:'#DC2626'};
+}
+
+// ── Toggle pct-calc section open/close ─────────────────────────
+function ttTogglePctCalc(blockId, actId){
+  if(!ttBlockStates[blockId]) ttBlockStates[blockId]={pts:0,checkedActs:{},markedDone:false,calcPts:{},calcObt:{},calcTot:{}};
+  const bState = ttBlockStates[blockId];
+  const wasChecked = bState.checkedActs[actId]||false;
+  bState.checkedActs[actId] = !wasChecked;
+
+  // If unchecking, remove the calc pts
+  if(wasChecked){
+    const oldPts = (bState.calcPts&&bState.calcPts[actId])||0;
+    bState.pts = Math.max(0, bState.pts - oldPts);
+    if(bState.calcPts) delete bState.calcPts[actId];
+    if(bState.calcObt) delete bState.calcObt[actId];
+    if(bState.calcTot) delete bState.calcTot[actId];
+  }
+
+  const panel = document.getElementById('pctcalc-'+actId);
+  const actEl = document.getElementById('ttact-'+actId);
+  const ptsEl = document.getElementById('ttact-pts-'+actId);
+  if(panel) panel.style.display = bState.checkedActs[actId] ? 'block' : 'none';
+  if(actEl){
+    const row = actEl.querySelector('[onclick*="ttTogglePctCalc"]');
+    if(row) row.style.background = bState.checkedActs[actId] ? '#ECFDF5' : '#FAFAFA';
+    const cb = actEl.querySelector('.tt-act-cb');
+    if(cb) cb.textContent = bState.checkedActs[actId] ? '✓' : '';
+  }
+  if(ptsEl) ptsEl.textContent = '0 pts';
+  ttUpdateBlockPts(blockId);
+  calcDayPts();
+}
+
+// ── Live percentage calculation ────────────────────────────────
+function ttCalcPct(actId, maxPts, color){
+  const obt = parseFloat(document.getElementById('pct-obt-'+actId)?.value)||0;
+  const tot = parseFloat(document.getElementById('pct-tot-'+actId)?.value)||0;
+  const resultEl = document.getElementById('pct-result-'+actId);
+  const ptsEl    = document.getElementById('ttact-pts-'+actId);
+  if(!resultEl) return;
+
+  if(!tot || obt < 0){
+    resultEl.innerHTML = '';
+    return;
+  }
+
+  const pct = Math.round(obt/tot*100);
+
+  // New points scale: only 100% = full marks
+  let pts;
+  if(pct===100)    pts = maxPts;
+  else if(pct>=90) pts = Math.round(maxPts*0.85);
+  else if(pct>=80) pts = Math.round(maxPts*0.70);
+  else if(pct>=70) pts = Math.round(maxPts*0.55);
+  else if(pct>=60) pts = Math.round(maxPts*0.40);
+  else if(pct>=40) pts = Math.round(maxPts*0.20);
+  else             pts = 0;
+
+  const {grade, gradeColor} = _ttGradeInfo(pct);
+
+  // Progress bar width (capped at 100)
+  const barW = Math.min(100, pct);
+
+  resultEl.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;padding:4px 8px;background:#F0FDF4;border-radius:7px;border:1px solid #BBF7D0">
+      <div>
+        <span style="font-size:11px;font-weight:900;color:${gradeColor}">${pct}% — ${grade}</span>
+        <div style="background:#E5E7EB;border-radius:3px;height:5px;overflow:hidden;margin-top:3px;width:120px">
+          <div style="width:${barW}%;height:100%;background:${gradeColor};border-radius:3px;transition:width .4s"></div>
+        </div>
+      </div>
+      <span style="font-size:13px;font-weight:900;color:${gradeColor};margin-left:10px">+${pts} pts</span>
+    </div>`;
+
+  if(ptsEl) ptsEl.textContent = '+'+pts+' pts';
+
+  // Save into block state
+  // Find which block this activity belongs to
+  const schedule = ttGetSchedule();
+  for(const block of schedule){
+    const act = (block.activities||[]).find(a=>a.id===actId);
+    if(act){
+      if(!ttBlockStates[block.id]) ttBlockStates[block.id]={pts:0,checkedActs:{},markedDone:false};
+      const bst = ttBlockStates[block.id];
+      if(!bst.calcPts) bst.calcPts={};
+      if(!bst.calcObt) bst.calcObt={};
+      if(!bst.calcTot) bst.calcTot={};
+      const oldPts = bst.calcPts[actId]||0;
+      bst.pts = Math.max(0, bst.pts - oldPts + pts);
+      bst.calcPts[actId] = pts;
+      bst.calcObt[actId] = obt;
+      bst.calcTot[actId] = tot;
+      ttUpdateBlockPts(block.id);
+      calcDayPts();
+      break;
+    }
+  }
+}
+
+
+// ── Dropdown points selector ───────────────────────────────────
+function ttSelectDropdownPts(blockId, actId, selectedPts){
+  if(!ttBlockStates[blockId]) ttBlockStates[blockId]={pts:0,checkedActs:{},markedDone:false};
+  const bState = ttBlockStates[blockId];
+  if(!bState.ddPts) bState.ddPts = {};
+
+  // Remove old pts
+  const oldPts = bState.ddPts[actId] || 0;
+  bState.pts = Math.max(0, bState.pts - oldPts);
+
+  // Toggle off if same pts selected again
+  if(oldPts === selectedPts){
+    bState.ddPts[actId] = 0;
+    bState.checkedActs[actId] = false;
+  } else {
+    bState.ddPts[actId] = selectedPts;
+    bState.pts += selectedPts;
+    bState.checkedActs[actId] = true;
+  }
+
+  // Update button visuals
+  const act = ttGetSchedule().flatMap(b=>b.activities||[]).find(a=>a.id===actId);
+  const block = ttGetSchedule().find(b=>(b.activities||[]).some(a=>a.id===actId));
+  const opts = act?.options||[3,5,7,10];
+  opts.forEach(v=>{
+    const btn = document.getElementById('ddopt-'+actId+'-'+v);
+    if(btn){
+      const active = bState.ddPts[actId]===v;
+      btn.style.background = active?(block?.color||'#7C3AED'):'#fff';
+      btn.style.color      = active?'#fff':(block?.color||'#7C3AED');
+    }
+  });
+
+  // Update pts display
+  const ptsEl = document.getElementById('ttact-pts-'+actId);
+  const actEl = document.getElementById('ttact-'+actId);
+  const curPts = bState.ddPts[actId]||0;
+  if(ptsEl) ptsEl.textContent = curPts>0?'+'+curPts+' pts':'0 pts';
+  if(actEl){
+    if(curPts>0) actEl.classList.add('checked');
+    else actEl.classList.remove('checked');
+  }
+
+  ttUpdateBlockPts(blockId);
+  calcDayPts();
+}
+
+// ── Text Entry (moral values, proverbs) ───────────────────────
+function ttToggleTextEntry(blockId, actId, pts){
+  if(!ttBlockStates[blockId]) ttBlockStates[blockId]={pts:0,checkedActs:{},markedDone:false};
+  const bState = ttBlockStates[blockId];
+  const wasChecked = bState.checkedActs[actId]||false;
+  bState.checkedActs[actId] = !wasChecked;
+  if(wasChecked){ bState.pts = Math.max(0, bState.pts - pts); }
+  else { bState.pts += pts; }
+  const panel = document.getElementById('te-panel-'+actId);
+  const actEl = document.getElementById('ttact-'+actId);
+  if(panel) panel.style.display = bState.checkedActs[actId] ? 'block' : 'none';
+  if(actEl){
+    if(bState.checkedActs[actId]) actEl.classList.add('checked');
+    else actEl.classList.remove('checked');
+    const cb = actEl.querySelector('.tt-act-cb');
+    if(cb) cb.textContent = bState.checkedActs[actId] ? '\u2713' : '';
+  }
+  ttUpdateBlockPts(blockId); calcDayPts();
+}
+
+function ttSaveTextEntry(blockId, actId){
+  if(!ttBlockStates[blockId]) return;
+  const ta = document.getElementById('te-text-'+actId);
+  if(!ta) return;
+  if(!ttBlockStates[blockId].textEntries) ttBlockStates[blockId].textEntries = {};
+  ttBlockStates[blockId].textEntries[actId] = ta.value;
+}
+
+async function ttSaveTextEntryToGallery(blockId, actId, galleryKey, actName){
+  const ta = document.getElementById('te-text-'+actId);
+  if(!ta || !ta.value.trim()){ toast('Please write something first!'); return; }
+  ttSaveTextEntry(blockId, actId);
+  const date = document.getElementById('rpt-date')?.value || new Date().toLocaleDateString('en-CA');
+  if(!_supabase){ toast('Not connected to database.'); return; }
+  const btn = document.getElementById('te-save-btn-'+actId);
+  if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
+  try{
+    const {error} = await _supabase.from('vaanya_creative_works').insert([{
+      date, activity_key: galleryKey, activity_name: actName,
+      text_content: ta.value.trim(), created_at: new Date().toISOString(),
+    }]);
+    if(error) throw error;
+    if(btn){ btn.disabled=false; btn.textContent='Saved to Gallery!'; }
+    toast('Saved to Gallery!');
+    setTimeout(()=>{ if(btn){ btn.textContent='Save to Gallery'; btn.disabled=false; } },3000);
+    _cgLoaded = false;
+  } catch(e){
+    console.error('Gallery save error:',e);
+    if(btn){ btn.disabled=false; btn.textContent='Save to Gallery'; }
+    toast('Could not save. Check connection.');
+  }
+}
+
+
+// ── Brain Lab → Timetable point sync ──────────────────────────
+let _ttSyncing = false;
+// Maps timetable activity IDs to their brain lab global variable
+const _TT_BRAIN_MAP = {
+  // Holiday: Maths Deep Practice block
+  'we-ma3': ()=>mathsPtsToday,   // Brain Lab Maths Sprint
+  'we-ma4': ()=>logicPtsTotal,   // Brain Lab Logic
+  // Holiday: Brain Lab + Focus block
+  'we-br1': ()=>sudokuPts,       // Sudoku
+  'we-br2': ()=>riddlePtsTotal,  // Riddles
+  // Weekday: Homework & Study block
+  'wd-st2': ()=>mathsPtsToday,   // Brain Lab Maths Sprint
+  'wd-st3': ()=>logicPtsTotal,   // Brain Lab Logic
+  'wd-st4': ()=>sudokuPts,       // Sudoku
+};
+
+function ttSyncBrainLabPts(){
+  if(_ttSyncing) return; _ttSyncing=true;
+
+  const schedule = ttGetSchedule();
+
+  schedule.forEach(block => {
+    const acts = block.activities || [];
+    const brainActs = acts.filter(a => a.type==='link' && _TT_BRAIN_MAP && _TT_BRAIN_MAP[a.id]);
+    if(!brainActs.length) return;
+
+    // Ensure block state exists
+    if(!ttBlockStates[block.id])
+      ttBlockStates[block.id] = {pts:0, checkedActs:{}, markedDone:false, linkPts:{}};
+    if(!ttBlockStates[block.id].linkPts)
+      ttBlockStates[block.id].linkPts = {};
+
+    const bst = ttBlockStates[block.id];
+
+    // Recalculate block pts from scratch: self + pct-calc + dropdown + brain
+    let selfPts = 0;
+    acts.forEach(act => {
+      if(act.type==='self' && bst.checkedActs[act.id]) selfPts += (act.pts||0);
+      if(act.type==='pct-calc' && bst.calcPts && bst.calcPts[act.id]) selfPts += bst.calcPts[act.id];
+      if(act.type==='dropdown' && bst.ddPts && bst.ddPts[act.id]) selfPts += bst.ddPts[act.id];
+      if(act.type==='text-entry' && bst.checkedActs[act.id]) selfPts += (act.pts||0);
+    });
+
+    // Sum all live brain lab pts
+    let brainTotal = 0;
+    brainActs.forEach(act => {
+      const livePts = _TT_BRAIN_MAP[act.id]();
+      bst.linkPts[act.id] = livePts;
+      if(livePts > 0) bst.checkedActs[act.id] = true;
+      else delete bst.checkedActs[act.id];
+      brainTotal += livePts;
+
+      // Update pts display
+      const ptsEl = document.getElementById('ttact-pts-'+act.id);
+      if(ptsEl){
+        ptsEl.textContent = '+'+livePts+' pts';
+        ptsEl.style.color = livePts > 0 ? block.color : '#9CA3AF';
+      }
+      // Update checkbox
+      const actEl = document.getElementById('ttact-'+act.id);
+      if(actEl){
+        if(livePts > 0) actEl.classList.add('checked');
+        else actEl.classList.remove('checked');
+        const cb = actEl.querySelector('.tt-act-cb');
+        if(cb) cb.textContent = livePts > 0 ? '\u2713' : '';
+      }
+    });
+
+    // Set block total
+    bst.pts = selfPts + brainTotal;
+
+    // Update footer
+    const footerEl = document.getElementById('ttpts-'+block.id);
+    if(footerEl) footerEl.textContent = bst.pts + ' pts earned';
+  });
+
+  _ttSyncing = false;
+  // calcDayPts is NOT called here — it reads ttBlockStates directly via ttGetTotalPts()
+  // The caller (brain lab check fn) calls calcDayPts after this sync
+}
+
+// ── Poem text formatting (Bold/Italic/Underline via markdown-style markers) ──
+function cmFormatText(type){
+  const ta = document.getElementById('cm-text-input');
+  if(!ta) return;
+  const start = ta.selectionStart;
+  const end   = ta.selectionEnd;
+  const selected = ta.value.substring(start, end);
+  if(!selected){ toast('Select some text first, then tap the format button!'); return; }
+
+  const markers = {bold:'**', italic:'_', underline:'__'};
+  const m = markers[type];
+  const already = selected.startsWith(m) && selected.endsWith(m);
+  let replacement;
+  if(already){
+    replacement = selected.slice(m.length, -m.length); // remove formatting
+  } else {
+    replacement = m + selected + m;
+  }
+  ta.value = ta.value.substring(0,start) + replacement + ta.value.substring(end);
+  ta.selectionStart = start;
+  ta.selectionEnd   = start + replacement.length;
+  ta.focus();
+  onCreativeTextInput();
+}
+
 buildAll();
 _sessionWireInputs(); // start per-date session tracking
 _sessionStartAutoSave(); // background Supabase auto-save every 60s
@@ -9068,12 +10235,18 @@ loadFromSupabase().then(ok => {
 // CREATIVE GALLERY — load, filter, display from Supabase
 // ════════════════════════════════════════════════════════════════
 const _CG_MAP = {
-  draw:    {icon:'🎨', label:'Drawing / Painting', dotColor:'#F97316', textBg:'#FFF7ED', textColor:'#92400E'},
-  poem:    {icon:'✍️',  label:'Poem',               dotColor:'#8B5CF6', textBg:'#F5F3FF', textColor:'#5B21B6'},
-  story:   {icon:'📖', label:'Story',               dotColor:'#3B82F6', textBg:'#EFF6FF', textColor:'#1E3A8A'},
-  craft:   {icon:'✂️',  label:'Paper Craft',         dotColor:'#10B981', textBg:'#ECFDF5', textColor:'#065F46'},
-  mandala: {icon:'🌸', label:'Mandala Art',          dotColor:'#EC4899', textBg:'#FDF2F8', textColor:'#9D174D'},
-  journal: {icon:'📔', label:'Journal',              dotColor:'#F59E0B', textBg:'#FFFDE7', textColor:'#92400E'},
+  draw:         {icon:'🎨', label:'Drawing / Painting', dotColor:'#F97316', textBg:'#FFF7ED', textColor:'#92400E'},
+  poem:         {icon:'✍️',  label:'Poem',               dotColor:'#8B5CF6', textBg:'#F5F3FF', textColor:'#5B21B6'},
+  story:        {icon:'📖', label:'Story',               dotColor:'#3B82F6', textBg:'#EFF6FF', textColor:'#1E3A8A'},
+  craft:        {icon:'✂️',  label:'Paper Craft',         dotColor:'#10B981', textBg:'#ECFDF5', textColor:'#065F46'},
+  mandala:      {icon:'🌸', label:'Mandala Art',          dotColor:'#EC4899', textBg:'#FDF2F8', textColor:'#9D174D'},
+  journal:      {icon:'📔', label:'Journal',              dotColor:'#F59E0B', textBg:'#FFFDE7', textColor:'#92400E'},
+  moral_values:      {icon:'📿', label:'Moral Values',        dotColor:'#065F46', textBg:'#F0FDF4', textColor:'#065F46'},
+  proverb:           {icon:'💬', label:'Proverb',             dotColor:'#7C3AED', textBg:'#F5F3FF', textColor:'#5B21B6'},
+  ai_notes:          {icon:'🤖', label:'AI Notes',            dotColor:'#2563EB', textBg:'#EFF6FF', textColor:'#1E3A8A'},
+  ayurvedic_notes:   {icon:'🌿', label:'Ayurvedic Notes',     dotColor:'#059669', textBg:'#ECFDF5', textColor:'#065F46'},
+  vedas_notes:       {icon:'🕉️', label:'Vedas Notes',         dotColor:'#D97706', textBg:'#FFFBEB', textColor:'#92400E'},
+  interesting_facts: {icon:'🏛️', label:'Interesting Facts',   dotColor:'#7C3AED', textBg:'#F5F3FF', textColor:'#5B21B6'},
 };
 
 async function loadCreativeGallery(force=false){
@@ -9245,6 +10418,8 @@ function cgOpenDetail(idx){
         <div style="font-size:13px;font-weight:700">No photo was uploaded for this entry.</div>
       </div>`;
     }
+  } else if(work.activity_key==='moral_values'||work.activity_key==='proverb'){
+    content.innerHTML = `<div class="cg-story-display" style="background:#F0FDF4;border-color:#A7F3D0;color:#064E3B">${(work.text_content||'').replace(/\n/g,'<br>')}</div>`;
   } else if(work.activity_key==='poem'){
     content.innerHTML = `<div class="cg-poem-display">${(work.text_content||'').replace(/\n/g,'<br>')}</div>`;
   } else if(work.activity_key==='story'){
