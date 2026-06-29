@@ -266,7 +266,7 @@ function ttRender(){
           <span class="tt-chevron">▼</span>
         </div>
       </div>
-      <div class="tt-block-body" id="ttbody-${block.id}">
+      <div class="tt-block-body" id="ttbody-${block.id}" style="${state==='current'?'':'pointer-events:none'}">
         ${state==='current'?'<div class="tt-current-indicator"><span class="tt-current-dot"></span>You are here right now!</div>':''}
         ${state==='locked'?'<div style="font-size:11px;font-weight:800;color:#6B7280;background:#F3F4F6;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style=\"font-size:14px\">🔒</span> This block is coming up later — you can see what\'s inside but it will unlock at the right time!</div>':''}
         ${state==='normal'?'<div style="font-size:11px;font-weight:800;color:#6B7280;background:#F3F4F6;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style=\"font-size:14px\">⏰</span> This block\'s time has passed. Tap Mark Done above if you completed it.</div>':''}
@@ -424,7 +424,7 @@ function ttRender(){
             <span style="font-size:11px;font-weight:800;color:#6B7280">Points earned this block</span>
             <span style="font-size:14px;font-weight:900;color:${block.color}" id="ttpts-${block.id}">${earnedPts} pts</span>
           </div>
-          ${(state==='current'||state==='normal') && state!=='break' && block.maxPts>0 ? `
+          ${state==='current' && block.maxPts>0 ? `
             <button class="tt-mark-done-btn ${bState.markedDone?'done':'primary'}" onclick="ttMarkDone('${block.id}')">
               ${bState.markedDone?'✅ Block completed!':'✅ Mark this block as done'}
             </button>`:''}`:''}

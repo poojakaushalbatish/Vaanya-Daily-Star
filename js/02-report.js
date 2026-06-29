@@ -214,6 +214,10 @@ function calcDayPts(){
   let parentRatingPts=ratingVal;
   pts+=parentRatingPts;breakdown.parentRating=parentRatingPts;
 
+  // Manual extra points (parent bonus) — entered in the Parent Review tab
+  const extraVal=parseInt(document.getElementById('parent-extra-pts')?.value||0)||0;
+  pts+=extraVal;breakdown.extraPts=extraVal;
+
   // Penalty bar removed — no deduction applied
 
   // Update live panel and XP bar — single source of truth
@@ -245,6 +249,7 @@ function renderBreakdown(bd,total){
     {label:'🎨 Creative',pts:bd.creative||0,col:'var(--pk)'},
     {label:'🧠 Brain Lab',pts:bd.brain||0,col:'var(--b)'},
     {label:'⭐ Parent rating',pts:bd.parentRating||0,col:bd.parentRating>=0?'var(--g)':'var(--r)'},
+    {label:'➕ Extra (parent)',pts:bd.extraPts||0,col:(bd.extraPts||0)>=0?'var(--g)':'var(--r)'},
   ].filter(r=>r.pts!==0);
 
   if(!rows.length){el.innerHTML='';return;}
@@ -591,6 +596,7 @@ function collectFormData(date, pts){
 
     parentComment:document.getElementById('parent-comment')?.value||'',
     parentRating:parseInt(document.getElementById('parent-rating')?.value||0),
+    extraPts:parseInt(document.getElementById('parent-extra-pts')?.value||0)||0,
     bookType:document.getElementById('book-type')?.value||'0',
     ssDone: SS_SUBJECTS.map((_,i)=>!!document.getElementById('ss-'+i)?.checked),
     ssDets: SS_SUBJECTS.map((_,i)=>document.getElementById('ssdet-'+i)?.value||''),
@@ -1558,3 +1564,32 @@ function viewHistDay(i, e){
   box.scrollIntoView({behavior:'smooth'});
 }
 
+// ── Parent manual extra points (running total) ───────────────────
+function addExtraPoints(){
+  const inp=document.getElementById('parent-extra-input');
+  const store=document.getElementById('parent-extra-pts');
+  if(!inp||!store) return;
+  const add=parseInt(inp.value);
+  if(isNaN(add)||add===0){ if(typeof toast==='function') toast('Enter a points value to add (e.g. 15 or -10).'); return; }
+  store.value=(parseInt(store.value||0)||0)+add;
+  inp.value='';
+  renderExtraLine();
+  if(typeof calcDayPts==='function') calcDayPts();
+  if(typeof toast==='function') toast((add>0?'+':'')+add+' pts added.');
+}
+function clearExtraPoints(){
+  const store=document.getElementById('parent-extra-pts');
+  if(store) store.value=0;
+  renderExtraLine();
+  if(typeof calcDayPts==='function') calcDayPts();
+}
+function renderExtraLine(){
+  const store=document.getElementById('parent-extra-pts');
+  const line=document.getElementById('parent-extra-line');
+  if(!line) return;
+  const v=parseInt(store?.value||0)||0;
+  if(v===0){ line.style.display='none'; line.innerHTML=''; return; }
+  line.style.display='flex';
+  line.innerHTML='<span>Manual bonus applied: <b>'+(v>0?'+':'')+v+' pts</b></span>'+
+    '<button onclick="clearExtraPoints()" style="background:none;border:none;color:#B91C1C;font-weight:800;cursor:pointer;font-size:12px">Clear</button>';
+}
