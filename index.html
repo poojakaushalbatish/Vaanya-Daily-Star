@@ -1147,6 +1147,17 @@
       <option value="80">🌟 Extraordinary — outstanding! (+80 pts)</option>
     </select>
     <div id="parent-rating-result" style="margin-bottom:14px;font-size:14px;font-weight:800;padding:10px;border-radius:var(--rads)"></div>
+    <!-- Extra / bonus points — parent manual adjustment (below the overall rating) -->
+    <div class="fl" style="margin-top:2px">Add extra points</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+      <input type="number" id="parent-extra-input" placeholder="e.g. 15  (use -10 to deduct)" inputmode="numeric"
+        style="flex:1;font-size:13px;font-weight:800;padding:10px"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();addExtraPoints();}">
+      <button type="button" onclick="addExtraPoints()"
+        style="background:linear-gradient(135deg,#7C3AED,#6D28D9);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap">➕ Add</button>
+    </div>
+    <input type="hidden" id="parent-extra-pts" value="0">
+    <div id="parent-extra-line" style="display:none;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;color:#5B21B6;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:9px;padding:8px 12px;margin-bottom:14px"></div>
 
     <!-- Comment box — preserved exactly -->
     <div class="fl">Mamma &amp; Papa's comments on today's performance</div>
