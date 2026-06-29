@@ -46,9 +46,12 @@ function ttBlockState(block, nowH){
     }
   }
 
-  if(nowH < unlockH)            return 'locked';
+  // Time window now ONLY decides which block is highlighted as "current".
+  // Blocks are never auto-frozen by the clock — past AND upcoming blocks stay
+  // fully editable ('open'). A block becomes view-only only when the child taps
+  // "Mark as done" (handled above via markedDone -> 'done').
   if(nowH >= unlockH && nowH < endH) return 'current';
-  return 'normal'; // past its window — unlocked but no longer active
+  return 'open';
 }
 
 // ── Toggle holiday mode ────────────────────────────────────────
@@ -244,13 +247,14 @@ function ttRender(){
       if(isFirstCurrent){ wrapper.classList.add('open'); _ttFirstCurrentOpened=true; }
     }
     else if(state==='done') wrapper.classList.add('state-done');
+    else if(state==='open')  wrapper.classList.add('state-open');
     else if(state==='locked')  wrapper.classList.add('state-locked');
     else if(state==='normal')  wrapper.classList.add('state-past');
     else if(state==='break') wrapper.classList.add('state-break');
 
     // Status badge text
-    const statusMap = {current:'🔴 CURRENT',done:'✅ COMPLETED',locked:'👁 UPCOMING',normal:'👁 VIEW ONLY',break:'☕ BREAK'};
-    const statusColors = {current:'background:#DBEAFE;color:#1D4ED8',done:'background:#DCFCE7;color:#166534',locked:'background:#F3F4F6;color:#6B7280',normal:'background:#F3F4F6;color:#6B7280',break:'background:#F9FAFB;color:#9CA3AF'};
+    const statusMap = {current:'🔴 CURRENT',open:'✏️ OPEN',done:'✅ COMPLETED',locked:'👁 UPCOMING',normal:'👁 VIEW ONLY',break:'☕ BREAK'};
+    const statusColors = {current:'background:#DBEAFE;color:#1D4ED8',open:'background:#ECFDF5;color:#047857',done:'background:#DCFCE7;color:#166534',locked:'background:#F3F4F6;color:#6B7280',normal:'background:#F3F4F6;color:#6B7280',break:'background:#F9FAFB;color:#9CA3AF'};
 
     const earnedPts = bState.pts || 0;
 
@@ -272,7 +276,7 @@ function ttRender(){
         ${state==='normal'?'<div style="font-size:11px;font-weight:800;color:#6B7280;background:#F3F4F6;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style=\"font-size:14px\">⏰</span> This block\'s time has passed. Tap Mark Done above if you completed it.</div>':''}
         ${block.type==='break'?'<div style="font-size:12px;color:#6B7280;padding:4px 0">Free time — relax, no tasks required.</div>':''}
         ${block.activities && block.activities.length>0 ? `
-          <div class="tt-activities">
+          <div class="tt-activities" style="${state==='done'?'pointer-events:none;opacity:.92':''}">
             ${block.activities.map(act=>{
               const isChecked = bState.checkedActs[act.id]||false;
               const cls = act.type==='parent'?'parent-pending':act.type==='link'?'linked':act.type==='wordbook'?'linked':'';
@@ -394,7 +398,7 @@ function ttRender(){
                     </div>
                     <div class="tt-act-pts" style="color:${block.color}">+${act.pts} pts 📖</div>
                   </div>
-                  ${ttWordEntryHTML()}
+                  ${ttWordEntryHTML(block.id, act.id, act.pts)}
                 </div>`;
               }
 
@@ -424,7 +428,7 @@ function ttRender(){
             <span style="font-size:11px;font-weight:800;color:#6B7280">Points earned this block</span>
             <span style="font-size:14px;font-weight:900;color:${block.color}" id="ttpts-${block.id}">${earnedPts} pts</span>
           </div>
-          ${(state==='current'||state==='normal') && state!=='break' && block.maxPts>0 ? `
+          ${(state==='current'||state==='open'||state==='normal') && state!=='break' && block.maxPts>0 ? `
             <button class="tt-mark-done-btn ${bState.markedDone?'done':'primary'}" onclick="ttMarkDone('${block.id}')">
               ${bState.markedDone?'✅ Block completed!':'✅ Mark this block as done'}
             </button>`:''}`:''}
@@ -514,8 +518,15 @@ function ttRenderMiniSchedule(){
   }).join('');
 }
 
+let _ttWordDraft = {};
+
 // ── Wordbook inline entry HTML (used inside Book Reading block) ──
-function ttWordEntryHTML(){
+// Uses UNIQUE ids (ttw-*) so it never collides with the Daily Report's
+// word1/mean1/... inputs in index.html. Drafts persist across the 60s
+// auto re-render so typed words are not lost.
+function ttWordEntryHTML(blockId, actId, pts){
+  const inStyle = "padding:7px 10px;border-radius:8px;border:1.5px solid #D1FAE5;font-size:12px;font-family:'Nunito',sans-serif;background:#F0FDF4;color:#065F46;outline:none;box-sizing:border-box";
+  const dval = (k) => (_ttWordDraft[k]||'').replace(/"/g,'&quot;');
   return `
   <div style="width:100%;background:#F0FDF4;border-radius:12px;padding:14px;border:1.5px solid #A7F3D0">
     <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#065F46;margin-bottom:10px">
@@ -525,28 +536,89 @@ function ttWordEntryHTML(){
     <div style="margin-bottom:10px;background:#fff;border-radius:10px;padding:10px 12px;border:1.5px solid #D1FAE5">
       <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#059669;margin-bottom:6px">Word ${n}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-        <input type="text" id="word${n}" placeholder="e.g. perseverance"
-          style="padding:7px 10px;border-radius:8px;border:1.5px solid #D1FAE5;font-size:12px;font-family:'Nunito',sans-serif;background:#F0FDF4;color:#065F46;outline:none;box-sizing:border-box"
-          oninput="calcWordPts();checkWordSaved()" onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#D1FAE5'">
-        <input type="text" id="mean${n}" placeholder="Meaning"
-          style="padding:7px 10px;border-radius:8px;border:1.5px solid #D1FAE5;font-size:12px;font-family:'Nunito',sans-serif;background:#F0FDF4;color:#065F46;outline:none;box-sizing:border-box"
-          oninput="calcWordPts();checkWordSaved()" onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#D1FAE5'">
+        <input type="text" id="ttw-word${n}" value="${dval('ttw-word'+n)}" placeholder="e.g. perseverance"
+          style="${inStyle}" oninput="ttwOnInput(this)" onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#D1FAE5'">
+        <input type="text" id="ttw-mean${n}" value="${dval('ttw-mean'+n)}" placeholder="Meaning"
+          style="${inStyle}" oninput="ttwOnInput(this)" onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#D1FAE5'">
       </div>
-      <input type="text" id="exam${n}" placeholder="Example sentence (required to save)"
-        style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #D1FAE5;font-size:12px;font-family:'Nunito',sans-serif;background:#F0FDF4;color:#065F46;outline:none;box-sizing:border-box"
-        oninput="checkWordSaved()" onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#D1FAE5'">
+      <input type="text" id="ttw-exam${n}" value="${dval('ttw-exam'+n)}" placeholder="Example sentence (required to save)"
+        style="width:100%;${inStyle}" oninput="ttwOnInput(this)" onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#D1FAE5'">
     </div>`).join('')}
-    <div id="save-wordbook-wrap" style="margin-top:4px">
-      <button id="save-wordbook-btn" onclick="saveWordsToWordBook()"
-        style="width:100%;padding:10px;border-radius:10px;border:none;
-          background:linear-gradient(135deg,#059669,#047857);color:#fff;
-          font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;
-          box-shadow:0 4px 12px rgba(5,150,105,.3)">
+    <div id="ttw-save-wrap" style="margin-top:4px">
+      <button id="ttw-save-btn" onclick="ttwSaveWords('${blockId}','${actId}',${pts||0})"
+        style="width:100%;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,#059669,#047857);color:#fff;font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(5,150,105,.3)">
         💾 Save to My Wordbook
       </button>
-      <div id="save-wordbook-status" style="font-size:11px;font-weight:800;color:#059669;margin-top:6px;text-align:center;min-height:16px"></div>
+      <div id="ttw-save-status" style="font-size:11px;font-weight:800;color:#059669;margin-top:6px;text-align:center;min-height:16px"></div>
     </div>
   </div>`;
+}
+
+// Keep typed words in memory so the 60s auto re-render doesn't wipe them.
+function ttwOnInput(el){
+  if(el && el.id) _ttWordDraft[el.id] = el.value;
+  ttwCheckSaved();
+}
+
+// Update the save button label with how many complete words are ready.
+function ttwCheckSaved(){
+  const rows=[1,2,3].map(n=>({
+    w:(document.getElementById('ttw-word'+n)?.value||'').trim(),
+    m:(document.getElementById('ttw-mean'+n)?.value||'').trim(),
+    e:(document.getElementById('ttw-exam'+n)?.value||'').trim()
+  }));
+  const ready=rows.filter(x=>x.w&&x.m&&x.e).length;
+  const btn=document.getElementById('ttw-save-btn');
+  if(btn) btn.textContent = ready>0
+    ? ('💾 Save '+ready+' word'+(ready!==1?'s':'')+' to My Wordbook')
+    : '💾 Save to My Wordbook';
+}
+
+// Save the block's words to the WordBook (own ids → no clash with the report).
+async function ttwSaveWords(blockId, actId, pts){
+  const btn=document.getElementById('ttw-save-btn');
+  const status=document.getElementById('ttw-save-status');
+  const rows=[1,2,3].map(n=>({
+    w:(document.getElementById('ttw-word'+n)?.value||'').trim(),
+    m:(document.getElementById('ttw-mean'+n)?.value||'').trim(),
+    e:(document.getElementById('ttw-exam'+n)?.value||'').trim()
+  }));
+  const complete=rows.filter(x=>x.w&&x.m&&x.e);
+  if(!complete.length){
+    if(status) status.textContent='⚠️ Fill Word + Meaning + Example to save.';
+    if(typeof toast==='function') toast('⚠️ Fill Word + Meaning + Example sentence to save.');
+    return;
+  }
+  if(btn){ btn.disabled=true; btn.style.opacity='.7'; }
+  if(status) status.textContent='Saving…';
+
+  let saved=0, skipped=0;
+  for(const it of complete){
+    if(typeof wbWords!=='undefined' && wbWords.some(w=>(w.word||'').toLowerCase()===it.w.toLowerCase())){ skipped++; continue; }
+    const res = await wbSaveToSupabase(it.w, it.m, it.e, 'timetable');
+    if(res){ if(typeof wbWords!=='undefined') wbWords.unshift(res); saved++; }
+  }
+  if(typeof wbRender==='function') wbRender();
+  if(typeof wbUpdateGamification==='function') wbUpdateGamification();
+
+  // Award the block's points once all 3 words are complete (block design: 10 pts).
+  if(complete.length>=3 && blockId && actId){
+    if(!ttBlockStates[blockId]) ttBlockStates[blockId]={pts:0,checkedActs:{},markedDone:false};
+    const st=ttBlockStates[blockId];
+    if(!st.checkedActs[actId]){ st.checkedActs[actId]=true; st.pts=(st.pts||0)+(pts||0); }
+    if(typeof ttUpdateBlockPts==='function') ttUpdateBlockPts(blockId);
+    if(typeof calcDayPts==='function') calcDayPts();
+  }
+
+  if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+  if(status){
+    const parts=[];
+    if(saved)   parts.push(saved+' saved to WordBook!');
+    if(skipped) parts.push(skipped+' already there.');
+    if(complete.length>=3) parts.push('+'+(pts||0)+' pts ⭐');
+    status.textContent=parts.join(' ') || 'Saved!';
+  }
+  if(typeof toast==='function') toast('📖 '+saved+' word'+(saved!==1?'s':'')+' added to your WordBook! 🌟');
 }
 
 // ── Percentage Calculator for Maths blocks ────────────────────
