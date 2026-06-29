@@ -46,12 +46,9 @@ function ttBlockState(block, nowH){
     }
   }
 
-  // Time window now ONLY decides which block is highlighted as "current".
-  // Blocks are never auto-frozen by the clock — past AND upcoming blocks stay
-  // fully editable ('open'). A block becomes view-only only when the child taps
-  // "Mark as done" (handled above via markedDone -> 'done').
+  if(nowH < unlockH)            return 'locked';
   if(nowH >= unlockH && nowH < endH) return 'current';
-  return 'open';
+  return 'normal'; // past its window — unlocked but no longer active
 }
 
 // ── Toggle holiday mode ────────────────────────────────────────
@@ -247,14 +244,13 @@ function ttRender(){
       if(isFirstCurrent){ wrapper.classList.add('open'); _ttFirstCurrentOpened=true; }
     }
     else if(state==='done') wrapper.classList.add('state-done');
-    else if(state==='open')  wrapper.classList.add('state-open');
     else if(state==='locked')  wrapper.classList.add('state-locked');
     else if(state==='normal')  wrapper.classList.add('state-past');
     else if(state==='break') wrapper.classList.add('state-break');
 
     // Status badge text
-    const statusMap = {current:'🔴 CURRENT',open:'✏️ OPEN',done:'✅ COMPLETED',locked:'👁 UPCOMING',normal:'👁 VIEW ONLY',break:'☕ BREAK'};
-    const statusColors = {current:'background:#DBEAFE;color:#1D4ED8',open:'background:#ECFDF5;color:#047857',done:'background:#DCFCE7;color:#166534',locked:'background:#F3F4F6;color:#6B7280',normal:'background:#F3F4F6;color:#6B7280',break:'background:#F9FAFB;color:#9CA3AF'};
+    const statusMap = {current:'🔴 CURRENT',done:'✅ COMPLETED',locked:'👁 UPCOMING',normal:'👁 VIEW ONLY',break:'☕ BREAK'};
+    const statusColors = {current:'background:#DBEAFE;color:#1D4ED8',done:'background:#DCFCE7;color:#166534',locked:'background:#F3F4F6;color:#6B7280',normal:'background:#F3F4F6;color:#6B7280',break:'background:#F9FAFB;color:#9CA3AF'};
 
     const earnedPts = bState.pts || 0;
 
@@ -276,7 +272,7 @@ function ttRender(){
         ${state==='normal'?'<div style="font-size:11px;font-weight:800;color:#6B7280;background:#F3F4F6;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style=\"font-size:14px\">⏰</span> This block\'s time has passed. Tap Mark Done above if you completed it.</div>':''}
         ${block.type==='break'?'<div style="font-size:12px;color:#6B7280;padding:4px 0">Free time — relax, no tasks required.</div>':''}
         ${block.activities && block.activities.length>0 ? `
-          <div class="tt-activities" style="${state==='done'?'pointer-events:none;opacity:.92':''}">
+          <div class="tt-activities">
             ${block.activities.map(act=>{
               const isChecked = bState.checkedActs[act.id]||false;
               const cls = act.type==='parent'?'parent-pending':act.type==='link'?'linked':act.type==='wordbook'?'linked':'';
@@ -428,7 +424,7 @@ function ttRender(){
             <span style="font-size:11px;font-weight:800;color:#6B7280">Points earned this block</span>
             <span style="font-size:14px;font-weight:900;color:${block.color}" id="ttpts-${block.id}">${earnedPts} pts</span>
           </div>
-          ${(state==='current'||state==='open'||state==='normal') && state!=='break' && block.maxPts>0 ? `
+          ${(state==='current'||state==='normal') && state!=='break' && block.maxPts>0 ? `
             <button class="tt-mark-done-btn ${bState.markedDone?'done':'primary'}" onclick="ttMarkDone('${block.id}')">
               ${bState.markedDone?'✅ Block completed!':'✅ Mark this block as done'}
             </button>`:''}`:''}
