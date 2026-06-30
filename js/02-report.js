@@ -198,11 +198,9 @@ function calcDayPts(){
   const shRes=document.getElementById('shloka-pts-result');
   if(shRes) shRes.textContent=_lgPts>0?'+'+_lgPts+' pts awarded ✅':(shlokaPts>0?'+'+shlokaPts+' pts ✅':'');
 
-  // Creative — pts from parent award dropdown
-  let crPts = parseInt(document.getElementById('creative-pts-award')?.value||0)||0;
+  // Creative — sum of the per-work points the parent awarded
+  let crPts = parseInt(document.getElementById('creative-pts-total')?.value||0)||0;
   breakdown.creative=crPts; pts+=crPts;
-  const crRes=document.getElementById('creative-pts-result');
-  if(crRes) crRes.textContent = crPts>0 ? '+'+crPts+' pts awarded ✅' : '';
 
   // Brain lab — pts added directly from puzzle completions, no gating
   const brPts=brainPtsToday;
@@ -305,7 +303,7 @@ function calcMaxPts(){
   // Shloka: max option value
   max.geeta += Math.max(...[...document.querySelectorAll('#shloka-pts-award option')].map(o=>parseInt(o.value)||0));
   // Creative: max option value
-  max.geeta += Math.max(...[...document.querySelectorAll('#creative-pts-award option')].map(o=>parseInt(o.value)||0));
+  max.geeta += Math.max(20, parseInt(document.getElementById('creative-pts-total')?.value||0)||0);
 
   // ── Parent Rating ─────────────────────────────────────────────
   // Max positive option in parent-rating
@@ -608,7 +606,7 @@ function collectFormData(date, pts){
     pastShlokas:(document.getElementById('past-shlokas')?.value||'').substring(0,3000),
     shlokaPtsAwarded: parseInt(document.getElementById('shloka-pts-award')?.value||0)||0,
     geetaProgress:     JSON.stringify(geetaProgress||{}),
-    creativePtsAwarded: parseInt(document.getElementById('creative-pts-award')?.value||0)||0,
+    creativePtsAwarded: parseInt(document.getElementById('creative-pts-total')?.value||0)||0,
     creativeImgData: creativeImgData || null,
     testSubj:document.getElementById('test-subj')?.value||'',
     testGot:document.getElementById('test-got')?.value||'',
@@ -1252,33 +1250,8 @@ function renderParentTab(){
     shlokaRef.style.color = shlokaReflect.length>2 ? '#064E3B' : '#9CA3AF';
   }
 
-  // Creative activity + desc + image
-  const creativeActEl = document.getElementById('parent-creative-activity');
-  if(creativeActEl){
-    creativeActEl.textContent = creativeChosen ? 'Activity: ' + creativeChosen : 'No creative activity selected yet.';
-    creativeActEl.style.color = creativeChosen ? '#3B0764' : '#9CA3AF';
-    creativeActEl.style.fontWeight = creativeChosen ? '800' : '600';
-    creativeActEl.style.fontStyle = creativeChosen ? 'normal' : 'italic';
-  }
-  const creativeDesc = (document.getElementById('creative-desc')?.value||'').trim();
-  const parentDescWrap = document.getElementById('parent-creative-desc-wrap');
-  const parentDesc = document.getElementById('parent-creative-desc');
-  if(parentDescWrap && parentDesc){
-    if(creativeDesc.length>2){ parentDescWrap.style.display='block'; parentDesc.textContent=creativeDesc; }
-    else { parentDescWrap.style.display='none'; }
-  }
-  const imgWrap = document.getElementById('parent-creative-img-wrap');
-  const imgEl = document.getElementById('parent-creative-img');
-  const noImg = document.getElementById('parent-creative-no-img');
-  if(creativeImgData){
-    if(imgWrap) imgWrap.style.display='block';
-    if(imgEl) imgEl.src=creativeImgData;
-    if(noImg) noImg.style.display='none';
-  } else {
-    if(imgWrap) imgWrap.style.display='none';
-    if(noImg) noImg.style.display='block';
-  }
-
+  // Creative Moments — multi-work list (each submission + per-work points)
+  prRenderCreativeWorks();
   const pts=calcDayPts();
   // Compute section sub-totals for the parent view
   const ttVal=parseInt(document.getElementById('rpt-tt')?.value||0);
@@ -1361,8 +1334,8 @@ function renderParentTab(){
   // ── Section 3: Geeta badge ──
   const b3=document.getElementById('pr-acc-pts-3');if(b3)b3.textContent=soulPts+' pts';
 
-  // ── Section 4: Creative badge ──
-  const crPtsAward=parseInt(document.getElementById('creative-pts-award')?.value||0);
+  // ── Section 4: Creative badge — sum of per-work points ──
+  const crPtsAward=parseInt(document.getElementById('creative-pts-total')?.value||0);
   const b4=document.getElementById('pr-acc-pts-4');if(b4)b4.textContent=crPtsAward+' pts';
 
   // ── Section 5: Wordbook summary ──
@@ -1677,4 +1650,122 @@ function prRenderDailyTimetable(){
 
   const b1=document.getElementById('pr-acc-pts-1');
   if(b1) b1.textContent = earnedTotal+' pts';
+}
+
+
+// ════════════════════════════════════════════════════════════════
+// PARENT REVIEW · SECTION 4 — CREATIVE MOMENTS (multi-work)
+// Loads every piece the child submitted today from vaanya_creative_works
+// and shows each compactly with its own points box. Parent points per
+// work are summed into #creative-pts-total, which calcDayPts banks.
+// ════════════════════════════════════════════════════════════════
+let _prCreativeWorks = null;   // today's works (array) | null = not loaded yet
+let _prCreativeAward = {};     // workId -> points the parent gave (session)
+
+async function prLoadCreativeWorks(){
+  const today = new Date(Date.now()+5.5*3600000).toISOString().split('T')[0];
+  // Instant paint if the Gallery is already loaded
+  if(typeof _cgAllWorks!=='undefined' && Array.isArray(_cgAllWorks) && _cgAllWorks.length){
+    _prCreativeWorks = _cgAllWorks.filter(w=>w.date===today);
+    prRenderCreativeWorks();
+  }
+  if(typeof _supabase==='undefined' || !_supabase){
+    if(_prCreativeWorks===null){ _prCreativeWorks=[]; prRenderCreativeWorks(); }
+    return;
+  }
+  try{
+    const {data,error} = await _supabase.from('vaanya_creative_works')
+      .select('*').eq('date',today).order('created_at',{ascending:true});
+    if(!error){ _prCreativeWorks = data||[]; prRenderCreativeWorks(); }
+    else { if(_prCreativeWorks===null){ _prCreativeWorks=[]; prRenderCreativeWorks(); } }
+  }catch(e){
+    console.error('prLoadCreativeWorks',e);
+    if(_prCreativeWorks===null){ _prCreativeWorks=[]; prRenderCreativeWorks(); }
+  }
+}
+
+function _prCreativeMeta(w){
+  const m=(typeof _CREATIVE_MAP!=='undefined' && _CREATIVE_MAP[w.activity_key]) ? _CREATIVE_MAP[w.activity_key] : null;
+  return { icon: m?m.icon:'🎨', title: w.activity_name || (m?m.title:'Creative work') };
+}
+function _prTime(ts){
+  if(!ts) return '';
+  try{ const d=new Date(ts); let h=d.getHours(); const mm=('0'+d.getMinutes()).slice(-2); const ap=h<12?'AM':'PM'; h=h%12||12; return h+':'+mm+' '+ap; }
+  catch(e){ return ''; }
+}
+
+function prCreativeTotal(){
+  let sum=0;
+  (_prCreativeWorks||[]).forEach(w=>{ sum += parseInt(_prCreativeAward[w.id]||0)||0; });
+  const hid=document.getElementById('creative-pts-total'); if(hid) hid.value=sum;
+  const tl=document.getElementById('parent-creative-total');
+  if(tl) tl.textContent=(_prCreativeWorks&&_prCreativeWorks.length)?('Creative total: '+sum+' pts'):'';
+  const b4=document.getElementById('pr-acc-pts-4'); if(b4) b4.textContent=sum+' pts';
+  return sum;
+}
+
+function prCreativeAwardInput(el){
+  if(!el) return;
+  const id=el.getAttribute('data-id');
+  let v=parseInt(el.value); if(isNaN(v)) v=0;
+  if(v<0) v=0; if(v>100) v=100;
+  el.value = v===0 ? '' : v;
+  _prCreativeAward[id]=v;
+  prCreativeTotal();
+  if(typeof calcDayPts==='function') calcDayPts();
+}
+
+function prRenderCreativeWorks(){
+  const list=document.getElementById('parent-creative-list');
+  if(!list) return;
+  if(_prCreativeWorks===null){
+    list.innerHTML='<div style="font-size:12px;color:#9CA3AF;font-style:italic;padding:6px 2px">Loading creative work…</div>';
+    return;
+  }
+  if(_prCreativeWorks.length===0){
+    list.innerHTML='<div style="font-size:12px;color:#9CA3AF;font-style:italic;padding:10px 12px;background:#FAFAFF;border:1px dashed #E5E7EB;border-radius:10px">No creative work submitted today.</div>';
+    prCreativeTotal(); return;
+  }
+  list.innerHTML=_prCreativeWorks.map(w=>{
+    const meta=_prCreativeMeta(w);
+    const award=_prCreativeAward[w.id]!==undefined?_prCreativeAward[w.id]:0;
+    const hasPhoto=!!(w.photo_data && String(w.photo_data).length>30);
+    const txt=(w.text_content||'').toString();
+    const thumb=hasPhoto
+      ? `<img src="${w.photo_data}" onclick="prLightbox(this.src)" style="width:46px;height:46px;object-fit:cover;border-radius:8px;border:1.5px solid #DDD6FE;cursor:zoom-in;flex-shrink:0" title="Tap to enlarge">`
+      : '';
+    const textBox=txt.trim().length>0
+      ? `<div style="flex:1;min-width:0;max-height:64px;overflow:auto;background:#FAFAFF;border:1px solid #ECECF3;border-radius:8px;padding:6px 9px;font-size:12px;line-height:1.5;color:#3B0764;white-space:pre-wrap">${txt.replace(/</g,'&lt;')}</div>`
+      : (hasPhoto?'':'<div style="flex:1;font-size:11px;color:#9CA3AF;font-style:italic">No text added.</div>');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid #ECECF3;border-radius:11px;margin-bottom:8px;background:#fff">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;width:50px">
+        <div style="font-size:18px;line-height:1">${meta.icon}</div>
+        <div style="font-size:8px;font-weight:800;color:#9CA3AF;text-align:center;line-height:1.1">${_prTime(w.created_at)}</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:900;color:#3B0764;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${meta.title}</div>
+        <div style="display:flex;align-items:center;gap:8px">${thumb}${textBox}</div>
+      </div>
+      <div style="flex-shrink:0;text-align:center">
+        <input type="number" data-id="${w.id}" value="${award===0?'':award}" placeholder="0" inputmode="numeric"
+          onchange="prCreativeAwardInput(this)"
+          style="width:56px;padding:8px 6px;font-size:13px;font-weight:900;text-align:center;border:1.5px solid #DDD6FE;border-radius:9px;background:#fff;color:#3B0764;font-family:'Nunito',sans-serif;outline:none">
+        <div style="font-size:8px;font-weight:800;color:#9CA3AF;text-transform:uppercase;letter-spacing:.05em;margin-top:2px">points</div>
+      </div>
+    </div>`;
+  }).join('');
+  prCreativeTotal();
+}
+
+function prLightbox(src){
+  if(!src) return;
+  const ov=document.getElementById('pr-lightbox');
+  const im=document.getElementById('pr-lightbox-img');
+  if(im) im.src=src;
+  if(ov) ov.style.display='flex';
+}
+function prCloseLightbox(){
+  const ov=document.getElementById('pr-lightbox');
+  if(ov) ov.style.display='none';
+  const im=document.getElementById('pr-lightbox-img'); if(im) im.src='';
 }

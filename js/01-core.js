@@ -529,6 +529,7 @@ function showTab(id,btn){
       if(wall)wall.style.display='none';
       if(content)content.style.display='block';
       renderParentTab();
+      if(typeof prLoadCreativeWorks==='function') prLoadCreativeWorks();
       renderParentShlokaApproval();
       renderParentShlokaMgmt();
     } else {
@@ -1870,4 +1871,3 @@ function buildEarnGuide(){
       <td style="color:var(--muted)">${note}</td>
     </tr>`).join('');
 }
-
