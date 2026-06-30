@@ -1160,6 +1160,8 @@ function cgBuildCard(work, idx){
 
   card.innerHTML = `
     <div class="cg-thumb" style="position:relative">
+      <button onclick="event.stopPropagation();cgDeleteWork(${work.id})" title="Delete this work" aria-label="Delete"
+        style="position:absolute;top:8px;right:8px;z-index:5;width:30px;height:30px;border:none;border-radius:50%;background:rgba(220,38,38,.92);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);line-height:1">🗑️</button>
       ${thumbHtml}
       <div class="cg-ribbon">${meta.icon} ${meta.label}</div>
     </div>
@@ -1168,6 +1170,24 @@ function cgBuildCard(work, idx){
       <div class="cg-card-date">📅 ${dateStr}</div>
     </div>`;
   return card;
+}
+
+// Delete a single creative work from the gallery (child-managed)
+async function cgDeleteWork(id){
+  if(id===undefined || id===null) return;
+  if(!confirm('Delete this creative work from the gallery? This cannot be undone.')) return;
+  if(!_supabase){ if(typeof toast==='function') toast('Not connected to database.'); return; }
+  try{
+    const {error} = await _supabase.from('vaanya_creative_works').delete().eq('id', id);
+    if(error) throw error;
+    _cgAllWorks = _cgAllWorks.filter(w=>String(w.id)!==String(id));
+    if(typeof cgUpdateStats==='function') cgUpdateStats();
+    cgSetFilter(_cgFilter||'all', null);
+    if(typeof toast==='function') toast('🗑️ Deleted from your gallery.');
+  }catch(e){
+    console.error('Gallery delete error:', e);
+    if(typeof toast==='function') toast('Could not delete — check your connection.');
+  }
 }
 
 function cgOpenDetail(idx){
