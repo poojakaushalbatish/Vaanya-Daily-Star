@@ -1040,7 +1040,7 @@ async function loadCreativeGallery(force=false){
 
   if(!_supabase){
     if(loading) loading.textContent='⚠️ Not connected to database.';
-    return;
+    _cgLoaded=false; return;
   }
 
   try{
@@ -1053,12 +1053,13 @@ async function loadCreativeGallery(force=false){
 
     _cgAllWorks = data || [];
     cgUpdateStats();
-    cgSetFilter(_cgFilter, null);
+    cgSetFilter(_cgFilter||'all', null);
 
     if(loading) loading.style.display='none';
   } catch(e){
     console.error('Gallery load error:', e);
-    if(loading) loading.textContent='⚠️ Could not load gallery. Check your connection.';
+    _cgLoaded=false; // allow retry next time instead of latching the error
+    if(loading) loading.textContent='⚠️ Could not load gallery — tap the Gallery tab again to retry.';
   }
 }
 

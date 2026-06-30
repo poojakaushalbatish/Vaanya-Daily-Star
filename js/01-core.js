@@ -1203,6 +1203,9 @@ async function saveCreativeWork(){
     }catch(e){console.warn('Creative save exception:',e);cloudErrMsg=e.message||'connection error';}
   }
 
+  // Make the Gallery reload so this new work appears next time it is opened
+  if(cloudOk){ try{ _cgLoaded=false; }catch(e){} }
+
   // Also save into the main daily report draft for parent review display
   if(opt.type==='photo') creativeImgData=photoBase64;
   const cDesc=document.getElementById('creative-desc');if(cDesc)cDesc.value=textContent;
