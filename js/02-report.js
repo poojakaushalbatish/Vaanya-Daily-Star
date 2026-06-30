@@ -1323,32 +1323,8 @@ function renderParentTab(){
   const el3=document.getElementById('pr-soul-pts');if(el3)el3.textContent=soulPts;
   const el4=document.getElementById('pr-total-pts');if(el4)el4.textContent=pts;
 
-  // ── Section 1: Daily Report accordion body & badge ──
-  const bars=document.getElementById('parent-breakdown-bars');
-  if(bars){
-    const dailyAreas=[
-      {label:'⏰ Tuition Time',pts:ttVal},
-      {label:'📚 Self Study (Subjects)',pts:ssPtsP},
-      {label:'📝 Test / Exam',pts:testPts},
-      {label:'💻 Odda (Coding)',pts:oddaPts},
-      {label:'🏋️ Gym / Exercise',pts:gymPts},
-      {label:'📱 Screen & Reading',pts:screenPts},
-    ];
-    const dailyPct=Math.min(100,Math.round(dailyPts/430*100));
-    bars.innerHTML=`
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-        <span style="font-size:11px;font-weight:800;color:var(--muted)">Daily total progress</span>
-        <span style="font-size:13px;font-weight:900;color:#7C3AED">${dailyPts} / 430 pts</span>
-      </div>
-      <div class="pr-section-bar-wrap"><div class="pr-section-bar" style="width:${dailyPct}%;background:linear-gradient(90deg,#8B5CF6,#6D28D9)"></div></div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:12px">${dailyPct}% of daily maximum</div>
-      ${dailyAreas.map(a=>`
-        <div class="pr-area-row">
-          <span class="pr-area-lbl">${a.label}</span>
-          <span class="pr-area-pts" style="color:#8B5CF6">+${a.pts} pts</span>
-        </div>`).join('')}`;
-  }
-  const b1=document.getElementById('pr-acc-pts-1');if(b1)b1.textContent=dailyPts+' pts';
+  // ── Section 1: Daily Report — live timetable blocks (what the child actually did) ──
+  prRenderDailyTimetable();
 
   // ── Section 2: Brain Lab accordion body & badge ──
   const brainBd=document.getElementById('pr-brain-breakdown');
@@ -1592,4 +1568,113 @@ function renderExtraLine(){
   line.style.display='flex';
   line.innerHTML='<span>Manual bonus applied: <b>'+(v>0?'+':'')+v+' pts</b></span>'+
     '<button onclick="clearExtraPoints()" style="background:none;border:none;color:#B91C1C;font-weight:800;cursor:pointer;font-size:12px">Clear</button>';
+}
+
+
+// ════════════════════════════════════════════════════════════════
+// PARENT REVIEW · SECTION 1 — DAILY REPORT as live timetable blocks
+// Mirrors the Daily Report timetable. Expanding a block shows ONLY the
+// tasks the child actually acted on, with the points earned for each.
+// ════════════════════════════════════════════════════════════════
+let _prTTOpen = {};   // blockId -> expanded?
+
+function _prTaskEarned(bSt, act){
+  if(!bSt || !act) return 0;
+  const id=act.id;
+  if(act.type==='pct-calc') return (bSt.calcPts&&bSt.calcPts[id])||0;
+  if(act.type==='dropdown') return (bSt.ddPts&&bSt.ddPts[id])||0;
+  if(act.type==='link'){
+    if(typeof _TT_BRAIN_MAP!=='undefined' && _TT_BRAIN_MAP[id]) return parseInt(_TT_BRAIN_MAP[id]())||0;
+    return (bSt.linkPts&&bSt.linkPts[id])||0;
+  }
+  // self · parent · parent-select · text-entry · wordbook
+  if(bSt.checkedActs && bSt.checkedActs[id]) return parseInt(act.pts)||0;
+  return 0;
+}
+function _prTaskActed(bSt, act){
+  if(!bSt || !act) return false;
+  if(bSt.checkedActs && bSt.checkedActs[act.id]) return true;
+  return _prTaskEarned(bSt, act) > 0;
+}
+function prToggleTTBlock(id){
+  _prTTOpen[id] = !_prTTOpen[id];
+  const body=document.getElementById('pr-tt-body-'+id);
+  const chev=document.getElementById('pr-tt-chev-'+id);
+  if(body) body.style.display = _prTTOpen[id] ? 'block' : 'none';
+  if(chev) chev.textContent = _prTTOpen[id] ? '\u25B2' : '\u25BC';
+}
+
+function prRenderDailyTimetable(){
+  const wrap=document.getElementById('parent-breakdown-bars');
+  if(!wrap) return;
+  const schedule = (typeof ttGetSchedule==='function') ? (ttGetSchedule()||[]) : [];
+  const states   = (typeof ttBlockStates!=='undefined' && ttBlockStates) ? ttBlockStates : {};
+
+  let earnedTotal=0, maxTotal=0;
+  const blocksHTML = schedule.map(block=>{
+    const bSt = states[block.id] || null;
+    const acts = (block.activities||[]);
+    const actedActs = acts.filter(a=>_prTaskActed(bSt,a));
+    const blockEarned = actedActs.reduce((s,a)=>s+_prTaskEarned(bSt,a),0);
+    const blockMax = parseInt(block.maxPts)||0;
+    earnedTotal += blockEarned; maxTotal += blockMax;
+
+    const isBreak = block.type==='break';
+    const hasActs = acts.length>0 && !isBreak;
+    const open = !!_prTTOpen[block.id];
+    const doneCount = actedActs.length;
+
+    const rows = doneCount>0
+      ? actedActs.map(a=>{
+          const ep=_prTaskEarned(bSt,a);
+          const note = (a.type==='text-entry' && bSt && bSt.textEntries && bSt.textEntries[a.id])
+            ? `<div style="font-size:11px;color:#6B7280;margin-top:2px;font-style:italic">\u201C${(bSt.textEntries[a.id]||'').toString().slice(0,140).replace(/</g,'&lt;')}\u201D</div>` : '';
+          return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:8px 12px;border-top:1px solid #F1F1F6">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12.5px;font-weight:800;color:#1E1B4B">\u2705 ${a.name}</div>
+              ${note}
+            </div>
+            <div style="font-size:12.5px;font-weight:900;color:${ep>0?'#059669':'#9CA3AF'};white-space:nowrap">+${ep} pts</div>
+          </div>`;
+        }).join('')
+      : `<div style="font-size:12px;color:#6B7280;font-style:italic;padding:9px 12px">Nothing marked in this block.</div>`;
+
+    const bodyHTML = isBreak ? ''
+      : `<div id="pr-tt-body-${block.id}" style="display:${open?'block':'none'};background:#fff">${rows}</div>`;
+
+    const chev = hasActs ? `<span id="pr-tt-chev-${block.id}" style="font-size:12px;color:#9CA3AF">${open?'\u25B2':'\u25BC'}</span>` : '';
+    const headClick = hasActs ? ` onclick="prToggleTTBlock('${block.id}')"` : '';
+    const ptsBadge = isBreak
+      ? `<span style="font-size:11px;font-weight:800;color:#9CA3AF;white-space:nowrap">${block.time||''}</span>`
+      : `<span style="font-size:12.5px;font-weight:900;color:#7C3AED;white-space:nowrap">+${blockEarned}${blockMax?(' / '+blockMax):''} pts</span>`;
+    const countPill = (!isBreak && doneCount>0)
+      ? `<span style="font-size:10px;font-weight:800;color:#059669;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:20px;padding:2px 8px;margin-left:6px">${doneCount} done</span>`
+      : '';
+
+    return `<div style="margin-bottom:8px;border:1px solid #ECECF3;border-radius:10px;overflow:hidden">
+      <div${headClick} style="${hasActs?'cursor:pointer;':''}display:flex;align-items:center;gap:10px;padding:10px 12px;background:#FAFAFF">
+        <div style="width:30px;height:30px;border-radius:8px;background:${block.iconBg||'#EEE'};display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${block.icon||'\uD83D\uDCCC'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;font-weight:800;color:#9CA3AF">${block.time||''}</div>
+          <div style="font-size:13px;font-weight:900;color:${block.color||'#1E1B4B'}">${block.name||''}${countPill}</div>
+        </div>
+        ${ptsBadge}
+        ${chev}
+      </div>
+      ${bodyHTML}
+    </div>`;
+  }).join('');
+
+  const pct = maxTotal>0 ? Math.min(100,Math.round(earnedTotal/maxTotal*100)) : 0;
+  wrap.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+      <span style="font-size:11px;font-weight:800;color:var(--muted)">Daily total progress — from the timetable</span>
+      <span style="font-size:13px;font-weight:900;color:#7C3AED">${earnedTotal} / ${maxTotal} pts</span>
+    </div>
+    <div class="pr-section-bar-wrap"><div class="pr-section-bar" style="width:${pct}%;background:linear-gradient(90deg,#8B5CF6,#6D28D9)"></div></div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:12px">${pct}% of timetable maximum \u00B7 tap a block to see what was done</div>
+    ${blocksHTML || '<div style="font-size:12px;color:var(--muted);font-style:italic">No timetable loaded yet.</div>'}`;
+
+  const b1=document.getElementById('pr-acc-pts-1');
+  if(b1) b1.textContent = earnedTotal+' pts';
 }
