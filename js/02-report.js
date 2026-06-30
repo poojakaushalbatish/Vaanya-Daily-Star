@@ -1251,6 +1251,7 @@ function renderParentTab(){
   }
 
   // Creative Moments — multi-work list (each submission + per-work points)
+  if(_prCreativeWorks===null && !_prCreativeLoading && typeof prLoadCreativeWorks==='function'){ prLoadCreativeWorks(); }
   prRenderCreativeWorks();
   const pts=calcDayPts();
   // Compute section sub-totals for the parent view
@@ -1661,8 +1662,11 @@ function prRenderDailyTimetable(){
 // ════════════════════════════════════════════════════════════════
 let _prCreativeWorks = null;   // today's works (array) | null = not loaded yet
 let _prCreativeAward = {};     // workId -> points the parent gave (session)
+let _prCreativeLoading = false;
 
 async function prLoadCreativeWorks(){
+  if(_prCreativeLoading) return;
+  _prCreativeLoading = true;
   const today = new Date(Date.now()+5.5*3600000).toISOString().split('T')[0];
   // Instant paint if the Gallery is already loaded
   if(typeof _cgAllWorks!=='undefined' && Array.isArray(_cgAllWorks) && _cgAllWorks.length){
@@ -1671,16 +1675,18 @@ async function prLoadCreativeWorks(){
   }
   if(typeof _supabase==='undefined' || !_supabase){
     if(_prCreativeWorks===null){ _prCreativeWorks=[]; prRenderCreativeWorks(); }
-    return;
+    _prCreativeLoading=false; return;
   }
   try{
     const {data,error} = await _supabase.from('vaanya_creative_works')
       .select('*').eq('date',today).order('created_at',{ascending:true});
     if(!error){ _prCreativeWorks = data||[]; prRenderCreativeWorks(); }
-    else { if(_prCreativeWorks===null){ _prCreativeWorks=[]; prRenderCreativeWorks(); } }
+    else { console.error('prLoadCreativeWorks query error:', error); if(_prCreativeWorks===null){ _prCreativeWorks=[]; prRenderCreativeWorks(); } }
   }catch(e){
     console.error('prLoadCreativeWorks',e);
     if(_prCreativeWorks===null){ _prCreativeWorks=[]; prRenderCreativeWorks(); }
+  }finally{
+    _prCreativeLoading=false;
   }
 }
 

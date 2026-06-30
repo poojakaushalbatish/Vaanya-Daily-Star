@@ -1176,6 +1176,7 @@ async function saveCreativeWork(){
 
   // Save to vaanya_creative_works table
   let cloudOk=false;
+  let cloudErrMsg='';
   if(_supabase){
     try{
       // Store full photo data (base64) — no truncation
@@ -1191,6 +1192,7 @@ async function saveCreativeWork(){
       }]);
       if(error){
         console.warn('Creative save error:',error);
+        cloudErrMsg=(error.code==='42P01')?'creative table missing in this database':(error.message||error.code||'database error');
         if(error.code==='42P01'){
           toast('\u26a0\ufe0f Creative works table not found — see console for setup SQL');
           console.info('%cRun this SQL in Supabase SQL Editor:\n\ncreate table vaanya_creative_works (\n  id bigint generated always as identity primary key,\n  date date not null,\n  activity_key text not null,\n  activity_name text not null,\n  text_content text,\n  photo_data text,\n  extra_json text,\n  created_at timestamptz default now()\n);\nalter table vaanya_creative_works enable row level security;\ncreate policy "allow all" on vaanya_creative_works for all using (true) with check (true);','color:orange;font-size:13px');
@@ -1198,7 +1200,7 @@ async function saveCreativeWork(){
       } else {
         cloudOk=true;
       }
-    }catch(e){console.warn('Creative save exception:',e);}
+    }catch(e){console.warn('Creative save exception:',e);cloudErrMsg=e.message||'connection error';}
   }
 
   // Also save into the main daily report draft for parent review display
@@ -1211,7 +1213,7 @@ async function saveCreativeWork(){
   if(status){
     status.innerHTML=cloudOk
       ?'<span style="color:#10B981;font-size:13px">\u2705 Saved! Mamma &amp; Papa can now see your beautiful work \U0001f3a8</span>'
-      :'<span style="color:#F59E0B">\U0001f4be Saved locally! (Cloud sync pending)</span>';
+      :'<span style="color:#EF4444;font-size:12px;font-weight:800">⚠️ Could NOT save to the cloud'+(cloudErrMsg?(': '+cloudErrMsg):'')+'. Your work is NOT in the gallery yet.</span>';
   }
   if(btn){btn.disabled=false;btn.textContent='\u2705 Saved!';}
   toast('Your '+opt.title+' is saved! \U0001f929');
